@@ -1,6 +1,10 @@
+import { useEffect, useRef } from 'react';
+import { CONFIG } from '../../data/config';
+import { GEAR, GEAR_BY_ID } from '../../data/gear';
+import type { GearDef } from '../../data/gear';
 import { ROLES_BY_ID } from '../../data/roles';
-import { GEAR_BY_ID } from '../../data/gear';
-import type { BeatQuality, HeistReport, MemberBeat } from '../../engine';
+import { skillUpgradeCost } from '../../engine';
+import type { BeatQuality, HeistReport, Member, MemberBeat, Recommendation } from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { crewLabel, formatCash, pct } from '../format';
 import { Avatar, HeistIcon, Icon } from '../icons';
@@ -12,8 +16,44 @@ const QUALITY_LABEL: Record<BeatQuality, string> = {
   botched: 'Botched',
 };
 
+const FOCUSABLE = 'button, [href], input, [tabindex]:not([tabindex="-1"])';
+
 export function ReportModal() {
   const { report, actions } = useGame();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<Element | null>(null);
+
+  useEffect(() => {
+    if (!report) return;
+    returnFocusRef.current = document.activeElement;
+    dialogRef.current?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        actions.dismissReport();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
+      if (!nodes || nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (returnFocusRef.current instanceof HTMLElement) returnFocusRef.current.focus();
+    };
+  }, [report, actions]);
+
   if (!report) return null;
   return (
     <div className="modal-backdrop" onClick={actions.dismissReport}>
@@ -21,7 +61,9 @@ export function ReportModal() {
         className="report"
         role="dialog"
         aria-modal="true"
-        aria-label="Heist report"
+        aria-label={`Debrief: ${report.heistName}`}
+        tabIndex={-1}
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <Header report={report} onClose={actions.dismissReport} />
@@ -32,7 +74,7 @@ export function ReportModal() {
         </p>
 
         <section className="report-section">
-          <h4 className="report-h">Play-by-play</h4>
+          <h3 className="report-h">Play-by-play</h3>
           <div className="beat-list">
             {report.members.map((m) => (
               <Beat key={m.memberId} beat={m} />
@@ -42,7 +84,7 @@ export function ReportModal() {
 
         {report.factors.length > 0 && (
           <section className="report-section">
-            <h4 className="report-h">What drove it</h4>
+            <h3 className="report-h">What drove it</h3>
             <ul className="factor-list">
               {report.factors.map((f, i) => (
                 <li key={i} className={f.positive ? 'good' : 'bad'}>
@@ -58,12 +100,13 @@ export function ReportModal() {
 
         {report.recommendations.length > 0 && (
           <section className="report-section">
-            <h4 className="report-h">Where to invest</h4>
+            <h3 className="report-h">Where to invest</h3>
             <ul className="rec-list">
               {report.recommendations.map((r, i) => (
                 <li key={i}>
                   <span className="rec-kind">{r.kind}</span>
-                  {r.text}
+                  <span className="rec-text">{r.text}</span>
+                  <RecAction rec={r} />
                 </li>
               ))}
             </ul>
@@ -79,11 +122,7 @@ export function ReportModal() {
 }
 
 function Header({ report, onClose }: { report: HeistReport; onClose: () => void }) {
-  const stampClass = report.perfect
-    ? 'stamp-ready'
-    : report.success
-      ? 'stamp-idle'
-      : 'stamp-locked';
+  const stampClass = report.perfect ? 'stamp-ready' : report.success ? 'stamp-idle' : 'stamp-locked';
   const stampText = report.perfect ? 'Flawless' : report.success ? 'Success' : 'Blown';
   return (
     <div className="report-head">
@@ -95,7 +134,7 @@ function Header({ report, onClose }: { report: HeistReport; onClose: () => void 
         <span className="report-crew">{crewLabel(report.crewLabelIndex)}</span>
       </div>
       <span className={`stamp-badge ${stampClass}`}>{stampText}</span>
-      <button className="report-close" aria-label="Close" onClick={onClose}>
+      <button className="report-close" aria-label="Close debrief" onClick={onClose}>
         ✕
       </button>
     </div>
@@ -103,15 +142,19 @@ function Header({ report, onClose }: { report: HeistReport; onClose: () => void 
 }
 
 function Summary({ report }: { report: HeistReport }) {
+  const takeClass = report.success ? 'cash' : report.payout > 0 ? 'salvage' : 'muted';
   return (
     <div className="report-summary">
       <div className="sum-cell">
         <span className="sum-label">Take</span>
-        <span className={`sum-value ${report.success ? 'cash' : 'muted'}`}>
-          {report.success ? formatCash(report.payout) : 'No take'}
+        <span className={`sum-value ${takeClass}`}>
+          {report.payout > 0 ? formatCash(report.payout) : 'No take'}
         </span>
         {report.perfectBonus > 0 && (
           <span className="sum-sub">incl. +{formatCash(report.perfectBonus)} bonus</span>
+        )}
+        {!report.success && report.payout > 0 && (
+          <span className="sum-sub">salvage — grabbed what they could</span>
         )}
       </div>
 
@@ -159,4 +202,48 @@ function Beat({ beat }: { beat: MemberBeat }) {
       </div>
     </div>
   );
+}
+
+/** Cheapest unowned gear for a member, preferring their role-affinity piece. */
+function bestGearFor(member: Member): GearDef | undefined {
+  const unowned = GEAR.filter((g) => !member.gearIds.includes(g.id));
+  if (unowned.length === 0) return undefined;
+  const affinity = unowned.filter((g) => g.roleAffinity === member.role);
+  return (affinity.length ? affinity : unowned).slice().sort((a, b) => a.cost - b.cost)[0];
+}
+
+/** One-click action for a member-targeted recommendation (train / gear). */
+function RecAction({ rec }: { rec: Recommendation }) {
+  const { game, actions } = useGame();
+  if (!rec.memberId) return null;
+  const member = game.members.find((m) => m.id === rec.memberId);
+  if (!member) return null;
+
+  if (rec.kind === 'skill') {
+    const maxed = member.skill >= CONFIG.maxMemberSkill;
+    const cost = skillUpgradeCost(member);
+    return (
+      <button
+        className="btn tiny rec-btn"
+        disabled={maxed || game.cash < cost}
+        onClick={() => actions.upgradeSkill(member.id)}
+      >
+        {maxed ? 'Maxed' : `Train · ${formatCash(cost)}`}
+      </button>
+    );
+  }
+  if (rec.kind === 'gear') {
+    const gear = bestGearFor(member);
+    if (!gear) return null;
+    return (
+      <button
+        className="btn tiny rec-btn"
+        disabled={game.cash < gear.cost}
+        onClick={() => actions.buyGear(member.id, gear.id)}
+      >
+        +{gear.name} · {formatCash(gear.cost)}
+      </button>
+    );
+  }
+  return null;
 }

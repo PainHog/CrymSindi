@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { CONFIG } from '../../data/config';
 import { HEISTS } from '../../data/heists';
 import type { HeistDef } from '../../data/heists';
@@ -11,7 +12,7 @@ import {
   missingRoles,
 } from '../../engine';
 import type { Crew, GameState } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCash, formatDuration, pct } from '../format';
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 
@@ -20,14 +21,31 @@ function roleNames(ids: string[]): string {
 }
 
 export function HeistList() {
-  const { game, now, actions } = useGame();
-  const heatMaxed = deriveHeat(game, now) >= CONFIG.maxHeat;
+  const { game, actions } = useGame();
+  const now = useNow();
+  const heat = deriveHeat(game, now);
+  const heatMaxed = heat >= CONFIG.maxHeat;
+  const roundedHeat = Math.round(heat);
 
   const idleCrews = game.crews
     .map((c, i) => ({ crew: c, index: i }))
     .filter(({ crew }) => crew.status === 'idle');
 
   const sorted = [...HEISTS].sort((a, b) => a.tier - b.tier || a.difficulty - b.difficulty);
+
+  // Success estimates run a Poisson-binomial DP per heist x crew; recompute only
+  // when the game or the (rounded) heat changes, not on every 250ms tick.
+  const estimates = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const heist of HEISTS) {
+      for (const crew of game.crews) {
+        map[`${heist.id}:${crew.id}`] = estimateSuccess(game, heist, crew, now);
+      }
+    }
+    return map;
+    // now is intentionally excluded: heat is bucketed to roundedHeat above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, roundedHeat]);
 
   return (
     <section className="panel">
@@ -45,7 +63,7 @@ export function HeistList() {
               heist={heist}
               idleCrews={idleCrews}
               heatMaxed={heatMaxed}
-              now={now}
+              estimates={estimates}
               game={game}
               onSend={actions.launch}
             />
@@ -94,14 +112,14 @@ function UnlockedHeist({
   heist,
   idleCrews,
   heatMaxed,
-  now,
+  estimates,
   game,
   onSend,
 }: {
   heist: HeistDef;
   idleCrews: { crew: Crew; index: number }[];
   heatMaxed: boolean;
-  now: number;
+  estimates: Record<string, number>;
   game: GameState;
   onSend: (heistId: string, crewId: string) => void;
 }) {
@@ -156,7 +174,7 @@ function UnlockedHeist({
               </button>
             );
           }
-          const chance = estimateSuccess(game, heist, crew, now);
+          const chance = estimates[`${heist.id}:${crew.id}`] ?? 0;
           return (
             <button
               key={crew.id}

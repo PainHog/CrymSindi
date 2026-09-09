@@ -129,7 +129,6 @@ function init(): UIState {
 
 interface GameContextValue {
   game: GameState;
-  now: number;
   message: string | null;
   messageId: number;
   report: HeistReport | null;
@@ -153,19 +152,12 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [ui, dispatch] = useReducer(reducer, undefined, init);
-  const [now, setNow] = useState(() => Date.now());
 
   // Keep a ref to the latest game for event handlers (save on blur/close).
   const gameRef = useRef(ui.game);
   useEffect(() => {
     gameRef.current = ui.game;
   }, [ui.game]);
-
-  // UI clock: drives countdowns/progress bars only. Not a source of truth.
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), CONFIG.uiTickMs);
-    return () => window.clearInterval(id);
-  }, []);
 
   // Persist immediately after every state change, so a crash between a collect
   // and the next save can't double-collect a heist or lose an earned take. This
@@ -234,20 +226,48 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [save, reset],
   );
 
-  const value: GameContextValue = {
-    game: ui.game,
-    now,
-    message: ui.message,
-    messageId: ui.messageId,
-    report: ui.report,
-    actions,
-  };
+  const value = useMemo<GameContextValue>(
+    () => ({
+      game: ui.game,
+      message: ui.message,
+      messageId: ui.messageId,
+      report: ui.report,
+      actions,
+    }),
+    [ui.game, ui.message, ui.messageId, ui.report, actions],
+  );
 
-  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+  return (
+    <GameContext.Provider value={value}>
+      <NowProvider>{children}</NowProvider>
+    </GameContext.Provider>
+  );
 }
 
 export function useGame(): GameContextValue {
   const ctx = useContext(GameContext);
   if (!ctx) throw new Error('useGame must be used within a GameProvider');
   return ctx;
+}
+
+// -----------------------------------------------------------------------------
+// Clock context: the 250ms tick lives here, isolated from game state. Only
+// components that render countdowns/progress (via useNow) re-render on tick;
+// everything else re-renders only when the game actually changes.
+// -----------------------------------------------------------------------------
+
+const NowContext = createContext<number>(Date.now());
+
+function NowProvider({ children }: { children: ReactNode }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), CONFIG.uiTickMs);
+    return () => window.clearInterval(id);
+  }, []);
+  return <NowContext.Provider value={now}>{children}</NowContext.Provider>;
+}
+
+/** Current wall-clock time (ms), updated on the UI tick. Display only. */
+export function useNow(): number {
+  return useContext(NowContext);
 }

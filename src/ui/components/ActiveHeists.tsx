@@ -1,11 +1,12 @@
 import { HEISTS_BY_ID } from '../../data/heists';
 import { heistStatusAt } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCountdown, pct } from '../format';
 import { HeistIcon, Icon } from '../icons';
 
 export function ActiveHeists() {
-  const { game, now, actions } = useGame();
+  const { game, actions } = useGame();
+  const now = useNow();
 
   return (
     <section className="panel">

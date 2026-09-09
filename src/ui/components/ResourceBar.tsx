@@ -1,6 +1,6 @@
 import { CONFIG } from '../../data/config';
 import { deriveHeat, heatCoolRateMult } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { useGame, useNow } from '../../store/GameContext';
 import { formatCash } from '../format';
 import { Icon } from '../icons';
 
@@ -12,7 +12,8 @@ function heatStatus(frac: number): { level: string; word: string } {
 }
 
 export function ResourceBar() {
-  const { game, now } = useGame();
+  const { game } = useGame();
+  const now = useNow();
   const heat = deriveHeat(game, now);
   const heatFrac = heat / CONFIG.maxHeat;
   const coolPerSec = CONFIG.heatCoolPerSec * heatCoolRateMult(game);

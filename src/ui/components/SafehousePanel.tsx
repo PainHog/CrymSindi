@@ -14,7 +14,7 @@ import {
   skillUpgradeCost,
 } from '../../engine';
 import type { Crew, Member, Safehouse } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCash, formatCountdown } from '../format';
 import { Avatar, Icon, RoleIcon } from '../icons';
 
@@ -190,7 +190,7 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
 }
 
 function CrewJobStatus({ heistName, endsAt }: { heistName: string; endsAt: number }) {
-  const { now } = useGame();
+  const now = useNow();
   const ready = now >= endsAt;
   return (
     <p className="active-note" style={{ marginBottom: 8 }}>

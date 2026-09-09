@@ -15,7 +15,7 @@
 
   --ink: #ece6d8; /* warm paper white */
   --ink-dim: #a8a191;
-  --ink-faint: #857e6f; /* meets WCAG AA on the page background */
+  --ink-faint: #968e7d; /* AA on the page background even at 10-11px */
 
   --brass: #e8b558; /* primary: cash / go */
   --brass-2: #f4cf83;
@@ -711,6 +711,7 @@ body::after {
 }
 .sum-value { font-family: var(--mono); font-weight: 700; font-size: 22px; }
 .sum-value.cash { color: var(--brass); }
+.sum-value.salvage { color: var(--amber); font-size: 18px; }
 .sum-value.muted { color: var(--crimson); font-size: 18px; }
 .sum-sub { font-size: 11px; color: var(--ink-faint); font-family: var(--mono); }
 .quality-track {
@@ -806,7 +807,8 @@ body::after {
 .rec-list li {
   display: flex;
   gap: 8px;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   font-size: 13px;
   padding: 8px 10px;
   border: 1px solid var(--line);
@@ -814,6 +816,8 @@ body::after {
   border-radius: 7px;
   background: #14140c;
 }
+.rec-text { flex: 1; min-width: 160px; }
+.rec-btn { margin-left: auto; flex: none; }
 .rec-kind {
   font-family: var(--font-display);
   font-size: 10px;
@@ -835,4 +839,5 @@ body::after {
   .progress-fill.running { animation: none; }
   .heat-fill.critical { animation: none; }
   .modal-backdrop, .report { animation: none; }
+  .toast { animation: none; }
 }
