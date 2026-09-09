@@ -13,12 +13,12 @@ import { SAFEHOUSE_TIERS } from '../data/safehouses';
 import { deriveHeat } from './selectors';
 import type { GameState } from './types';
 
-/** Fresh game: 1 safehouse (1 crew slot), 1 crew, 1 recruited member. */
+/** Fresh game: 1 safehouse (1 crew slot), 1 crew of 3 starting members. */
 export function createInitialState(now: number, config: Config = CONFIG): GameState {
   const tier = SAFEHOUSE_TIERS[0];
-  const memberId = 'm1';
   const crewId = 'c1';
   const safehouseId = 's1';
+  const skill = config.startingMemberSkill;
 
   return {
     version: config.version,
@@ -32,19 +32,22 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
       {
         id: crewId,
         safehouseId,
-        memberIds: [memberId],
+        memberIds: ['m1', 'm2', 'm3'],
         maxMembers: config.crewMaxMembers,
         status: 'idle',
       },
     ],
+    // A starter crew that can attempt the tier-1 jobs out of the gate.
     members: [
-      { id: memberId, name: 'Vic Marlow', role: 'driver', skill: config.startingMemberSkill, gearIds: [] },
+      { id: 'm1', name: 'Vic Marlow', role: 'driver', skill, gearIds: [] },
+      { id: 'm2', name: 'Rey Okafor', role: 'hacker', skill, gearIds: [] },
+      { id: 'm3', name: 'Sal Petrov', role: 'muscle', skill, gearIds: [] },
     ],
     activeHeists: [],
     purchasedUpgradeIds: [],
     lifetimeCash: 0,
     lastSaved: now,
-    nextId: 2,
+    nextId: 4,
   };
 }
 

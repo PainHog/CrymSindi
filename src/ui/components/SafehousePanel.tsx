@@ -127,11 +127,16 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
           </span>
           {crewLabel(index)}
         </span>
-        {onHeist ? (
-          <span className="stamp-badge stamp-locked">Locked</span>
-        ) : (
-          <span className="stamp-badge stamp-idle">Idle</span>
-        )}
+        <span className="crew-head-right">
+          <span className="crew-size">
+            {crew.memberIds.length}/{crew.maxMembers}
+          </span>
+          {onHeist ? (
+            <span className="stamp-badge stamp-locked">Locked</span>
+          ) : (
+            <span className="stamp-badge stamp-idle">Idle</span>
+          )}
+        </span>
       </div>
 
       {onHeist && heist && active && (
@@ -148,6 +153,12 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
           return m ? <MemberRow key={id} member={m} locked={onHeist} /> : null;
         })}
       </div>
+
+      {!onHeist && crew.memberIds.length < CONFIG.minCrewForHeist && (
+        <p className="hint warn crew-min-hint">
+          Need {CONFIG.minCrewForHeist}+ members to run a heist.
+        </p>
+      )}
 
       {!onHeist && openSeats > 0 && (
         <div className="recruit-row">

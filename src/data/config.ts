@@ -13,16 +13,25 @@ export interface Config {
   startingHeat: number;
   startingMemberSkill: number;
   crewMaxMembers: number;
+  minCrewForHeist: number;
 
   maxHeat: number;
   heatCoolPerSec: number;
   offlineCapSec: number;
 
-  successBase: number;
-  successSlope: number;
-  successMin: number;
-  successMax: number;
+  // Per-member resolution model (see engine/resolution.ts).
+  memberBaseChance: number;
+  memberSkillWeight: number;
+  memberDifficultyWeight: number;
+  memberChanceMin: number;
+  memberChanceMax: number;
   heatSuccessPenalty: number;
+  baseRequiredPasses: number;
+  difficultyPerRequiredPass: number;
+
+  // Payout model: time-based base, scaled by success quality.
+  payoutFloorFrac: number;
+  perfectBonusMult: number;
 
   newSafehouseBaseCost: number;
   newSafehouseCostMult: number;
@@ -46,29 +55,46 @@ export interface Config {
 export const CONFIG: Config = {
   // Save format version. Bump this if you change the shape of GameState in a way
   // that would break old saves; mismatched saves are discarded on load.
-  version: 1,
+  version: 2,
   saveKey: 'heist-crew-idle/save/v1',
 
   // ---- Starting conditions -------------------------------------------------
   startingCash: 350,
   startingHeat: 0,
-  startingMemberSkill: 3, // skill of the free starting member
-  crewMaxMembers: 3, // how many members a crew can hold
+  startingMemberSkill: 3, // skill of each free starting member
+  crewMaxMembers: 8, // how many members a crew can hold
+  minCrewForHeist: 3, // members required to launch any heist
 
   // ---- Heat (risk meter) ---------------------------------------------------
   maxHeat: 100, // heat is clamped to [0, maxHeat]
   heatCoolPerSec: 0.3, // base heat points that cool per real second (~5.5 min for a full bar)
   offlineCapSec: 12 * 60 * 60, // cap passive effects (heat cooldown) at 12 hours
 
-  // ---- Success-chance model ------------------------------------------------
-  // chance = successBase + successSlope * (crewPower - difficulty)
-  //          - heatSuccessPenalty * (heat / maxHeat)
-  // then clamped to [successMin, successMax].
-  successBase: 0.55,
-  successSlope: 0.02, // per point of (crewPower - difficulty)
-  successMin: 0.05,
-  successMax: 0.97,
-  heatSuccessPenalty: 0.35, // at full heat, subtract up to this from the chance
+  // ---- Per-member resolution model -----------------------------------------
+  // Each member rolls once. Their pass chance:
+  //   p = memberBaseChance + memberSkillWeight*effectiveSkill
+  //       - memberDifficultyWeight*difficulty - heatSuccessPenalty*(heat/maxHeat)
+  //   clamped to [memberChanceMin, memberChanceMax].
+  // A heist succeeds if every required role has a member who passed AND the
+  // number of passers reaches requiredPasses (below).
+  memberBaseChance: 0.5,
+  memberSkillWeight: 0.045,
+  memberDifficultyWeight: 0.01,
+  memberChanceMin: 0.05,
+  memberChanceMax: 0.95,
+  heatSuccessPenalty: 0.35, // at full heat, subtract this from each member's chance
+  // requiredPasses = baseRequiredPasses + floor(difficulty / difficultyPerRequiredPass)
+  // (this is why higher tiers need bigger crews).
+  baseRequiredPasses: 2,
+  difficultyPerRequiredPass: 18,
+
+  // ---- Payout model --------------------------------------------------------
+  // base = heist.payoutPerSec * durationSec. On success the take scales with
+  // crew performance: payout = base * (payoutFloorFrac + (1-payoutFloorFrac)*quality)
+  // where quality = fraction of the crew that passed. A flawless run (everyone
+  // passed) multiplies the take by perfectBonusMult.
+  payoutFloorFrac: 0.5,
+  perfectBonusMult: 1.5,
 
   // ---- Economy: safehouses -------------------------------------------------
   // Cost to buy the next NEW safehouse = base * mult^(safehousesOwned - 1).
@@ -82,7 +108,7 @@ export const CONFIG: Config = {
 
   // ---- Economy: recruiting -------------------------------------------------
   // Cost to recruit into a crew = role.recruitCost * mult^(membersInThatCrew).
-  recruitCostMultPerMember: 1.8,
+  recruitCostMultPerMember: 1.5,
 
   // ---- Economy: member skill upgrades --------------------------------------
   // Cost = base * mult^(currentSkill - startingMemberSkill).

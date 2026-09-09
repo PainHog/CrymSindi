@@ -627,7 +627,212 @@ body::after {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* ---- Crew size chip ---- */
+.crew-head-right { display: flex; align-items: center; gap: 8px; }
+.crew-size { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+.crew-min-hint { margin: 8px 0 0; }
+
+/* ---- After-action report (modal) ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(6, 7, 10, 0.74);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  animation: fade-in 0.15s ease-out;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.report {
+  width: min(680px, 100%);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  box-shadow: 0 22px 64px #000b;
+  animation: pop-in 0.18s ease-out;
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+.report-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.report-ico {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  color: var(--brass);
+  background: #0e1016;
+  border: 1px solid var(--line);
+  flex: none;
+}
+.report-ico[data-tier='fail'] { color: var(--crimson); }
+.report-title { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.report-name { font-family: var(--font-display); font-weight: 600; font-size: 18px; letter-spacing: 0.5px; }
+.report-crew { font-size: 12px; color: var(--ink-dim); }
+.report-close {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  border-radius: 7px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  flex: none;
+}
+.report-close:hover { color: var(--ink); border-color: var(--line-strong); }
+
+.report-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sum-cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sum-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.sum-value { font-family: var(--mono); font-weight: 700; font-size: 22px; }
+.sum-value.cash { color: var(--brass); }
+.sum-value.muted { color: var(--crimson); font-size: 18px; }
+.sum-sub { font-size: 11px; color: var(--ink-faint); font-family: var(--mono); }
+.quality-track {
+  position: relative;
+  height: 12px;
+  background: #0b0d12;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 5px 0 3px;
+}
+.quality-fill { height: 100%; transition: width 0.3s; }
+.quality-fill.ok { background: linear-gradient(90deg, #b98f3e, var(--brass)); }
+.quality-fill.perfect { background: linear-gradient(90deg, var(--brass), var(--mint)); }
+.quality-fill.fail { background: linear-gradient(90deg, #8a3a30, var(--crimson)); }
+.quality-threshold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ink);
+  opacity: 0.7;
+}
+
+.turning-point {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  margin: 12px 0;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #0f1116;
+}
+.turning-point.good { border-color: #3a5a4a; }
+.turning-point.bad { border-color: #5a3a34; }
+
+.report-section { margin-top: 14px; }
+.report-h {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0 0 8px;
+}
+.beat-list { display: flex; flex-direction: column; gap: 8px; }
+.beat {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0f1116;
+}
+.beat.pass { border-left: 3px solid var(--mint); }
+.beat.fail { border-left: 3px solid var(--crimson); }
+.beat-body { min-width: 0; }
+.beat-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.beat-name { font-weight: 600; }
+.beat-role {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--role, var(--steel));
+}
+.beat-q {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.q-flawless { color: var(--brass); }
+.q-clean { color: var(--mint); }
+.q-shaky { color: var(--amber); }
+.q-botched { color: var(--crimson); }
+.beat-detail { margin: 5px 0 3px; font-size: 13px; color: var(--ink); }
+.beat-stats { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+
+.factor-list,
+.rec-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.factor-list li { display: flex; gap: 8px; font-size: 13px; align-items: flex-start; color: var(--ink); }
+.factor-list li.good .factor-mark { color: var(--mint); }
+.factor-list li.bad .factor-mark { color: var(--crimson); }
+.factor-mark { font-size: 10px; line-height: 1.6; flex: none; }
+.rec-list li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
+  border-radius: 7px;
+  background: #14140c;
+}
+.rec-kind {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--brass);
+  border: 1px solid #4a3d1e;
+  border-radius: 4px;
+  padding: 1px 6px;
+  flex: none;
+}
+.report .btn.block { margin-top: 16px; }
+
+@media (max-width: 560px) {
+  .report-summary { grid-template-columns: 1fr; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .progress-fill.running { animation: none; }
   .heat-fill.critical { animation: none; }
+  .modal-backdrop, .report { animation: none; }
 }

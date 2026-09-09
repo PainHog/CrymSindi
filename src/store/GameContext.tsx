@@ -36,12 +36,14 @@ import {
   upgradeSkill,
   type ActionResult,
   type GameState,
+  type HeistReport,
 } from '../engine';
 
 interface UIState {
   game: GameState;
   message: string | null;
   messageId: number;
+  report: HeistReport | null;
 }
 
 type Action =
@@ -55,11 +57,13 @@ type Action =
   | { type: 'upgradeSkill'; memberId: string }
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'refreshHeat'; now: number }
+  | { type: 'dismissReport' }
   | { type: 'replace'; game: GameState; message?: string };
 
 function applyResult(ui: UIState, result: ActionResult): UIState {
   if (result.ok) {
     return {
+      ...ui,
       game: result.state,
       message: result.message ?? ui.message,
       messageId: ui.messageId + 1,
@@ -72,8 +76,13 @@ function reducer(ui: UIState, action: Action): UIState {
   switch (action.type) {
     case 'launch':
       return applyResult(ui, launchHeist(ui.game, action.heistId, action.crewId, action.now));
-    case 'collect':
-      return applyResult(ui, collectHeist(ui.game, action.id, action.now));
+    case 'collect': {
+      const res = collectHeist(ui.game, action.id, action.now);
+      const nextUi = applyResult(ui, res);
+      return { ...nextUi, report: res.ok && res.report ? res.report : ui.report };
+    }
+    case 'dismissReport':
+      return { ...ui, report: null };
     case 'buySafehouse':
       return applyResult(ui, buySafehouse(ui.game));
     case 'upgradeSafehouse':
@@ -92,6 +101,7 @@ function reducer(ui: UIState, action: Action): UIState {
       return { ...ui, game: refreshHeat(ui.game, action.now) };
     case 'replace':
       return {
+        ...ui,
         game: action.game,
         message: action.message ?? ui.message,
         messageId: ui.messageId + 1,
@@ -109,9 +119,9 @@ function init(): UIState {
       loaded.readyCount > 0
         ? `Welcome back. ${loaded.readyCount} heist${loaded.readyCount > 1 ? 's' : ''} ready to collect.`
         : null;
-    return { game: loaded.state, message: msg, messageId: 0 };
+    return { game: loaded.state, message: msg, messageId: 0, report: null };
   }
-  return { game: createInitialState(now), message: null, messageId: 0 };
+  return { game: createInitialState(now), message: null, messageId: 0, report: null };
 }
 
 interface GameContextValue {
@@ -119,6 +129,7 @@ interface GameContextValue {
   now: number;
   message: string | null;
   messageId: number;
+  report: HeistReport | null;
   actions: {
     launch: (heistId: string, crewId: string) => void;
     collect: (id: string) => void;
@@ -129,6 +140,7 @@ interface GameContextValue {
     buyGear: (memberId: string, gearId: string) => void;
     upgradeSkill: (memberId: string) => void;
     buyUpgrade: (upgradeId: string) => void;
+    dismissReport: () => void;
     save: () => void;
     reset: () => void;
   };
@@ -202,6 +214,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyGear: (memberId, gearId) => dispatch({ type: 'buyGear', memberId, gearId }),
       upgradeSkill: (memberId) => dispatch({ type: 'upgradeSkill', memberId }),
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
+      dismissReport: () => dispatch({ type: 'dismissReport' }),
       save,
       reset,
     }),
@@ -213,6 +226,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     now,
     message: ui.message,
     messageId: ui.messageId,
+    report: ui.report,
     actions,
   };
 

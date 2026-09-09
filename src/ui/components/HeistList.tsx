@@ -5,9 +5,10 @@ import { ROLES_BY_ID } from '../../data/roles';
 import {
   crewHasRoles,
   deriveHeat,
+  estimateSuccess,
   isHeistUnlocked,
+  minMembersFor,
   missingRoles,
-  successChance,
 } from '../../engine';
 import type { Crew, GameState } from '../../engine';
 import { useGame } from '../../store/GameContext';
@@ -104,6 +105,11 @@ function UnlockedHeist({
   game: GameState;
   onSend: (heistId: string, crewId: string) => void;
 }) {
+  const minMembers = minMembersFor(heist);
+  const base = heist.payoutPerSec * heist.durationSec;
+  const payLow = formatCash(base * CONFIG.payoutFloorFrac);
+  const payHigh = formatCash(base * CONFIG.perfectBonusMult);
+
   return (
     <div className="heist-card" data-tier={heist.tier}>
       <div className="heist-head">
@@ -116,12 +122,9 @@ function UnlockedHeist({
       <p className="heist-desc">{heist.description}</p>
 
       <div className="heist-meta">
-        <Meta
-          label="Payout"
-          value={`${formatCash(heist.payoutMin)}–${formatCash(heist.payoutMax)}`}
-          cash
-        />
+        <Meta label="Take" value={`${payLow}–${payHigh}`} cash />
         <Meta label="Time" value={formatDuration(heist.durationSec)} />
+        <Meta label="Crew" value={`${minMembers}+`} />
         <Meta label="Heat" value={`+${heist.heatCost}`} />
         <Meta label="Difficulty" value={String(heist.difficulty)} />
         <span className="meta-item">
@@ -133,10 +136,15 @@ function UnlockedHeist({
       <div className="send-row">
         {idleCrews.length === 0 && <span className="hint">All crews are busy or none exist.</span>}
         {idleCrews.map(({ crew, index }) => {
-          if (crew.memberIds.length === 0) {
+          if (crew.memberIds.length < minMembers) {
             return (
-              <button key={crew.id} className="btn small" disabled title="Recruit members first">
-                {crewLabel(index)} · empty
+              <button
+                key={crew.id}
+                className="btn small"
+                disabled
+                title={`This job needs at least ${minMembers} members`}
+              >
+                {crewLabel(index)} · needs {minMembers} ({crew.memberIds.length})
               </button>
             );
           }
@@ -148,13 +156,13 @@ function UnlockedHeist({
               </button>
             );
           }
-          const chance = successChance(game, heist, crew, now);
+          const chance = estimateSuccess(game, heist, crew, now);
           return (
             <button
               key={crew.id}
               className="btn small primary"
               disabled={heatMaxed}
-              title={heatMaxed ? 'Heat is maxed - wait for it to cool' : `Success ${pct(chance)}`}
+              title={heatMaxed ? 'Heat is maxed - wait for it to cool' : `Estimated success ${pct(chance)}`}
               onClick={() => onSend(heist.id, crew.id)}
             >
               Send {crewLabel(index)} · {pct(chance)}

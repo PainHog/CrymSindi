@@ -1,29 +1,22 @@
 // -----------------------------------------------------------------------------
 // HEIST ACTIONS: launch + collect
 // -----------------------------------------------------------------------------
-// Launch: validates the crew, applies heat cost, locks the crew, and records
-// start/end timestamps. Collect: only allowed once now >= endsAt; rolls the
-// success chance (roll-at-collect), applies cash/heat, and frees the crew.
+// Launch: validates the crew (size minimum + required roles), applies heat cost,
+// locks the crew, and records start/end timestamps. Collect: only allowed once
+// now >= endsAt; runs the per-member resolution (see resolution.ts), applies the
+// take/heat, frees the crew, and returns the full after-action report.
 //
-// All randomness is injected via `rng` so the resolution math is deterministic
-// under test.
+// Randomness is injected via `rng` so resolution is deterministic under test.
 // -----------------------------------------------------------------------------
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { HEISTS_BY_ID } from '../data/heists';
-import { addHeat, settleHeat } from './heat';
-import {
-  deriveHeat,
-  getCrew,
-  heatGainMult,
-  isHeistUnlocked,
-  missingRoles,
-  payoutMult,
-  successChance,
-} from './selectors';
 import { ROLES_BY_ID } from '../data/roles';
-import type { ActionResult, CollectOutcome, GameState } from './types';
+import { addHeat, settleHeat } from './heat';
+import { deriveHeat, getCrew, heatGainMult, isHeistUnlocked, missingRoles } from './selectors';
+import { minMembersFor, resolveHeist } from './resolution';
+import type { ActionResult, GameState, HeistReport } from './types';
 
 /** Launch a heist: assign a crew and start the timer. */
 export function launchHeist(
@@ -40,7 +33,11 @@ export function launchHeist(
   const crew = getCrew(state, crewId);
   if (!crew) return { ok: false, error: 'Unknown crew.' };
   if (crew.status !== 'idle') return { ok: false, error: 'That crew is already on a job.' };
-  if (crew.memberIds.length === 0) return { ok: false, error: 'That crew has no members.' };
+
+  const minMembers = minMembersFor(heist, config);
+  if (crew.memberIds.length < minMembers) {
+    return { ok: false, error: `This job needs at least ${minMembers} crew members.` };
+  }
 
   const missing = missingRoles(state, crew, heist);
   if (missing.length > 0) {
@@ -73,68 +70,43 @@ export function launchHeist(
   return { ok: true, state: next, message: `${heist.name} underway.` };
 }
 
-/** Collect a finished heist: roll success, apply results, free the crew. */
+/** Collect a finished heist: resolve per member, apply results, free the crew. */
 export function collectHeist(
   state: GameState,
   activeHeistId: string,
   now: number,
   rng: () => number = Math.random,
   config: Config = CONFIG,
-): ActionResult & { outcome?: CollectOutcome } {
+): ActionResult & { report?: HeistReport } {
   const active = state.activeHeists.find((a) => a.id === activeHeistId);
   if (!active) return { ok: false, error: 'That heist no longer exists.' };
   if (now < active.endsAt) return { ok: false, error: 'That heist is still in progress.' };
 
   const heist = HEISTS_BY_ID[active.heistId];
   const crew = getCrew(state, active.crewId);
+
+  const freeCrew = (s: GameState): GameState => ({
+    ...s,
+    activeHeists: s.activeHeists.filter((a) => a.id !== activeHeistId),
+    crews: s.crews.map((c) => (c.id === active.crewId ? { ...c, status: 'idle' as const } : c)),
+  });
+
   if (!heist || !crew) {
     // Corrupt reference - free the crew and drop the heist defensively.
-    const cleaned: GameState = {
-      ...state,
-      activeHeists: state.activeHeists.filter((a) => a.id !== activeHeistId),
-      crews: state.crews.map((c) =>
-        c.id === active.crewId ? { ...c, status: 'idle' as const } : c,
-      ),
-    };
-    return { ok: true, state: cleaned, message: 'Collected.' };
+    return { ok: true, state: freeCrew(state), message: 'Collected.' };
   }
 
-  const chance = successChance(state, heist, crew, now, config);
-  const success = rng() < chance;
+  const report = resolveHeist(state, heist, crew, now, rng, config);
 
-  // Remove the active heist and unlock the crew regardless of outcome.
-  let next: GameState = {
-    ...state,
-    activeHeists: state.activeHeists.filter((a) => a.id !== activeHeistId),
-    crews: state.crews.map((c) =>
-      c.id === active.crewId ? { ...c, status: 'idle' as const } : c,
-    ),
-  };
-
-  let payout = 0;
-  let heatAdded = 0;
-  let message: string;
-
-  if (success) {
-    const span = heist.payoutMax - heist.payoutMin;
-    payout = Math.round((heist.payoutMin + rng() * span) * payoutMult(state));
-    next = { ...next, cash: next.cash + payout, lifetimeCash: next.lifetimeCash + payout };
-    message = `${heist.name} succeeded! +$${payout.toLocaleString()}`;
-  } else {
-    heatAdded = heist.failHeatBonus * heatGainMult(state);
-    next = addHeat(next, heatAdded, now, config);
-    message = `${heist.name} failed. The crew got out, but the heat is on.`;
+  let next = freeCrew(state);
+  if (report.success) {
+    next = { ...next, cash: next.cash + report.payout, lifetimeCash: next.lifetimeCash + report.payout };
+  }
+  if (report.heatAdded > 0) {
+    next = addHeat(next, report.heatAdded, now, config);
   }
 
-  const outcome: CollectOutcome = {
-    success,
-    chance,
-    payout,
-    heatAdded,
-    heistId: heist.id,
-  };
-
-  return { ok: true, state: next, message, outcome };
+  return { ok: true, state: next, message: report.headline, report };
 }
 
 /** Settle heat to `now` without any other change (used on focus/visibility). */

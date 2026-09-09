@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CONFIG } from '../data/config';
+import { ROLES_BY_ID } from '../data/roles';
 import { createInitialState } from './state';
 import {
   buyGear,
@@ -72,27 +73,32 @@ describe('crews', () => {
 });
 
 describe('recruiting', () => {
-  it('scales cost with crew size and adds a member of the chosen role', () => {
+  it('scales cost with current crew size and adds a member of the chosen role', () => {
     const state = rich();
-    const crew = getCrew(state, 'c1')!; // 1 member already
-    const expected = Math.round(120 * Math.pow(CONFIG.recruitCostMultPerMember, 1));
+    const crew = getCrew(state, 'c1')!;
+    const driverBase = ROLES_BY_ID['driver'].recruitCost;
+    const expected = Math.round(
+      driverBase * Math.pow(CONFIG.recruitCostMultPerMember, crew.memberIds.length),
+    );
     expect(recruitCost(crew, 'driver')).toBe(expected);
 
-    const res = recruitMember(state, 'c1', 'hacker');
+    const before = crew.memberIds.length;
+    const res = recruitMember(state, 'c1', 'lookout');
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(getCrew(res.state, 'c1')!.memberIds).toHaveLength(2);
-    const newMember = res.state.members.find((m) => m.role === 'hacker');
-    expect(newMember).toBeTruthy();
+    expect(getCrew(res.state, 'c1')!.memberIds).toHaveLength(before + 1);
+    expect(res.state.members.some((m) => m.role === 'lookout')).toBe(true);
   });
 
   it('cannot exceed crew capacity', () => {
     let state = rich();
-    // fill the crew to maxMembers (starts with 1)
-    for (let i = 1; i < CONFIG.crewMaxMembers; i++) {
+    // fill the crew up to maxMembers from its current size
+    let size = getCrew(state, 'c1')!.memberIds.length;
+    while (size < CONFIG.crewMaxMembers) {
       const r = recruitMember(state, 'c1', 'muscle');
       expect(r.ok).toBe(true);
       if (r.ok) state = r.state;
+      size++;
     }
     const overflow = recruitMember(state, 'c1', 'muscle');
     expect(overflow.ok).toBe(false);

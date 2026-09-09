@@ -77,11 +77,69 @@ export type ActionResult =
   | { ok: true; state: GameState; message?: string }
   | { ok: false; error: string };
 
-/** Outcome details returned when a heist is collected. */
-export interface CollectOutcome {
-  success: boolean;
+// ---- After-action report (the play-by-play) ---------------------------------
+
+/** How a single member performed on their part of the job. */
+export type BeatQuality = 'flawless' | 'clean' | 'shaky' | 'botched';
+
+export interface MemberBeat {
+  memberId: string;
+  name: string;
+  role: RoleId;
+  effectiveSkill: number;
+  gearIds: GearId[];
+  /** Whether this member cleared their check. */
+  passed: boolean;
+  /** The roll (0..1) and the chance they needed to beat it. */
+  roll: number;
   chance: number;
-  payout: number;
-  heatAdded: number;
+  quality: BeatQuality;
+  /** Narrative of what this member did and how it went. */
+  detail: string;
+}
+
+/** A driver that pushed the outcome one way or the other. */
+export interface HeistFactor {
+  label: string;
+  /** true = helped, false = hurt. */
+  positive: boolean;
+  note: string;
+}
+
+export interface Recommendation {
+  kind: 'skill' | 'gear' | 'role' | 'heat' | 'crewSize';
+  text: string;
+  memberId?: string;
+}
+
+/** Full after-action report produced when a heist is collected. */
+export interface HeistReport {
   heistId: HeistId;
+  heistName: string;
+  crewId: string;
+  crewLabelIndex: number;
+
+  success: boolean;
+  perfect: boolean;
+  headline: string;
+  turningPoint: string;
+
+  passCount: number;
+  crewSize: number;
+  requiredPasses: number;
+  /** Fraction of the crew that passed (0..1) - the "success quality" slider. */
+  quality: number;
+
+  payout: number;
+  perfectBonus: number;
+  heatAdded: number;
+
+  difficulty: number;
+  crewPower: number;
+  heatAtResolve: number;
+
+  members: MemberBeat[];
+  missingRoleCoverage: RoleId[];
+  factors: HeistFactor[];
+  recommendations: Recommendation[];
 }

@@ -54,13 +54,24 @@ offline/idle + heat-cooldown math** (including the offline cap).
   never advanced by a tick loop. On load (and on tab focus) elapsed real time is computed and a
   heist that finished while you were away is simply **"ready to collect."** The on-screen countdown
   is a display-only clock and never affects earnings or completion.
-- **Roll at collect.** Success is rolled when you collect, not when you launch — from crew power
-  (member skill + gear) vs. the job's difficulty, reduced by current Heat. Success pays Cash;
-  failure pays nothing and adds extra Heat. Either way, collecting frees the crew.
+- **Per-member resolution at collect.** Success is resolved when you collect, not when you launch.
+  Each member rolls once against the job's difficulty (their chance scales off skill + gear, minus
+  current Heat). The heist succeeds if every required role has a member who passed AND enough
+  members pass overall (`requiredPasses` grows with difficulty — that's why higher tiers need
+  bigger crews). Collecting always frees the crew.
+- **After-action report (play-by-play).** Every collect produces a debrief: what each member did
+  and how it went (flawless / clean / shaky / botched), the factors that drove the outcome, and
+  concrete recommendations for where to invest (train the weak link, gear them, cover a thin role,
+  cool the Heat, push for the perfect bonus).
+- **Crews: 3 to 8 members.** A heist needs at least 3 members; crews hold up to 8. Bigger crews
+  cover more roles and give redundancy against failed rolls, which higher tiers demand.
+- **Time-based income, scaled by performance.** The base take = `payoutPerSec * duration`, then
+  scaled by how many members passed (a barely-successful run pays a floor fraction, a stronger run
+  pays more). A flawless run — everyone passed — pays a bonus on top.
 - **Crew locking.** An assigned crew is locked for the whole heist and stays locked after it
   finishes until you collect. Locked crews show as unavailable.
 - **Heat** rises when you launch a job and cools continuously over real time (capped for very long
-  absences). High Heat lowers success chance; at max Heat you can't launch until it cools.
+  absences). High Heat lowers every member's odds; at max Heat you can't launch until it cools.
 - **Parallelism = more crews.** Because a heist locks a whole crew, running several at once means
   owning several crews, which needs safehouse capacity. That's the scaling fantasy.
 
@@ -73,11 +84,11 @@ not by touching systems.
 
 | You want to change...                        | Edit this file                |
 | -------------------------------------------- | ----------------------------- |
-| Base rates, costs, Heat math, offline cap, unlock thresholds, pacing | `src/data/config.ts` |
+| Costs, crew min/max, resolution + payout constants, Heat math, offline cap, unlock thresholds | `src/data/config.ts` |
 | Roles (Hacker, Muscle, Driver, Lookout, …), recruit cost, base skill | `src/data/roles.ts` |
 | Safehouse tiers + crew-slot capacity / upgrade costs | `src/data/safehouses.ts` |
 | Gear / tools and their skill bonuses         | `src/data/gear.ts`            |
-| Heists — roles required, duration, payout, Heat, difficulty, tier | `src/data/heists.ts` |
+| Heists — roles required, duration, payoutPerSec, Heat, difficulty, tier | `src/data/heists.ts` |
 | Global upgrades (Heat/payout multipliers) and their costs | `src/data/upgrades.ts` |
 | Recruited-member name pool                   | `src/data/names.ts`           |
 
@@ -85,10 +96,11 @@ The **simulation/economy logic** is separate from the UI, in `src/engine/`:
 
 | File                        | Responsibility                                                        |
 | --------------------------- | -------------------------------------------------------------------- |
-| `engine/types.ts`           | Core data model (Safehouse → Crew → Member, ActiveHeist, GameState)  |
-| `engine/selectors.ts`       | Pure derived reads: crew power, success chance, costs, Heat, statuses |
+| `engine/types.ts`           | Core data model + the after-action report types                     |
+| `engine/selectors.ts`       | Pure derived reads: crew power, costs, Heat, roles, statuses         |
 | `engine/heat.ts`            | Heat settle/add helpers (timestamp-based)                            |
-| `engine/heists.ts`          | Launch + collect (roll-at-collect resolution)                        |
+| `engine/resolution.ts`      | Per-member resolution, success estimate, and the play-by-play report |
+| `engine/heists.ts`          | Launch (crew/role/size checks) + collect                            |
 | `engine/economy.ts`         | Cash sinks: buy/upgrade/recruit/gear/skill/upgrades                  |
 | `engine/state.ts`           | Initial state, offline resolution, save/load (localStorage)          |
 
@@ -100,7 +112,8 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
 
 ## Content in this proof of concept
 
-- 1 starting safehouse (room to buy a 2nd and to expand capacity), crews of up to 3 members
+- 1 starting safehouse (room to buy a 2nd and to expand capacity); a starting crew of 3, crews of
+  up to 8 members (min 3 to run a heist)
 - 4 roles, 5 gear items, 4 global upgrades
 - Ten heists across five tiers, gated by lifetime earnings, spanning a full
   duration ladder for both quick check-ins and long idle sessions:

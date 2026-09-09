@@ -135,26 +135,6 @@ export function heistStatusAt(endsAt: number, now: number): HeistStatus {
   return now >= endsAt ? 'ready' : 'inProgress';
 }
 
-// ---- Success chance ---------------------------------------------------------
-
-/**
- * Probability a heist succeeds if collected now. Scales off crew power vs the
- * job's difficulty, reduced by current heat, clamped to [successMin, successMax].
- */
-export function successChance(
-  state: GameState,
-  heist: HeistDef,
-  crew: Crew,
-  now: number,
-  config: Config = CONFIG,
-): number {
-  const power = crewPower(state, crew);
-  const heat = deriveHeat(state, now, config);
-  let chance = config.successBase + config.successSlope * (power - heist.difficulty);
-  chance -= config.heatSuccessPenalty * (heat / config.maxHeat);
-  return clamp(chance, config.successMin, config.successMax);
-}
-
 // ---- Costs ------------------------------------------------------------------
 
 /** Cost of buying the next new safehouse given how many are already owned. */
