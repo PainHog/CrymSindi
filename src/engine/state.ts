@@ -121,13 +121,39 @@ export function loadGame(now: number, config: Config = CONFIG): OfflineSummary |
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as GameState;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (parsed.version !== config.version) return null; // incompatible save
+    const parsed: unknown = JSON.parse(raw);
+    if (!isValidSave(parsed)) return null; // corrupt / wrong-shape save
+    if (parsed.version !== config.version) return null; // incompatible version
     return resolveOffline(parsed, now, config);
   } catch {
     return null;
   }
+}
+
+/**
+ * Structural guard for a parsed save. A matching `version` is not enough - a
+ * truncated write or a hand-edited file can be valid JSON of the wrong shape,
+ * which would crash the UI on the first `state.crews.map(...)`. We require the
+ * scalar fields to be numbers and every collection to be an array before we
+ * trust a save; anything else falls back to a fresh game.
+ */
+function isValidSave(value: unknown): value is GameState {
+  if (!value || typeof value !== 'object') return false;
+  const s = value as Record<string, unknown>;
+  return (
+    typeof s.version === 'number' &&
+    typeof s.cash === 'number' &&
+    typeof s.heat === 'number' &&
+    typeof s.heatUpdatedAt === 'number' &&
+    typeof s.lifetimeCash === 'number' &&
+    typeof s.lastSaved === 'number' &&
+    typeof s.nextId === 'number' &&
+    Array.isArray(s.safehouses) &&
+    Array.isArray(s.crews) &&
+    Array.isArray(s.members) &&
+    Array.isArray(s.activeHeists) &&
+    Array.isArray(s.purchasedUpgradeIds)
+  );
 }
 
 export function clearSave(config: Config = CONFIG): void {

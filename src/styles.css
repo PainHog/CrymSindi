@@ -14,8 +14,8 @@
   --line-strong: #3a4150;
 
   --ink: #ece6d8; /* warm paper white */
-  --ink-dim: #948d7d;
-  --ink-faint: #6a6456;
+  --ink-dim: #a8a191;
+  --ink-faint: #857e6f; /* meets WCAG AA on the page background */
 
   --brass: #e8b558; /* primary: cash / go */
   --brass-2: #f4cf83;
@@ -40,6 +40,10 @@
 [data-role='lookout'] { --role: #c58ce8; }
 
 * { box-sizing: border-box; }
+
+/* Visible keyboard focus ring (brass), readable on the dark theme. */
+:focus-visible { outline: 2px solid var(--brass-2); outline-offset: 2px; border-radius: 4px; }
+:focus:not(:focus-visible) { outline: none; }
 
 html, body { height: 100%; }
 

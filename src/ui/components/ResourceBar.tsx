@@ -44,7 +44,9 @@ export function ResourceBar() {
           <div
             className="heat-meter"
             role="meter"
+            aria-label={`Heat — ${word}`}
             aria-valuenow={Math.round(heat)}
+            aria-valuemin={0}
             aria-valuemax={CONFIG.maxHeat}
           >
             <div className={`heat-fill ${level}`} style={{ width: `${heatFrac * 100}%` }} />
