@@ -9,9 +9,10 @@ import {
   missingRoles,
   successChance,
 } from '../../engine';
-import type { Crew } from '../../engine';
+import type { Crew, GameState } from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { crewLabel, formatCash, formatDuration, pct } from '../format';
+import { HeistIcon, Icon, RoleIcon } from '../icons';
 
 function roleNames(ids: string[]): string {
   return ids.map((r) => ROLES_BY_ID[r]?.name ?? r).join(', ');
@@ -21,7 +22,6 @@ export function HeistList() {
   const { game, now, actions } = useGame();
   const heatMaxed = deriveHeat(game, now) >= CONFIG.maxHeat;
 
-  // idle crews with their roster index (for stable labels)
   const idleCrews = game.crews
     .map((c, i) => ({ crew: c, index: i }))
     .filter(({ crew }) => crew.status === 'idle');
@@ -30,7 +30,12 @@ export function HeistList() {
 
   return (
     <section className="panel">
-      <h2 className="panel-title">Available heists</h2>
+      <h2 className="panel-title">
+        <span className="panel-ico">
+          <Icon name="mask" size={17} />
+        </span>
+        The board
+      </h2>
       <div className="heist-list">
         {sorted.map((heist) =>
           isHeistUnlocked(game, heist) ? (
@@ -55,15 +60,32 @@ export function HeistList() {
 function LockedHeist({ heist, lifetimeCash }: { heist: HeistDef; lifetimeCash: number }) {
   const needed = CONFIG.tierUnlocks[heist.tier] ?? 0;
   return (
-    <div className="heist-card locked">
+    <div className="heist-card locked" data-tier={heist.tier}>
       <div className="heist-head">
+        <span className="heist-icon-wrap redacted">
+          <HeistIcon id={heist.id} size={20} />
+        </span>
         <span className="heist-name">{heist.name}</span>
-        <span className="badge tier">Tier {heist.tier}</span>
+        <span className="stamp-badge stamp-locked">Classified</span>
       </div>
       <p className="locked-note">
-        Locked · unlocks at {formatCash(needed)} lifetime take (you have {formatCash(lifetimeCash)})
+        <Icon name="vault" size={13} /> Unlocks at {formatCash(needed)} lifetime take (you have{' '}
+        {formatCash(lifetimeCash)})
       </p>
     </div>
+  );
+}
+
+function NeedsRoles({ roles }: { roles: string[] }) {
+  if (roles.length === 0) return <span className="needs-anyone">anyone</span>;
+  return (
+    <span className="needs-roles">
+      {roles.map((r) => (
+        <span className="role-ico" data-role={r} key={r} title={ROLES_BY_ID[r]?.name ?? r}>
+          <RoleIcon role={r} size={15} />
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -79,26 +101,33 @@ function UnlockedHeist({
   idleCrews: { crew: Crew; index: number }[];
   heatMaxed: boolean;
   now: number;
-  game: ReturnType<typeof useGame>['game'];
+  game: GameState;
   onSend: (heistId: string, crewId: string) => void;
 }) {
   return (
-    <div className="heist-card">
+    <div className="heist-card" data-tier={heist.tier}>
       <div className="heist-head">
+        <span className="heist-icon-wrap">
+          <HeistIcon id={heist.id} size={20} />
+        </span>
         <span className="heist-name">{heist.name}</span>
-        <span className="badge tier">Tier {heist.tier}</span>
+        <span className="stamp-badge stamp-tier">Tier {heist.tier}</span>
       </div>
       <p className="heist-desc">{heist.description}</p>
 
       <div className="heist-meta">
-        <Meta label="Payout" value={`${formatCash(heist.payoutMin)}–${formatCash(heist.payoutMax)}`} />
+        <Meta
+          label="Payout"
+          value={`${formatCash(heist.payoutMin)}–${formatCash(heist.payoutMax)}`}
+          cash
+        />
         <Meta label="Time" value={formatDuration(heist.durationSec)} />
         <Meta label="Heat" value={`+${heist.heatCost}`} />
         <Meta label="Difficulty" value={String(heist.difficulty)} />
-        <Meta
-          label="Needs"
-          value={heist.requiredRoles.length ? roleNames(heist.requiredRoles) : 'anyone'}
-        />
+        <span className="meta-item">
+          <span className="meta-label">Needs</span>
+          <NeedsRoles roles={heist.requiredRoles} />
+        </span>
       </div>
 
       <div className="send-row">
@@ -138,11 +167,11 @@ function UnlockedHeist({
   );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
+function Meta({ label, value, cash }: { label: string; value: string; cash?: boolean }) {
   return (
     <span className="meta-item">
       <span className="meta-label">{label}</span>
-      <span className="meta-value">{value}</span>
+      <span className={`meta-value ${cash ? 'cash' : ''}`}>{value}</span>
     </span>
   );
 }

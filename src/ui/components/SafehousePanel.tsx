@@ -16,6 +16,7 @@ import {
 import type { Crew, Member, Safehouse } from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { crewLabel, formatCash, formatCountdown } from '../format';
+import { Avatar, Icon, RoleIcon } from '../icons';
 
 export function SafehousePanel() {
   const { game, actions } = useGame();
@@ -24,13 +25,11 @@ export function SafehousePanel() {
   return (
     <section className="panel">
       <div className="panel-title row">
-        <h2>Safehouses &amp; crews</h2>
-        <button
-          className="btn small"
-          disabled={game.cash < buyCost}
-          onClick={actions.buySafehouse}
-        >
-          Buy safehouse · {formatCash(buyCost)}
+        <h2>
+          <Icon name="safehouse" size={17} /> Safehouses &amp; crews
+        </h2>
+        <button className="btn small" disabled={game.cash < buyCost} onClick={actions.buySafehouse}>
+          + Safehouse · {formatCash(buyCost)}
         </button>
       </div>
 
@@ -51,7 +50,6 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
   const upgradeCost = safehouseUpgradeCost(safehouse);
   const openSlots = safehouse.crewSlots - safehouse.crewIds.length;
 
-  // crews housed here, paired with their global roster index for labels
   const crews = safehouse.crewIds
     .map((id) => game.crews.find((c) => c.id === id))
     .filter((c): c is Crew => Boolean(c))
@@ -62,13 +60,18 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
   return (
     <div className="safehouse-card">
       <div className="safehouse-head">
-        <div>
-          <span className="safehouse-name">
-            #{order + 1} · {tier?.name ?? 'Safehouse'}
+        <div className="safehouse-id">
+          <span className="safehouse-ico">
+            <Icon name="safehouse" size={18} />
           </span>
-          <span className="safehouse-slots">
-            {safehouse.crewIds.length}/{safehouse.crewSlots} crew slots
-          </span>
+          <div>
+            <span className="safehouse-name">
+              #{order + 1} · {tier?.name ?? 'Safehouse'}
+            </span>
+            <span className="safehouse-slots">
+              {safehouse.crewIds.length}/{safehouse.crewSlots} crew slots
+            </span>
+          </div>
         </div>
         {hasUpgrade ? (
           <button
@@ -80,7 +83,7 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
             Expand · {formatCash(upgradeCost)}
           </button>
         ) : (
-          <span className="badge">Max capacity</span>
+          <span className="stamp-badge stamp-tier">Max capacity</span>
         )}
       </div>
 
@@ -91,7 +94,9 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
 
         {Array.from({ length: openSlots }).map((_, i) => (
           <div className="crew-card empty-slot" key={`slot-${i}`}>
-            <span className="empty-slot-label">Empty crew slot</span>
+            <span className="empty-slot-label">
+              <Icon name="crew" size={15} /> Empty crew slot
+            </span>
             <button
               className="btn small"
               disabled={game.cash < formCost}
@@ -116,15 +121,25 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
   return (
     <div className={`crew-card ${onHeist ? 'locked' : ''}`}>
       <div className="crew-head">
-        <span className="crew-name">{crewLabel(index)}</span>
+        <span className="crew-name">
+          <span className="crew-ico">
+            <Icon name="crew" size={15} />
+          </span>
+          {crewLabel(index)}
+        </span>
         {onHeist ? (
-          <span className="badge locked-badge">Locked</span>
+          <span className="stamp-badge stamp-locked">Locked</span>
         ) : (
-          <span className="badge idle-badge">Idle</span>
+          <span className="stamp-badge stamp-idle">Idle</span>
         )}
       </div>
 
-      {onHeist && heist && active && <CrewJobStatus heistName={heist.name} endsAt={active.endsAt} />}
+      {onHeist && heist && active && (
+        <>
+          <div className="crew-tape">On the job — do not disturb</div>
+          <CrewJobStatus heistName={heist.name} endsAt={active.endsAt} />
+        </>
+      )}
 
       <div className="member-list">
         {crew.memberIds.length === 0 && <p className="hint">No members yet — recruit below.</p>}
@@ -136,7 +151,7 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
 
       {!onHeist && openSeats > 0 && (
         <div className="recruit-row">
-          <span className="recruit-label">Recruit ({openSeats} open):</span>
+          <span className="recruit-label">Recruit ({openSeats} open)</span>
           <div className="recruit-buttons">
             {ROLES.map((role) => {
               const cost = recruitCost(crew, role.id);
@@ -144,10 +159,14 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
                 <button
                   key={role.id}
                   className="btn tiny"
+                  data-role={role.id}
                   disabled={game.cash < cost}
                   title={role.description}
                   onClick={() => actions.recruit(crew.id, role.id)}
                 >
+                  <span className="role-ico">
+                    <RoleIcon role={role.id} size={13} />
+                  </span>
                   {role.name} · {formatCash(cost)}
                 </button>
               );
@@ -163,9 +182,13 @@ function CrewJobStatus({ heistName, endsAt }: { heistName: string; endsAt: numbe
   const { now } = useGame();
   const ready = now >= endsAt;
   return (
-    <p className="crew-job">
-      On job: <strong>{heistName}</strong> ·{' '}
-      {ready ? <span className="ready-text">ready to collect</span> : formatCountdown(endsAt - now)}
+    <p className="active-note" style={{ marginBottom: 8 }}>
+      <Icon name="clock" size={13} /> {heistName} ·{' '}
+      {ready ? (
+        <strong style={{ color: 'var(--brass)' }}>ready to collect</strong>
+      ) : (
+        formatCountdown(endsAt - now)
+      )}
     </p>
   );
 }
@@ -180,48 +203,60 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
   const unowned = GEAR.filter((g) => !member.gearIds.includes(g.id));
 
   return (
-    <div className={`member-row ${locked ? 'dim' : ''}`}>
-      <div className="member-main">
-        <span className="member-name">{member.name}</span>
-        <span className="member-role">{role?.name ?? member.role}</span>
-        <span className="member-skill">
-          skill {effective}
-          {gearBonus > 0 && <span className="skill-bonus"> ({member.skill}+{gearBonus})</span>}
-        </span>
-      </div>
+    <div className={`member-row ${locked ? 'dim' : ''}`} data-role={member.role}>
+      <Avatar role={member.role} name={member.name} size={44} />
 
-      {member.gearIds.length > 0 && (
-        <div className="gear-chips">
-          {member.gearIds.map((gid) => (
-            <span className="chip" key={gid}>
-              {GEAR.find((g) => g.id === gid)?.name ?? gid}
-            </span>
-          ))}
+      <div className="member-info">
+        <div className="member-main">
+          <span className="member-name">{member.name}</span>
+          <span className="member-role">{role?.name ?? member.role}</span>
+          <span className="member-skill">
+            skill {effective}
+            {gearBonus > 0 && (
+              <span className="skill-bonus">
+                {' '}
+                ({member.skill}+{gearBonus})
+              </span>
+            )}
+          </span>
         </div>
-      )}
 
-      {!locked && (
-        <div className="member-actions">
-          <button
-            className="btn tiny"
-            disabled={maxed || game.cash < skillCost}
-            onClick={() => actions.upgradeSkill(member.id)}
-          >
-            {maxed ? 'Skill maxed' : `Train · ${formatCash(skillCost)}`}
-          </button>
-          {unowned.map((g) => (
+        {member.gearIds.length > 0 && (
+          <div className="gear-chips">
+            {member.gearIds.map((gid) => (
+              <span className="chip" key={gid}>
+                {GEAR.find((g) => g.id === gid)?.name ?? gid}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {!locked && (
+          <div className="member-actions">
             <button
-              key={g.id}
-              className="btn tiny ghost"
-              disabled={game.cash < g.cost}
-              title={g.description + (g.roleAffinity ? ` (best for ${ROLES_BY_ID[g.roleAffinity]?.name})` : '')}
-              onClick={() => actions.buyGear(member.id, g.id)}
+              className="btn tiny"
+              disabled={maxed || game.cash < skillCost}
+              onClick={() => actions.upgradeSkill(member.id)}
             >
-              +{g.name} · {formatCash(g.cost)}
+              {maxed ? 'Skill maxed' : `Train · ${formatCash(skillCost)}`}
             </button>
-          ))}
-        </div>
-      )}
+            {unowned.map((g) => (
+              <button
+                key={g.id}
+                className="btn tiny ghost"
+                disabled={game.cash < g.cost}
+                title={
+                  g.description +
+                  (g.roleAffinity ? ` (best for ${ROLES_BY_ID[g.roleAffinity]?.name})` : '')
+                }
+                onClick={() => actions.buyGear(member.id, g.id)}
+              >
+                +{g.name} · {formatCash(g.cost)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
