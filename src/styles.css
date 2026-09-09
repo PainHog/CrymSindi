@@ -1,0 +1,589 @@
+/* ------------------------------------------------------------------ *
+ * Heist Crew Idle - clean, readable, numbers-and-buttons dark theme.
+ * ------------------------------------------------------------------ */
+
+:root {
+  --bg: #14161c;
+  --bg-2: #1b1e27;
+  --panel: #21252f;
+  --panel-2: #272c38;
+  --border: #333a48;
+  --text: #e7eaf0;
+  --text-dim: #99a1b3;
+  --accent: #4fd1a5; /* green - cash / go */
+  --accent-2: #6aa9ff; /* blue - info */
+  --warn: #f0a04b;
+  --danger: #e5646e;
+  --ready: #ffd166;
+  --radius: 10px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 50% -10%, #1d2230, var(--bg));
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.app {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 16px 18px 48px;
+}
+
+/* ---- Top bar ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-mark {
+  color: var(--accent);
+  font-size: 22px;
+}
+.topbar h1 {
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- Resource bar ---- */
+.resourcebar {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.resource {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.resource-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+}
+.resource-value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+}
+.resource.cash .resource-value {
+  color: var(--accent);
+}
+.resource-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.heat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.heat-track {
+  height: 10px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 4px 0 2px;
+}
+.heat-fill {
+  height: 100%;
+  transition: width 0.25s linear, background 0.3s;
+}
+.heat-fill.normal {
+  background: var(--accent-2);
+}
+.heat-fill.high {
+  background: var(--warn);
+}
+.heat-fill.critical {
+  background: var(--danger);
+}
+
+/* ---- Layout ---- */
+.layout {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .resourcebar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---- Panels ---- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+}
+.panel-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+.panel-title.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.panel-title.row h2 {
+  font-size: 13px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+.empty,
+.hint {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.hint.warn {
+  color: var(--warn);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+}
+.btn:hover:not(:disabled) {
+  background: #303747;
+  border-color: #45506380;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn.small {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.btn.tiny {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.btn.block {
+  width: 100%;
+}
+.btn.primary {
+  background: linear-gradient(180deg, #2f6f5b, #285f4e);
+  border-color: #327a63;
+  color: #eafff7;
+  font-weight: 600;
+}
+.btn.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #35866d, #2c6a56);
+}
+.btn.ghost {
+  background: transparent;
+}
+.btn.danger {
+  color: var(--danger);
+  border-color: #5a3238;
+}
+
+/* ---- Badges / chips ---- */
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.badge.tier {
+  color: var(--accent-2);
+}
+.idle-badge {
+  color: var(--accent);
+  border-color: #2f5a4a;
+}
+.locked-badge {
+  color: var(--warn);
+  border-color: #5a4a2f;
+}
+.ready-badge {
+  color: #1a1500;
+  background: var(--ready);
+  border-color: var(--ready);
+  font-weight: 700;
+}
+.chip {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+/* ---- Safehouses ---- */
+.safehouse-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.safehouse-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.safehouse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.safehouse-name {
+  font-weight: 600;
+  display: block;
+}
+.safehouse-slots {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.crew-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+/* ---- Crews ---- */
+.crew-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.crew-card.locked {
+  border-color: #5a4a2f80;
+  background: #262117;
+}
+.crew-card.empty-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-style: dashed;
+  color: var(--text-dim);
+}
+.empty-slot-label {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.crew-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.crew-name {
+  font-weight: 600;
+}
+.crew-job {
+  font-size: 12px;
+  color: var(--warn);
+  margin: 0 0 8px;
+}
+.ready-text {
+  color: var(--ready);
+  font-weight: 700;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.member-row {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 10px;
+}
+.member-row.dim {
+  opacity: 0.55;
+}
+.member-main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.member-name {
+  font-weight: 600;
+}
+.member-role {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-2);
+}
+.member-skill {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+.skill-bonus {
+  color: var(--accent);
+}
+.gear-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+.member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.recruit-row {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+.recruit-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  display: block;
+  margin-bottom: 6px;
+}
+.recruit-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---- Heists ---- */
+.heist-list,
+.active-list,
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.heist-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.heist-card.locked {
+  opacity: 0.75;
+}
+.heist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.heist-name {
+  font-weight: 600;
+}
+.heist-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 4px 0 8px;
+}
+.locked-note {
+  font-size: 12px;
+  color: var(--warn);
+  margin: 6px 0 0;
+}
+.heist-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+}
+.meta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+.meta-value {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.send-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ---- Active heists ---- */
+.active-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.active-card.ready {
+  border-color: var(--ready);
+  box-shadow: 0 0 0 1px var(--ready) inset;
+}
+.active-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.active-name {
+  font-weight: 600;
+  margin-right: 8px;
+}
+.active-crew {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.countdown {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--accent-2);
+}
+.progress-track {
+  height: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent-2);
+  transition: width 0.25s linear;
+}
+.progress-fill.done {
+  background: var(--ready);
+}
+.active-note {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ---- Upgrades ---- */
+.upgrade-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.upgrade-card.owned {
+  opacity: 0.7;
+}
+.upgrade-info {
+  display: flex;
+  flex-direction: column;
+}
+.upgrade-name {
+  font-weight: 600;
+}
+.upgrade-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ---- Footer + toast ---- */
+.footer {
+  margin-top: 22px;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  box-shadow: 0 8px 30px #0008;
+  animation: toast-in 0.2s ease-out;
+  z-index: 50;
+  max-width: 90vw;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
