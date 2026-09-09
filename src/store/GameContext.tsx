@@ -47,7 +47,7 @@ interface UIState {
 }
 
 type Action =
-  | { type: 'launch'; heistId: string; crewId: string; now: number }
+  | { type: 'launch'; heistId: string; crewId: string; now: number; seed: number }
   | { type: 'collect'; id: string; now: number }
   | { type: 'buySafehouse' }
   | { type: 'upgradeSafehouse'; safehouseId: string }
@@ -75,7 +75,10 @@ function applyResult(ui: UIState, result: ActionResult): UIState {
 function reducer(ui: UIState, action: Action): UIState {
   switch (action.type) {
     case 'launch':
-      return applyResult(ui, launchHeist(ui.game, action.heistId, action.crewId, action.now));
+      return applyResult(
+        ui,
+        launchHeist(ui.game, action.heistId, action.crewId, action.now, action.seed),
+      );
     case 'collect': {
       const res = collectHeist(ui.game, action.id, action.now);
       const nextUi = applyResult(ui, res);
@@ -164,13 +167,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(id);
   }, []);
 
-  // Periodic autosave.
+  // Persist immediately after every state change, so a crash between a collect
+  // and the next save can't double-collect a heist or lose an earned take. This
+  // also commits the collect roll the moment it is shown to the player.
   useEffect(() => {
-    const id = window.setInterval(() => {
-      saveGame(gameRef.current, Date.now());
-    }, CONFIG.autosaveIntervalMs);
-    return () => window.clearInterval(id);
-  }, []);
+    saveGame(ui.game, Date.now());
+  }, [ui.game]);
 
   // Save on tab close/hide; settle heat when the tab becomes visible again.
   useEffect(() => {
@@ -193,8 +195,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const save = useCallback(() => {
-    const saved = saveGame(gameRef.current, Date.now());
-    dispatch({ type: 'replace', game: saved, message: 'Saved.' });
+    const { state: saved, ok } = saveGame(gameRef.current, Date.now());
+    dispatch({
+      type: 'replace',
+      game: saved,
+      message: ok ? 'Saved.' : 'Save failed — storage is full or blocked.',
+    });
   }, []);
 
   const reset = useCallback(() => {
@@ -205,7 +211,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<GameContextValue['actions']>(
     () => ({
-      launch: (heistId, crewId) => dispatch({ type: 'launch', heistId, crewId, now: Date.now() }),
+      launch: (heistId, crewId) =>
+        dispatch({
+          type: 'launch',
+          heistId,
+          crewId,
+          now: Date.now(),
+          seed: Math.floor(Math.random() * 0x100000000),
+        }),
       collect: (id) => dispatch({ type: 'collect', id, now: Date.now() }),
       buySafehouse: () => dispatch({ type: 'buySafehouse' }),
       upgradeSafehouse: (safehouseId) => dispatch({ type: 'upgradeSafehouse', safehouseId }),

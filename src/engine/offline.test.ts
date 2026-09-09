@@ -104,7 +104,7 @@ describe('resolveOffline (idle/offline resolution)', () => {
 
 describe('saveGame', () => {
   it('returns a state with heat settled to now (works without localStorage)', () => {
-    const saved = saveGame(hot(100), T0 + 10 * SEC);
+    const saved = saveGame(hot(100), T0 + 10 * SEC).state;
     expect(saved.heat).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
     expect(saved.lastSaved).toBe(T0 + 10 * SEC);
   });

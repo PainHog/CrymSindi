@@ -44,6 +44,9 @@ export interface ActiveHeist {
   crewId: string;
   startedAt: number; // ms epoch
   endsAt: number; // ms epoch
+  /** RNG seed fixed at launch, so the outcome is determined then (not re-rollable
+   *  by reloading). Optional for backward compatibility with older saves. */
+  seed?: number;
 }
 
 export interface GameState {

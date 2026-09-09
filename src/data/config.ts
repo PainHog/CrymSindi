@@ -32,6 +32,8 @@ export interface Config {
   // Payout model: time-based base, scaled by success quality.
   payoutFloorFrac: number;
   perfectBonusMult: number;
+  failPayoutFrac: number;
+  qualitySlack: number;
 
   newSafehouseBaseCost: number;
   newSafehouseCostMult: number;
@@ -61,13 +63,13 @@ export const CONFIG: Config = {
   // ---- Starting conditions -------------------------------------------------
   startingCash: 350,
   startingHeat: 0,
-  startingMemberSkill: 3, // skill of each free starting member
+  startingMemberSkill: 5, // skill of each free starting member
   crewMaxMembers: 8, // how many members a crew can hold
   minCrewForHeist: 3, // members required to launch any heist
 
   // ---- Heat (risk meter) ---------------------------------------------------
   maxHeat: 100, // heat is clamped to [0, maxHeat]
-  heatCoolPerSec: 0.3, // base heat points that cool per real second (~5.5 min for a full bar)
+  heatCoolPerSec: 0.05, // base heat points that cool per real second (~33 min for a full bar) - persists across long jobs so chaining big scores actually raises standing heat
   offlineCapSec: 12 * 60 * 60, // cap passive effects (heat cooldown) at 12 hours
 
   // ---- Per-member resolution model -----------------------------------------
@@ -79,9 +81,9 @@ export const CONFIG: Config = {
   // number of passers reaches requiredPasses (below).
   memberBaseChance: 0.5,
   memberSkillWeight: 0.045,
-  memberDifficultyWeight: 0.01,
+  memberDifficultyWeight: 0.02,
   memberChanceMin: 0.05,
-  memberChanceMax: 0.95,
+  memberChanceMax: 0.97,
   heatSuccessPenalty: 0.35, // at full heat, subtract this from each member's chance
   // requiredPasses = baseRequiredPasses + floor(difficulty / difficultyPerRequiredPass)
   // (this is why higher tiers need bigger crews).
@@ -89,12 +91,16 @@ export const CONFIG: Config = {
   difficultyPerRequiredPass: 18,
 
   // ---- Payout model --------------------------------------------------------
-  // base = heist.payoutPerSec * durationSec. On success the take scales with
-  // crew performance: payout = base * (payoutFloorFrac + (1-payoutFloorFrac)*quality)
-  // where quality = fraction of the crew that passed. A flawless run (everyone
-  // passed) multiplies the take by perfectBonusMult.
-  payoutFloorFrac: 0.5,
-  perfectBonusMult: 1.5,
+  // base = heist.payoutPerSec * durationSec. On success the take scales with how
+  // many members passed relative to (requiredPasses + qualitySlack), so bringing
+  // MORE members never lowers the take - it only raises the floor and the odds.
+  // A flawless run (everyone passed) multiplies the take by perfectBonusMult.
+  // A FAILED run still salvages failPayoutFrac of the base (never a total $0 loss
+  // on a long job) but adds fail heat.
+  payoutFloorFrac: 0.35,
+  perfectBonusMult: 1.75,
+  failPayoutFrac: 0.2,
+  qualitySlack: 3,
 
   // ---- Economy: safehouses -------------------------------------------------
   // Cost to buy the next NEW safehouse = base * mult^(safehousesOwned - 1).
@@ -112,15 +118,15 @@ export const CONFIG: Config = {
 
   // ---- Economy: member skill upgrades --------------------------------------
   // Cost = base * mult^(currentSkill - startingMemberSkill).
-  skillUpgradeBaseCost: 60,
-  skillUpgradeCostMult: 1.5,
+  skillUpgradeBaseCost: 40,
+  skillUpgradeCostMult: 1.25,
   skillUpgradePerLevel: 1, // skill gained per upgrade
   maxMemberSkill: 15,
 
   // ---- Progression gates ---------------------------------------------------
   // Map of heist tier -> lifetime cash (total ever earned) required to unlock.
   // Tier 1 is always unlocked. Add more entries to gate future tiers.
-  tierUnlocks: { 2: 3000, 3: 20000, 4: 120000, 5: 600000 } as Record<number, number>,
+  tierUnlocks: { 2: 1500, 3: 20000, 4: 120000, 5: 600000 } as Record<number, number>,
 
   // ---- Client pacing (UI only, never the source of truth) ------------------
   autosaveIntervalMs: 15000,

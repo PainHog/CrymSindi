@@ -91,22 +91,31 @@ function hasLocalStorage(): boolean {
   }
 }
 
-/** Serialize + persist. Heat is settled to `now` so the saved value is current. */
-export function saveGame(state: GameState, now: number, config: Config = CONFIG): GameState {
+export interface SaveResult {
+  /** The settled state (heat baked to `now`) whether or not the write succeeded. */
+  state: GameState;
+  /** True only if the state was actually written to storage. */
+  ok: boolean;
+}
+
+/** Serialize + persist. Heat is settled to `now` so the saved value is current.
+ *  Reports whether the write actually happened so callers don't claim "Saved."
+ *  when storage is full/blocked. */
+export function saveGame(state: GameState, now: number, config: Config = CONFIG): SaveResult {
   const settled: GameState = {
     ...state,
     heat: deriveHeat(state, now, config),
     heatUpdatedAt: now,
     lastSaved: now,
   };
-  if (hasLocalStorage()) {
-    try {
-      localStorage.setItem(config.saveKey, JSON.stringify(settled));
-    } catch {
-      // Storage full or blocked; ignore - game continues in memory.
-    }
+  if (!hasLocalStorage()) return { state: settled, ok: false };
+  try {
+    localStorage.setItem(config.saveKey, JSON.stringify(settled));
+    return { state: settled, ok: true };
+  } catch {
+    // Storage full or blocked; game continues in memory but nothing was written.
+    return { state: settled, ok: false };
   }
-  return settled;
 }
 
 /**
@@ -127,7 +136,7 @@ export function loadGame(now: number, config: Config = CONFIG): OfflineSummary |
     const parsed: unknown = JSON.parse(raw);
     if (!isValidSave(parsed)) return null; // corrupt / wrong-shape save
     if (parsed.version !== config.version) return null; // incompatible version
-    return resolveOffline(parsed, now, config);
+    return resolveOffline(clampState(parsed, config), now, config);
   } catch {
     return null;
   }
@@ -140,23 +149,80 @@ export function loadGame(now: number, config: Config = CONFIG): OfflineSummary |
  * scalar fields to be numbers and every collection to be an array before we
  * trust a save; anything else falls back to a fresh game.
  */
+const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
 function isValidSave(value: unknown): value is GameState {
   if (!value || typeof value !== 'object') return false;
   const s = value as Record<string, unknown>;
-  return (
-    typeof s.version === 'number' &&
-    typeof s.cash === 'number' &&
-    typeof s.heat === 'number' &&
-    typeof s.heatUpdatedAt === 'number' &&
-    typeof s.lifetimeCash === 'number' &&
-    typeof s.lastSaved === 'number' &&
-    typeof s.nextId === 'number' &&
-    Array.isArray(s.safehouses) &&
-    Array.isArray(s.crews) &&
-    Array.isArray(s.members) &&
-    Array.isArray(s.activeHeists) &&
-    Array.isArray(s.purchasedUpgradeIds)
+  const scalarsOk =
+    isFiniteNum(s.version) &&
+    isFiniteNum(s.cash) &&
+    isFiniteNum(s.heat) &&
+    isFiniteNum(s.heatUpdatedAt) &&
+    isFiniteNum(s.lifetimeCash) &&
+    isFiniteNum(s.lastSaved) &&
+    isFiniteNum(s.nextId);
+  if (!scalarsOk) return false;
+  if (
+    !Array.isArray(s.safehouses) ||
+    !Array.isArray(s.crews) ||
+    !Array.isArray(s.members) ||
+    !Array.isArray(s.activeHeists) ||
+    !Array.isArray(s.purchasedUpgradeIds)
+  ) {
+    return false;
+  }
+  // Element-shape checks: a deep-malformed save (e.g. crews:[null]) would pass a
+  // shallow Array.isArray check and then crash the UI on crew.memberIds.map(...).
+  const crewsOk = (s.crews as unknown[]).every(
+    (c) =>
+      !!c &&
+      typeof c === 'object' &&
+      typeof (c as { id?: unknown }).id === 'string' &&
+      Array.isArray((c as { memberIds?: unknown }).memberIds) &&
+      typeof (c as { status?: unknown }).status === 'string',
   );
+  const membersOk = (s.members as unknown[]).every(
+    (m) =>
+      !!m &&
+      typeof m === 'object' &&
+      typeof (m as { id?: unknown }).id === 'string' &&
+      typeof (m as { role?: unknown }).role === 'string' &&
+      isFiniteNum((m as { skill?: unknown }).skill),
+  );
+  const safehousesOk = (s.safehouses as unknown[]).every(
+    (h) =>
+      !!h &&
+      typeof h === 'object' &&
+      typeof (h as { id?: unknown }).id === 'string' &&
+      Array.isArray((h as { crewIds?: unknown }).crewIds),
+  );
+  const activeOk = (s.activeHeists as unknown[]).every(
+    (a) =>
+      !!a &&
+      typeof a === 'object' &&
+      typeof (a as { id?: unknown }).id === 'string' &&
+      typeof (a as { heistId?: unknown }).heistId === 'string' &&
+      typeof (a as { crewId?: unknown }).crewId === 'string' &&
+      isFiniteNum((a as { startedAt?: unknown }).startedAt) &&
+      isFiniteNum((a as { endsAt?: unknown }).endsAt),
+  );
+  return crewsOk && membersOk && safehousesOk && activeOk;
+}
+
+/** Clamp a loaded save into legal ranges so an edited/legacy value can't produce
+ *  an absurd UI state (skill past the cap, negative or infinite cash, etc.). */
+function clampState(state: GameState, config: Config = CONFIG): GameState {
+  return {
+    ...state,
+    cash: Math.max(0, state.cash),
+    lifetimeCash: Math.max(0, state.lifetimeCash),
+    heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
+    members: state.members.map((m) => ({
+      ...m,
+      skill: Math.min(config.maxMemberSkill, Math.max(0, m.skill)),
+    })),
+  };
 }
 
 export function clearSave(config: Config = CONFIG): void {

@@ -15,7 +15,7 @@ import { HEISTS_BY_ID } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import { addHeat, settleHeat } from './heat';
 import { deriveHeat, getCrew, heatGainMult, isHeistUnlocked, missingRoles } from './selectors';
-import { minMembersFor, resolveHeist } from './resolution';
+import { makeRng, minMembersFor, resolveHeist } from './resolution';
 import type { ActionResult, GameState, HeistReport } from './types';
 
 /** Launch a heist: assign a crew and start the timer. */
@@ -24,6 +24,7 @@ export function launchHeist(
   heistId: string,
   crewId: string,
   now: number,
+  seed: number = Math.floor(Math.random() * 0x100000000),
   config: Config = CONFIG,
 ): ActionResult {
   const heist = HEISTS_BY_ID[heistId];
@@ -58,6 +59,7 @@ export function launchHeist(
     crewId,
     startedAt: now,
     endsAt: now + heist.durationSec * 1000,
+    seed: seed >>> 0,
   };
 
   next = {
@@ -75,7 +77,7 @@ export function collectHeist(
   state: GameState,
   activeHeistId: string,
   now: number,
-  rng: () => number = Math.random,
+  rng?: () => number,
   config: Config = CONFIG,
 ): ActionResult & { report?: HeistReport } {
   const active = state.activeHeists.find((a) => a.id === activeHeistId);
@@ -96,10 +98,14 @@ export function collectHeist(
     return { ok: true, state: freeCrew(state), message: 'Collected.' };
   }
 
-  const report = resolveHeist(state, heist, crew, now, rng, config);
+  // Determinism: outcome is fixed by the seed stored at launch (falls back to
+  // Math.random only for pre-seed saves). Tests can still inject their own rng.
+  const roll = rng ?? (active.seed != null ? makeRng(active.seed) : Math.random);
+  const report = resolveHeist(state, heist, crew, now, roll, config);
 
   let next = freeCrew(state);
-  if (report.success) {
+  if (report.payout > 0) {
+    // includes salvage on a failed run
     next = { ...next, cash: next.cash + report.payout, lifetimeCash: next.lifetimeCash + report.payout };
   }
   if (report.heatAdded > 0) {

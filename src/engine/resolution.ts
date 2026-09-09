@@ -55,9 +55,24 @@ export function memberPassChance(
   return clamp(p, config.memberChanceMin, config.memberChanceMax);
 }
 
-/** How many members must pass for a job of this difficulty. */
+/** How many members must pass for a job of this difficulty (never above the
+ *  crew-size cap, so a job can't become unwinnable-by-construction). */
 export function requiredPassesFor(heist: HeistDef, config: Config = CONFIG): number {
-  return config.baseRequiredPasses + Math.floor(heist.difficulty / config.difficultyPerRequiredPass);
+  const raw = config.baseRequiredPasses + Math.floor(heist.difficulty / config.difficultyPerRequiredPass);
+  return Math.min(raw, config.crewMaxMembers);
+}
+
+/** Deterministic PRNG (mulberry32) from a 32-bit seed. Used so a heist's outcome
+ *  is fixed at launch time - keeps collect resolution pure and closes the
+ *  reload-to-reroll exploit. */
+export function makeRng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 /** Minimum crew size to even attempt a job (roles + passes + global floor). */
@@ -249,18 +264,25 @@ export function resolveHeist(
   const quality = crewSize > 0 ? passCount / crewSize : 0;
   const perfect = success && passCount === crewSize;
 
-  // Time-based take, scaled by crew performance, bonus for a flawless run.
+  // Time-based take. On success it scales with passers relative to
+  // (requiredPasses + slack) - a denominator independent of crew size, so
+  // bringing MORE members never lowers the take. A flawless run pays a bonus; a
+  // blown run still salvages a fraction of the base for the time invested.
   const base = heist.payoutPerSec * heist.durationSec;
+  const mult = payoutMult(state);
   let payout = 0;
   let perfectBonus = 0;
   if (success) {
-    const qMult = config.payoutFloorFrac + (1 - config.payoutFloorFrac) * quality;
-    payout = Math.round(base * qMult * payoutMult(state));
+    const target = requiredPasses + config.qualitySlack;
+    const takeFrac = config.payoutFloorFrac + (1 - config.payoutFloorFrac) * clamp(passCount / target, 0, 1);
+    payout = Math.round(base * takeFrac * mult);
     if (perfect) {
       const before = payout;
       payout = Math.round(payout * config.perfectBonusMult);
       perfectBonus = payout - before;
     }
+  } else {
+    payout = Math.round(base * config.failPayoutFrac * mult);
   }
   const heatAdded = success ? 0 : heist.failHeatBonus * heatGainMult(state);
 

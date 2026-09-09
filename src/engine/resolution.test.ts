@@ -47,8 +47,8 @@ function makeState(specs: Spec[]): GameState {
 
 describe('resolution numbers', () => {
   it('memberPassChance follows the formula and clamps', () => {
-    // 0.5 + 0.045*3 - 0.01*4 - 0 = 0.595
-    expect(memberPassChance(3, 4, 0)).toBeCloseTo(0.595, 5);
+    // 0.5 + 0.045*3 - 0.02*4 - 0 = 0.555
+    expect(memberPassChance(3, 4, 0)).toBeCloseTo(0.555, 5);
     expect(memberPassChance(1000, 4, 0)).toBe(CONFIG.memberChanceMax);
     expect(memberPassChance(0, 1000, 0)).toBe(CONFIG.memberChanceMin);
   });
@@ -71,6 +71,8 @@ describe('resolution numbers', () => {
 describe('resolveHeist outcomes', () => {
   const smash = HEISTS_BY_ID['smash_grab'];
 
+  // base = payoutPerSec(6) * durationSec(20) = 120; requiredPasses(smash)=2;
+  // target = 2 + qualitySlack(3) = 5; takeFrac = 0.35 + 0.65*clamp(pass/5).
   it('a flawless run pays the perfect bonus', () => {
     const state = makeState([
       { role: 'driver', skill: 5 },
@@ -81,13 +83,13 @@ describe('resolveHeist outcomes', () => {
     expect(report.success).toBe(true);
     expect(report.perfect).toBe(true);
     expect(report.quality).toBe(1);
-    // base = 4 * 20 = 80; quality 1 -> 80; perfect bonus x1.5 -> 120
-    expect(report.payout).toBe(120);
-    expect(report.perfectBonus).toBe(40);
+    // 3 passed: takeFrac = 0.35 + 0.65*(3/5) = 0.74 -> 120*0.74 = 88.8 -> 89; perfect x1.75 -> 156
+    expect(report.payout).toBe(156);
+    expect(report.perfectBonus).toBe(67);
     expect(report.heatAdded).toBe(0);
   });
 
-  it('a total failure pays nothing and adds fail heat', () => {
+  it('a failed run still salvages a fraction of the base and adds fail heat', () => {
     const state = makeState([
       { role: 'driver', skill: 5 },
       { role: 'muscle', skill: 5 },
@@ -95,7 +97,8 @@ describe('resolveHeist outcomes', () => {
     ]);
     const report = resolveHeist(state, smash, getCrew(state, 'c1')!, T0, seq(0.999));
     expect(report.success).toBe(false);
-    expect(report.payout).toBe(0);
+    // salvage = base(120) * failPayoutFrac(0.2) = 24
+    expect(report.payout).toBe(24);
     expect(report.heatAdded).toBeCloseTo(smash.failHeatBonus, 5);
   });
 
@@ -106,13 +109,13 @@ describe('resolveHeist outcomes', () => {
       { role: 'hacker', skill: 5 },
       { role: 'lookout', skill: 5 },
     ]);
-    // first 3 pass, 4th fails -> 3/4 quality
+    // first 3 pass, 4th fails
     const report = resolveHeist(state, smash, getCrew(state, 'c1')!, T0, seq(0, 0, 0, 0.999));
     expect(report.success).toBe(true);
     expect(report.perfect).toBe(false);
     expect(report.quality).toBe(0.75);
-    // base 80 * (0.5 + 0.5*0.75) = 80 * 0.875 = 70
-    expect(report.payout).toBe(70);
+    // 3 passed: takeFrac = 0.35 + 0.65*(3/5) = 0.74 -> 120*0.74 = 88.8 -> 89
+    expect(report.payout).toBe(89);
   });
 
   it('fails when a required role has no passer, even if enough others pass', () => {
