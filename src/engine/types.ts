@@ -47,6 +47,17 @@ export interface ActiveHeist {
   /** RNG seed fixed at launch, so the outcome is determined then (not re-rollable
    *  by reloading). Optional for backward compatibility with older saves. */
   seed?: number;
+  /** For the repeatable Syndicate Contract: the contract level this run was
+   *  launched at, so its (escalating) definition is stable across collect. */
+  contractLevel?: number;
+}
+
+/** Career totals that persist across prestige resets (drive milestones). */
+export interface CareerStats {
+  heistsCompleted: number;
+  heistsSucceeded: number;
+  flawless: number;
+  biggestScore: number;
 }
 
 export interface GameState {
@@ -65,8 +76,23 @@ export interface GameState {
   activeHeists: ActiveHeist[];
   purchasedUpgradeIds: UpgradeId[];
 
-  /** Total cash ever earned (monotonic). Drives tier unlock gates. */
+  /** Total cash earned THIS run (reset on prestige). Drives tier unlock gates
+   *  and the notoriety payout on retirement. */
   lifetimeCash: number;
+
+  // ---- Meta-progression (persists across prestige) -------------------------
+  /** Permanent Notoriety points earned by retiring crews. */
+  notoriety: number;
+  /** How many times the player has retired ("gone legit"). */
+  prestigeCount: number;
+  /** Total cash earned across ALL runs (never reset) - for milestones. */
+  careerCash: number;
+  /** Cleared levels of the repeatable Syndicate Contract. */
+  contractLevel: number;
+  /** Career totals for milestones (persist across prestige). */
+  stats: CareerStats;
+  /** Milestone ids already awarded. */
+  milestonesEarned: string[];
 
   /** Timestamp of the last save; used for offline resolution + display. */
   lastSaved: number;

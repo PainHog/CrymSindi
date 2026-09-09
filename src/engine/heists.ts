@@ -14,7 +14,17 @@ import type { Config } from '../data/config';
 import { HEISTS_BY_ID } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import { addHeat, settleHeat } from './heat';
-import { deriveHeat, getCrew, heatGainMult, isHeistUnlocked, missingRoles } from './selectors';
+import {
+  contractHeistDef,
+  contractUnlocked,
+  deriveHeat,
+  getCrew,
+  heatGainMult,
+  heistDefFor,
+  isContract,
+  isHeistUnlocked,
+  missingRoles,
+} from './selectors';
 import { makeRng, minMembersFor, resolveHeist } from './resolution';
 import type { ActionResult, GameState, HeistReport } from './types';
 
@@ -27,9 +37,13 @@ export function launchHeist(
   seed: number = Math.floor(Math.random() * 0x100000000),
   config: Config = CONFIG,
 ): ActionResult {
-  const heist = HEISTS_BY_ID[heistId];
+  const heist = heistDefFor(heistId, state, config);
   if (!heist) return { ok: false, error: 'Unknown heist.' };
-  if (!isHeistUnlocked(state, heist)) return { ok: false, error: 'That heist is still locked.' };
+  if (isContract(heistId)) {
+    if (!contractUnlocked(state)) return { ok: false, error: 'That contract is still locked.' };
+  } else if (!isHeistUnlocked(state, heist)) {
+    return { ok: false, error: 'That heist is still locked.' };
+  }
 
   const crew = getCrew(state, crewId);
   if (!crew) return { ok: false, error: 'Unknown crew.' };
@@ -60,6 +74,7 @@ export function launchHeist(
     startedAt: now,
     endsAt: now + heist.durationSec * 1000,
     seed: seed >>> 0,
+    ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
   next = {
@@ -84,7 +99,11 @@ export function collectHeist(
   if (!active) return { ok: false, error: 'That heist no longer exists.' };
   if (now < active.endsAt) return { ok: false, error: 'That heist is still in progress.' };
 
-  const heist = HEISTS_BY_ID[active.heistId];
+  // Use the contract's level snapshotted at launch (its def escalates over time).
+  const heist =
+    active.contractLevel != null
+      ? contractHeistDef(active.contractLevel, config)
+      : HEISTS_BY_ID[active.heistId];
   const crew = getCrew(state, active.crewId);
 
   const freeCrew = (s: GameState): GameState => ({
@@ -104,9 +123,30 @@ export function collectHeist(
   const report = resolveHeist(state, heist, crew, now, roll, config);
 
   let next = freeCrew(state);
+
+  // Career totals (persist across prestige; drive milestones).
+  next = {
+    ...next,
+    stats: {
+      heistsCompleted: next.stats.heistsCompleted + 1,
+      heistsSucceeded: next.stats.heistsSucceeded + (report.success ? 1 : 0),
+      flawless: next.stats.flawless + (report.perfect ? 1 : 0),
+      biggestScore: Math.max(next.stats.biggestScore, report.payout),
+    },
+  };
+
   if (report.payout > 0) {
     // includes salvage on a failed run
-    next = { ...next, cash: next.cash + report.payout, lifetimeCash: next.lifetimeCash + report.payout };
+    next = {
+      ...next,
+      cash: next.cash + report.payout,
+      lifetimeCash: next.lifetimeCash + report.payout,
+      careerCash: next.careerCash + report.payout,
+    };
+  }
+  // Clearing a contract escalates the next one.
+  if (report.success && isContract(active.heistId)) {
+    next = { ...next, contractLevel: next.contractLevel + 1 };
   }
   if (report.heatAdded > 0) {
     next = addHeat(next, report.heatAdded, now, config);

@@ -48,11 +48,16 @@ export function memberEffectiveSkill(member: Member): number {
   return skill;
 }
 
-/** Sum of effective skill across all members in a crew. */
+/** A member's effective skill including the global Notoriety aura. */
+export function memberPower(state: GameState, member: Member, config: Config = CONFIG): number {
+  return memberEffectiveSkill(member) + notorietySkillBonus(state, config);
+}
+
+/** Sum of member power (incl. Notoriety) across a crew. */
 export function crewPower(state: GameState, crew: Crew): number {
   return crew.memberIds.reduce((sum, id) => {
     const m = getMember(state, id);
-    return sum + (m ? memberEffectiveSkill(m) : 0);
+    return sum + (m ? memberPower(state, m) : 0);
   }, 0);
 }
 
@@ -94,6 +99,63 @@ function upgradeProduct(
 export const heatGainMult = (s: GameState) => upgradeProduct(s, 'heatGainMult');
 export const heatCoolRateMult = (s: GameState) => upgradeProduct(s, 'heatCoolRateMult');
 export const payoutMult = (s: GameState) => upgradeProduct(s, 'payoutMult');
+
+/** Does any purchased upgrade grant the offline auto-collect Fixer? */
+export function hasFixer(state: GameState): boolean {
+  return state.purchasedUpgradeIds.some((id) => UPGRADES_BY_ID[id]?.effect.autoCollect);
+}
+
+// ---- Notoriety (meta-progression) ------------------------------------------
+
+/** Permanent global payout multiplier from Notoriety. */
+export function notorietyMult(state: GameState, config: Config = CONFIG): number {
+  return 1 + config.notorietyMultPerPoint * state.notoriety;
+}
+/** Flat power every member gains from Notoriety (lets you beat harder content). */
+export function notorietySkillBonus(state: GameState, config: Config = CONFIG): number {
+  return config.notorietySkillPerPoint * state.notoriety;
+}
+/** Notoriety you'd earn by retiring now (from this run's lifetime cash). */
+export function notorietyGainFor(lifetimeCash: number, config: Config = CONFIG): number {
+  if (lifetimeCash <= 0) return 0;
+  return Math.floor(Math.sqrt(lifetimeCash / config.notorietyDivisor));
+}
+export function canPrestige(state: GameState, config: Config = CONFIG): boolean {
+  return state.lifetimeCash >= config.prestigeThreshold;
+}
+
+// ---- Endgame repeatable "Syndicate Contract" -------------------------------
+
+export const CONTRACT_ID = 'syndicate_contract';
+export const isContract = (heistId: string): boolean => heistId === CONTRACT_ID;
+
+/** The repeatable contract's (escalating) definition at a given cleared level. */
+export function contractHeistDef(level: number, config: Config = CONFIG): HeistDef {
+  const lvl = Math.max(0, Math.floor(level));
+  return {
+    id: CONTRACT_ID,
+    tier: 6,
+    name: `Syndicate Contract · Op ${lvl + 1}`,
+    description: 'A standing job that escalates every time you clear it. The work never ends.',
+    requiredRoles: ['hacker', 'muscle', 'driver'],
+    durationSec: config.contractDurationSec,
+    payoutPerSec: config.contractBasePayoutPerSec * Math.pow(config.contractPayoutGrowth, lvl),
+    heatCost: config.contractHeatCost,
+    failHeatBonus: config.contractFailHeatBonus,
+    difficulty: config.contractBaseDifficulty + config.contractDifficultyPerLevel * lvl,
+  };
+}
+
+/** Resolve any heist id to its definition (handles the dynamic contract). */
+export function heistDefFor(heistId: string, state: GameState, config: Config = CONFIG): HeistDef | undefined {
+  if (isContract(heistId)) return contractHeistDef(state.contractLevel, config);
+  return HEISTS_BY_ID[heistId];
+}
+
+/** The contract becomes available once tier 5 is unlocked. */
+export function contractUnlocked(state: GameState): boolean {
+  return maxUnlockedTier(state) >= 5;
+}
 
 // ---- Heat (timestamp-derived) ----------------------------------------------
 

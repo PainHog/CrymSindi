@@ -10,7 +10,8 @@
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { SAFEHOUSE_TIERS } from '../data/safehouses';
-import { deriveHeat } from './selectors';
+import { deriveHeat, hasFixer } from './selectors';
+import { collectHeist, launchHeist } from './heists';
 import type { GameState } from './types';
 
 /** Fresh game: 1 safehouse (1 crew slot), 1 crew of 3 starting members. */
@@ -46,6 +47,12 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     activeHeists: [],
     purchasedUpgradeIds: [],
     lifetimeCash: 0,
+    notoriety: 0,
+    prestigeCount: 0,
+    careerCash: 0,
+    contractLevel: 0,
+    stats: { heistsCompleted: 0, heistsSucceeded: 0, flawless: 0, biggestScore: 0 },
+    milestonesEarned: [],
     lastSaved: now,
     nextId: 4,
   };
@@ -57,6 +64,10 @@ export interface OfflineSummary {
   readyCount: number;
   /** Ms of real time that elapsed since the last save. */
   awayMs: number;
+  /** Heists the Fixer auto-collected while away (0 without the Fixer). */
+  autoCollected: number;
+  /** Cash the Fixer brought in while away. */
+  autoEarned: number;
 }
 
 /**
@@ -71,13 +82,46 @@ export function resolveOffline(
   config: Config = CONFIG,
 ): OfflineSummary {
   const awayMs = Math.max(0, now - state.lastSaved);
-  const settledHeat = deriveHeat(state, now, config);
-  const readyCount = state.activeHeists.filter((a) => now >= a.endsAt).length;
+  let s = state;
+  let autoCollected = 0;
+  let autoEarned = 0;
+
+  // The Fixer works the crews while you are away: auto-collect each finished
+  // heist and relaunch the same job, chronologically, up to the offline cap.
+  // Without the Fixer, finished heists just wait to be collected by hand.
+  if (hasFixer(s)) {
+    const horizon = Math.min(now, s.lastSaved + config.offlineCapSec * 1000);
+    let guard = 0;
+    const MAX_CYCLES = 1000;
+    while (guard++ < MAX_CYCLES) {
+      const next = s.activeHeists
+        .filter((a) => a.endsAt <= horizon)
+        .sort((a, b) => a.endsAt - b.endsAt)[0];
+      if (!next) break;
+      const t = next.endsAt;
+      const collected = collectHeist(s, next.id, t, undefined, config);
+      if (!collected.ok) break;
+      s = collected.state;
+      autoCollected += 1;
+      autoEarned += collected.report?.payout ?? 0;
+      // Relaunch the same job for that crew (deterministic seed per cycle).
+      const seed = ((next.seed ?? t) ^ (guard * 0x9e3779b1)) >>> 0;
+      const relaunched = launchHeist(s, next.heistId, next.crewId, t, seed, config);
+      if (relaunched.ok) s = relaunched.state;
+      // If relaunch failed (e.g. heat maxed), the crew is now idle; keep going
+      // with any other finished heists, then stop.
+    }
+  }
+
+  const settledHeat = deriveHeat(s, now, config);
+  const readyCount = s.activeHeists.filter((a) => now >= a.endsAt).length;
 
   return {
-    state: { ...state, heat: settledHeat, heatUpdatedAt: now, lastSaved: now },
+    state: { ...s, heat: settledHeat, heatUpdatedAt: now, lastSaved: now },
     readyCount,
     awayMs,
+    autoCollected,
+    autoEarned,
   };
 }
 
@@ -161,7 +205,14 @@ function isValidSave(value: unknown): value is GameState {
     isFiniteNum(s.heatUpdatedAt) &&
     isFiniteNum(s.lifetimeCash) &&
     isFiniteNum(s.lastSaved) &&
-    isFiniteNum(s.nextId);
+    isFiniteNum(s.nextId) &&
+    isFiniteNum(s.notoriety) &&
+    isFiniteNum(s.prestigeCount) &&
+    isFiniteNum(s.careerCash) &&
+    isFiniteNum(s.contractLevel) &&
+    Array.isArray(s.milestonesEarned) &&
+    !!s.stats &&
+    typeof s.stats === 'object';
   if (!scalarsOk) return false;
   if (
     !Array.isArray(s.safehouses) ||
@@ -217,6 +268,10 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     ...state,
     cash: Math.max(0, state.cash),
     lifetimeCash: Math.max(0, state.lifetimeCash),
+    careerCash: Math.max(0, state.careerCash),
+    notoriety: Math.max(0, state.notoriety),
+    prestigeCount: Math.max(0, Math.floor(state.prestigeCount)),
+    contractLevel: Math.max(0, Math.floor(state.contractLevel)),
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
     members: state.members.map((m) => ({
       ...m,

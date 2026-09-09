@@ -4,6 +4,8 @@ import { HEISTS } from '../../data/heists';
 import type { HeistDef } from '../../data/heists';
 import { ROLES_BY_ID } from '../../data/roles';
 import {
+  contractHeistDef,
+  contractUnlocked,
   crewHasRoles,
   deriveHeat,
   estimateSuccess,
@@ -32,12 +34,14 @@ export function HeistList() {
     .filter(({ crew }) => crew.status === 'idle');
 
   const sorted = [...HEISTS].sort((a, b) => a.tier - b.tier || a.difficulty - b.difficulty);
+  const contract = contractUnlocked(game) ? contractHeistDef(game.contractLevel) : null;
 
   // Success estimates run a Poisson-binomial DP per heist x crew; recompute only
   // when the game or the (rounded) heat changes, not on every 250ms tick.
   const estimates = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const heist of HEISTS) {
+    const defs = contract ? [...HEISTS, contract] : HEISTS;
+    for (const heist of defs) {
       for (const crew of game.crews) {
         map[`${heist.id}:${crew.id}`] = estimateSuccess(game, heist, crew, now);
       }
@@ -56,6 +60,17 @@ export function HeistList() {
         The board
       </h2>
       <div className="heist-list">
+        {contract && (
+          <UnlockedHeist
+            key="contract"
+            heist={contract}
+            idleCrews={idleCrews}
+            heatMaxed={heatMaxed}
+            estimates={estimates}
+            game={game}
+            onSend={actions.launch}
+          />
+        )}
         {sorted.map((heist) =>
           isHeistUnlocked(game, heist) ? (
             <UnlockedHeist
@@ -135,7 +150,9 @@ function UnlockedHeist({
           <HeistIcon id={heist.id} size={20} />
         </span>
         <span className="heist-name">{heist.name}</span>
-        <span className="stamp-badge stamp-tier">Tier {heist.tier}</span>
+        <span className="stamp-badge stamp-tier">
+          {heist.tier >= 6 ? 'Contract' : `Tier ${heist.tier}`}
+        </span>
       </div>
       <p className="heist-desc">{heist.description}</p>
 

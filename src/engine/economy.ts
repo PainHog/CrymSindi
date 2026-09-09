@@ -20,10 +20,12 @@ import {
   getSafehouse,
   nextCrewCost,
   nextSafehouseCost,
+  notorietyGainFor,
   recruitCost,
   safehouseUpgradeCost,
   skillUpgradeCost,
 } from './selectors';
+import { createInitialState } from './state';
 import type { ActionResult, Crew, GameState, Member, Safehouse } from './types';
 
 function spend(state: GameState, cost: number): GameState {
@@ -220,6 +222,31 @@ export function upgradeSkill(
       ),
     },
     message: `${member.name} leveled up.`,
+  };
+}
+
+/**
+ * Retire the crew ("go legit"): wipe the operation for permanent Notoriety.
+ * Career totals, contract progress, and milestones carry over.
+ */
+export function prestige(state: GameState, now: number, config: Config = CONFIG): ActionResult {
+  if (state.lifetimeCash < config.prestigeThreshold) {
+    return { ok: false, error: 'Not enough of a track record to retire yet.' };
+  }
+  const gain = notorietyGainFor(state.lifetimeCash, config);
+  const fresh = createInitialState(now, config);
+  return {
+    ok: true,
+    state: {
+      ...fresh,
+      notoriety: state.notoriety + gain,
+      prestigeCount: state.prestigeCount + 1,
+      careerCash: state.careerCash,
+      contractLevel: state.contractLevel,
+      stats: state.stats,
+      milestonesEarned: state.milestonesEarned,
+    },
+    message: `Went legit. +${gain} Notoriety (now ${state.notoriety + gain}).`,
   };
 }
 

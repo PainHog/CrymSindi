@@ -35,6 +35,21 @@ export interface Config {
   failPayoutFrac: number;
   qualitySlack: number;
 
+  // Prestige ("go legit") -> permanent Notoriety.
+  prestigeThreshold: number; // lifetime cash needed before you can retire
+  notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
+  notorietyMultPerPoint: number; // each point = +this to the global payout multiplier
+  notorietySkillPerPoint: number; // each point adds this to every member's effective skill
+
+  // Endgame repeatable "Syndicate Contract" (unlocks with tier 5).
+  contractBaseDifficulty: number;
+  contractDifficultyPerLevel: number;
+  contractBasePayoutPerSec: number;
+  contractPayoutGrowth: number; // payoutPerSec *= this each level (exponential take)
+  contractDurationSec: number;
+  contractHeatCost: number;
+  contractFailHeatBonus: number;
+
   newSafehouseBaseCost: number;
   newSafehouseCostMult: number;
 
@@ -57,7 +72,7 @@ export interface Config {
 export const CONFIG: Config = {
   // Save format version. Bump this if you change the shape of GameState in a way
   // that would break old saves; mismatched saves are discarded on load.
-  version: 2,
+  version: 3,
   saveKey: 'heist-crew-idle/save/v1',
 
   // ---- Starting conditions -------------------------------------------------
@@ -101,6 +116,21 @@ export const CONFIG: Config = {
   perfectBonusMult: 1.75,
   failPayoutFrac: 0.2,
   qualitySlack: 3,
+
+  // ---- Prestige / Notoriety ------------------------------------------------
+  prestigeThreshold: 100000,
+  notorietyDivisor: 2500,
+  notorietyMultPerPoint: 0.05, // +5% take per point (compounds over prestiges)
+  notorietySkillPerPoint: 0.15, // +power per point so you can beat harder content
+
+  // ---- Endgame "Syndicate Contract" (repeatable, escalates) ----------------
+  contractBaseDifficulty: 54,
+  contractDifficultyPerLevel: 2,
+  contractBasePayoutPerSec: 18,
+  contractPayoutGrowth: 1.12, // exponential take growth per level cleared
+  contractDurationSec: 20 * 60,
+  contractHeatCost: 60,
+  contractFailHeatBonus: 45,
 
   // ---- Economy: safehouses -------------------------------------------------
   // Cost to buy the next NEW safehouse = base * mult^(safehousesOwned - 1).

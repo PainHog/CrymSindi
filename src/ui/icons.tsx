@@ -30,7 +30,9 @@ export type IconName =
   | 'cargo'
   | 'convoy'
   | 'datacenter'
-  | 'centralbank';
+  | 'centralbank'
+  | 'crown'
+  | 'trophy';
 
 function Svg({
   size,
@@ -233,6 +235,21 @@ function paths(name: IconName): ReactNode {
           <path d="M3 9 12 4l9 5" />
           <path d="M4.5 9v8M9 9v8M12 9v8M15 9v8M19.5 9v8" />
           <path d="M3 20h18" />
+        </>
+      );
+    case 'crown':
+      return (
+        <>
+          <path d="M4 8.5l3.6 3.2L12 5.5l4.4 6.2L20 8.5l-1.4 9.5H5.4L4 8.5Z" />
+          <path d="M5.4 18h13.2" />
+        </>
+      );
+    case 'trophy':
+      return (
+        <>
+          <path d="M7 4.5h10v4a5 5 0 0 1-10 0v-4Z" />
+          <path d="M7 6H4.5v1.5A3 3 0 0 0 7 10.4M17 6h2.5v1.5A3 3 0 0 1 17 10.4" />
+          <path d="M9.5 13.5v3M14.5 13.5v3M8 19.5h8M9 16.5h6v3H9z" />
         </>
       );
     default:

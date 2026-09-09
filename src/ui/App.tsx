@@ -1,6 +1,8 @@
 import { GameProvider } from '../store/GameContext';
 import { ActiveHeists } from './components/ActiveHeists';
 import { HeistList } from './components/HeistList';
+import { MilestonesPanel } from './components/MilestonesPanel';
+import { PrestigePanel } from './components/PrestigePanel';
 import { ReportModal } from './components/ReportModal';
 import { ResourceBar } from './components/ResourceBar';
 import { SafehousePanel } from './components/SafehousePanel';
@@ -19,6 +21,8 @@ export default function App() {
           <div className="col col-main">
             <SafehousePanel />
             <UpgradePanel />
+            <PrestigePanel />
+            <MilestonesPanel />
           </div>
           <div className="col col-side">
             <ActiveHeists />

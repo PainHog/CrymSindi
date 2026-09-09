@@ -182,9 +182,12 @@ body::after {
 /* ---- Resource bar ---- */
 .resourcebar {
   display: grid;
-  grid-template-columns: 1fr 1.7fr 1fr;
+  grid-template-columns: 1fr 1.7fr 1fr 1fr;
   gap: 12px;
   margin-bottom: 18px;
+}
+@media (max-width: 1080px) {
+  .resourcebar { grid-template-columns: 1fr 1fr; }
 }
 .stat {
   display: flex;
@@ -209,6 +212,9 @@ body::after {
 .stat.cash::before { background: var(--brass); }
 .stat.heat::before { background: var(--crimson); }
 .stat.lifetime::before { background: var(--steel); }
+.stat.notoriety::before { background: #b98cf0; }
+.stat.notoriety .stat-icon { color: #b98cf0; }
+.stat.notoriety .stat-value { color: #cbb0f5; }
 .stat-icon {
   display: grid;
   place-items: center;
@@ -834,6 +840,53 @@ body::after {
 @media (max-width: 560px) {
   .report-summary { grid-template-columns: 1fr; }
 }
+
+/* ---- Prestige panel ---- */
+.prestige-panel { border-color: #4a3a5e; }
+.prestige-panel::before { background: linear-gradient(90deg, transparent, #b98cf03a, transparent); }
+.prestige-blurb { font-size: 12.5px; color: var(--ink-dim); margin: 0 0 12px; }
+.prestige-blurb strong { color: #cbb0f5; }
+.prestige-stats { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; margin-bottom: 12px; }
+.pstat { display: flex; flex-direction: column; gap: 2px; background: #14121a; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.pstat-label { font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim); }
+.pstat-value { font-family: var(--mono); font-size: 14px; color: #cbb0f5; }
+
+/* ---- Milestones panel ---- */
+.milestone-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-dim);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.milestone-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+.milestone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-1);
+  opacity: 0.6;
+}
+.milestone.done { opacity: 1; border-color: #4a3d1e; }
+.milestone-mark { font-size: 15px; color: var(--ink-faint); flex: none; }
+.milestone.done .milestone-mark { color: var(--brass); }
+.milestone-body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.milestone-name { font-weight: 600; font-size: 13px; }
+.milestone-desc { font-size: 11px; color: var(--ink-dim); }
+.milestone-reward { font-family: var(--mono); font-size: 11px; color: var(--brass); flex: none; white-space: nowrap; }
+
+/* ---- Contract card (endgame, tier 6) ---- */
+.heist-card[data-tier='6'] {
+  --tier-accent: #cbb0f5;
+  border-color: #4a3a5e;
+  box-shadow: 0 0 22px #b98cf01a inset;
+}
+.heist-card[data-tier='6'] .heist-icon-wrap { color: #cbb0f5; }
+.heist-card[data-tier='6'] .stamp-tier { color: #cbb0f5; }
 
 @media (prefers-reduced-motion: reduce) {
   .progress-fill.running { animation: none; }

@@ -20,6 +20,7 @@ import {
 } from 'react';
 import { CONFIG } from '../data/config';
 import {
+  awardMilestones,
   buyGear,
   buySafehouse,
   buyUpgrade,
@@ -29,6 +30,7 @@ import {
   formCrew,
   launchHeist,
   loadGame,
+  prestige,
   recruitMember,
   refreshHeat,
   saveGame,
@@ -56,18 +58,18 @@ type Action =
   | { type: 'buyGear'; memberId: string; gearId: string }
   | { type: 'upgradeSkill'; memberId: string }
   | { type: 'buyUpgrade'; upgradeId: string }
+  | { type: 'prestige'; now: number }
   | { type: 'refreshHeat'; now: number }
   | { type: 'dismissReport' }
   | { type: 'replace'; game: GameState; message?: string };
 
 function applyResult(ui: UIState, result: ActionResult): UIState {
   if (result.ok) {
-    return {
-      ...ui,
-      game: result.state,
-      message: result.message ?? ui.message,
-      messageId: ui.messageId + 1,
-    };
+    const { state, earned } = awardMilestones(result.state);
+    const message = earned.length
+      ? `Milestone: ${earned.map((m) => m.name).join(', ')}`
+      : (result.message ?? ui.message);
+    return { ...ui, game: state, message, messageId: ui.messageId + 1 };
   }
   return { ...ui, message: result.error, messageId: ui.messageId + 1 };
 }
@@ -100,6 +102,8 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(ui, upgradeSkill(ui.game, action.memberId));
     case 'buyUpgrade':
       return applyResult(ui, buyUpgrade(ui.game, action.upgradeId));
+    case 'prestige':
+      return applyResult(ui, prestige(ui.game, action.now));
     case 'refreshHeat':
       return { ...ui, game: refreshHeat(ui.game, action.now) };
     case 'replace':
@@ -118,10 +122,12 @@ function init(): UIState {
   const now = Date.now();
   const loaded = loadGame(now);
   if (loaded) {
-    const msg =
-      loaded.readyCount > 0
-        ? `Welcome back. ${loaded.readyCount} heist${loaded.readyCount > 1 ? 's' : ''} ready to collect.`
-        : null;
+    let msg: string | null = null;
+    if (loaded.autoCollected > 0) {
+      msg = `The Fixer ran ${loaded.autoCollected} job${loaded.autoCollected > 1 ? 's' : ''} while you were out — +$${Math.round(loaded.autoEarned).toLocaleString('en-US')}.`;
+    } else if (loaded.readyCount > 0) {
+      msg = `Welcome back. ${loaded.readyCount} heist${loaded.readyCount > 1 ? 's' : ''} ready to collect.`;
+    }
     return { game: loaded.state, message: msg, messageId: 0, report: null };
   }
   return { game: createInitialState(now), message: null, messageId: 0, report: null };
@@ -142,6 +148,7 @@ interface GameContextValue {
     buyGear: (memberId: string, gearId: string) => void;
     upgradeSkill: (memberId: string) => void;
     buyUpgrade: (upgradeId: string) => void;
+    prestige: () => void;
     dismissReport: () => void;
     save: () => void;
     reset: () => void;
@@ -219,6 +226,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyGear: (memberId, gearId) => dispatch({ type: 'buyGear', memberId, gearId }),
       upgradeSkill: (memberId) => dispatch({ type: 'upgradeSkill', memberId }),
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
+      prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
       dismissReport: () => dispatch({ type: 'dismissReport' }),
       save,
       reset,

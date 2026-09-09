@@ -1,7 +1,7 @@
 import { CONFIG } from '../../data/config';
-import { deriveHeat, heatCoolRateMult } from '../../engine';
+import { deriveHeat, heatCoolRateMult, notorietyMult } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
-import { formatCash } from '../format';
+import { formatCash, pct } from '../format';
 import { Icon } from '../icons';
 
 function heatStatus(frac: number): { level: string; word: string } {
@@ -63,6 +63,17 @@ export function ResourceBar() {
         <div className="stat-body">
           <span className="stat-label">Lifetime take</span>
           <span className="stat-value">{formatCash(game.lifetimeCash)}</span>
+        </div>
+      </div>
+
+      <div className="stat notoriety">
+        <span className="stat-icon">
+          <Icon name="crown" size={22} />
+        </span>
+        <div className="stat-body">
+          <span className="stat-label">Notoriety</span>
+          <span className="stat-value">{game.notoriety}</span>
+          <span className="stat-sub">+{pct(notorietyMult(game) - 1)} take</span>
         </div>
       </div>
     </div>

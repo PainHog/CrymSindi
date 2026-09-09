@@ -24,7 +24,8 @@ import {
   deriveHeat,
   getMember,
   heatGainMult,
-  memberEffectiveSkill,
+  memberPower,
+  notorietyMult,
   payoutMult,
 } from './selectors';
 import type {
@@ -123,7 +124,7 @@ export function estimateSuccess(
   const heat = deriveHeat(state, now, config);
   const per = members.map((m) => ({
     role: m.role,
-    p: memberPassChance(memberEffectiveSkill(m), heist.difficulty, heat, config),
+    p: memberPassChance(memberPower(state, m, config), heist.difficulty, heat, config),
   }));
 
   const pCount = poissonBinomialAtLeast(per.map((x) => x.p), requiredPassesFor(heist, config));
@@ -230,7 +231,7 @@ export function resolveHeist(
 
   // Per-member checks (one rng() per member, in crew order).
   const beats: MemberBeat[] = members.map((m) => {
-    const eff = memberEffectiveSkill(m);
+    const eff = memberPower(state, m, config);
     const chance = memberPassChance(eff, heist.difficulty, heat, config);
     const roll = rng();
     const passed = roll < chance;
@@ -269,7 +270,7 @@ export function resolveHeist(
   // bringing MORE members never lowers the take. A flawless run pays a bonus; a
   // blown run still salvages a fraction of the base for the time invested.
   const base = heist.payoutPerSec * heist.durationSec;
-  const mult = payoutMult(state);
+  const mult = payoutMult(state) * notorietyMult(state, config);
   let payout = 0;
   let perfectBonus = 0;
   if (success) {

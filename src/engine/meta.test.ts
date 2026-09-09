@@ -1,0 +1,196 @@
+import { describe, it, expect } from 'vitest';
+import { CONFIG } from '../data/config';
+import type { RoleId } from '../data/roles';
+import { createInitialState, resolveOffline } from './state';
+import { prestige } from './economy';
+import { awardMilestones } from './milestones';
+import { launchHeist, collectHeist } from './heists';
+import {
+  CONTRACT_ID,
+  contractHeistDef,
+  contractUnlocked,
+  maxUnlockedTier,
+  notorietyGainFor,
+  notorietyMult,
+  notorietySkillBonus,
+} from './selectors';
+import type { GameState, Member } from './types';
+
+const T0 = 1_000_000_000_000;
+
+const seq = (...v: number[]) => {
+  let i = 0;
+  return () => v[Math.min(i++, v.length - 1)];
+};
+
+function makeState(specs: { role: RoleId; skill: number }[], patch: Partial<GameState> = {}): GameState {
+  const base = createInitialState(T0);
+  const members: Member[] = specs.map((s, i) => ({
+    id: `m${i + 1}`,
+    name: `M${i + 1}`,
+    role: s.role,
+    skill: s.skill,
+    gearIds: [],
+  }));
+  return {
+    ...base,
+    members,
+    crews: [{ ...base.crews[0], memberIds: members.map((m) => m.id), maxMembers: 8 }],
+    ...patch,
+  };
+}
+
+describe('notoriety', () => {
+  it('gain scales with sqrt of lifetime cash', () => {
+    expect(notorietyGainFor(0)).toBe(0);
+    // floor(sqrt(200000 / 2500)) = floor(sqrt(80)) = 8
+    expect(notorietyGainFor(200000)).toBe(8);
+  });
+  it('multiplier and skill bonus scale with points', () => {
+    const s = { ...createInitialState(T0), notoriety: 10 };
+    expect(notorietyMult(s)).toBeCloseTo(1 + 0.05 * 10, 5);
+    expect(notorietySkillBonus(s)).toBeCloseTo(0.15 * 10, 5);
+  });
+});
+
+describe('prestige', () => {
+  it('is refused below the threshold', () => {
+    const s = { ...createInitialState(T0), lifetimeCash: CONFIG.prestigeThreshold - 1 };
+    expect(prestige(s, T0).ok).toBe(false);
+  });
+
+  it('resets the run but keeps career, notoriety, contract and milestones', () => {
+    const s: GameState = {
+      ...createInitialState(T0),
+      cash: 50000,
+      lifetimeCash: 200000,
+      careerCash: 900000,
+      contractLevel: 4,
+      notoriety: 3,
+      milestonesEarned: ['first_score'],
+      stats: { heistsCompleted: 20, heistsSucceeded: 18, flawless: 4, biggestScore: 40000 },
+    };
+    const res = prestige(s, T0);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const n = res.state;
+    expect(n.cash).toBe(CONFIG.startingCash); // fresh operation
+    expect(n.lifetimeCash).toBe(0);
+    expect(n.notoriety).toBe(3 + notorietyGainFor(200000)); // 3 + 8
+    expect(n.prestigeCount).toBe(1);
+    expect(n.careerCash).toBe(900000); // preserved
+    expect(n.contractLevel).toBe(4); // preserved
+    expect(n.milestonesEarned).toContain('first_score');
+    expect(n.stats.heistsCompleted).toBe(20);
+    expect(n.crews[0].memberIds).toHaveLength(3); // fresh starter crew
+  });
+
+  it('notoriety raises every member power and the take', () => {
+    const s = makeState(
+      [
+        { role: 'hacker', skill: 5 },
+        { role: 'muscle', skill: 5 },
+        { role: 'driver', skill: 5 },
+      ],
+      { notoriety: 10 },
+    );
+    const report = resolveWithNotoriety(s);
+    // each member's effective skill includes +0.15*10 = +1.5
+    expect(report.members[0].effectiveSkill).toBeCloseTo(5 + 1.5, 5);
+    // payout is multiplied by notorietyMult (1.5x here) on top of the base take
+    expect(report.payout).toBeGreaterThan(0);
+  });
+});
+
+function resolveWithNotoriety(s: GameState) {
+  const launched = launchHeist(s, 'smash_grab', 'c1', T0);
+  if (!launched.ok) throw new Error('launch failed');
+  const endsAt = launched.state.activeHeists[0].endsAt;
+  const collected = collectHeist(launched.state, launched.state.activeHeists[0].id, endsAt, seq(0));
+  if (!collected.ok || !collected.report) throw new Error('collect failed');
+  return collected.report;
+}
+
+describe('milestones', () => {
+  it('awards a met milestone once and applies its reward', () => {
+    const s = { ...createInitialState(T0), stats: { heistsCompleted: 1, heistsSucceeded: 1, flawless: 0, biggestScore: 0 } };
+    const first = awardMilestones(s);
+    expect(first.earned.map((m) => m.id)).toContain('first_score');
+    expect(first.state.cash).toBe(CONFIG.startingCash + 250); // reward applied
+    // second pass awards nothing new
+    const second = awardMilestones(first.state);
+    expect(second.earned).toHaveLength(0);
+  });
+});
+
+describe('endgame contract', () => {
+  it('escalates difficulty and payout with level', () => {
+    const l0 = contractHeistDef(0);
+    const l5 = contractHeistDef(5);
+    expect(l5.difficulty).toBeGreaterThan(l0.difficulty);
+    expect(l5.payoutPerSec).toBeGreaterThan(l0.payoutPerSec);
+    expect(l0.id).toBe(CONTRACT_ID);
+  });
+
+  it('unlocks with tier 5 and clearing it advances the level', () => {
+    // lifetimeCash past the tier-5 gate unlocks the contract
+    const s = makeState(
+      [
+        { role: 'hacker', skill: 15 },
+        { role: 'muscle', skill: 15 },
+        { role: 'driver', skill: 15 },
+        { role: 'lookout', skill: 15 },
+        { role: 'hacker', skill: 15 },
+      ],
+      { lifetimeCash: 600000, contractLevel: 0 },
+    );
+    expect(maxUnlockedTier(s)).toBe(5);
+    expect(contractUnlocked(s)).toBe(true);
+
+    const launched = launchHeist(s, CONTRACT_ID, 'c1', T0);
+    expect(launched.ok).toBe(true);
+    if (!launched.ok) return;
+    expect(launched.state.activeHeists[0].contractLevel).toBe(0);
+
+    const endsAt = launched.state.activeHeists[0].endsAt;
+    const collected = collectHeist(launched.state, launched.state.activeHeists[0].id, endsAt, seq(0));
+    expect(collected.ok).toBe(true);
+    if (!collected.ok) return;
+    expect(collected.report!.success).toBe(true);
+    expect(collected.state.contractLevel).toBe(1); // advanced
+  });
+});
+
+describe('the Fixer (offline auto-collect)', () => {
+  const crew = [
+    { role: 'driver' as RoleId, skill: 8 },
+    { role: 'muscle' as RoleId, skill: 8 },
+    { role: 'hacker' as RoleId, skill: 8 },
+  ];
+
+  it('auto-collects and relaunches finished jobs while away', () => {
+    const s = makeState(crew, { purchasedUpgradeIds: ['the_fixer'] });
+    const launched = launchHeist(s, 'smash_grab', 'c1', T0); // 20s job
+    expect(launched.ok).toBe(true);
+    if (!launched.ok) return;
+
+    const saved = { ...launched.state, lastSaved: T0 };
+    const summary = resolveOffline(saved, T0 + 200 * 1000); // ~10 cycles of 20s
+    expect(summary.autoCollected).toBeGreaterThan(1);
+    expect(summary.autoEarned).toBeGreaterThan(0);
+    // nothing is left sitting "ready to collect" - the Fixer handled it (any
+    // remaining heist is either back in progress or the chain stopped on heat)
+    expect(summary.readyCount).toBe(0);
+    expect(summary.state.activeHeists.length).toBeLessThanOrEqual(1);
+  });
+
+  it('does nothing without the Fixer (finished job waits to collect)', () => {
+    const s = makeState(crew);
+    const launched = launchHeist(s, 'smash_grab', 'c1', T0);
+    expect(launched.ok).toBe(true);
+    if (!launched.ok) return;
+    const summary = resolveOffline({ ...launched.state, lastSaved: T0 }, T0 + 200 * 1000);
+    expect(summary.autoCollected).toBe(0);
+    expect(summary.readyCount).toBe(1);
+  });
+});

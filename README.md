@@ -89,7 +89,8 @@ not by touching systems.
 | Safehouse tiers + crew-slot capacity / upgrade costs | `src/data/safehouses.ts` |
 | Gear / tools and their skill bonuses         | `src/data/gear.ts`            |
 | Heists — roles required, duration, payoutPerSec, Heat, difficulty, tier | `src/data/heists.ts` |
-| Global upgrades (Heat/payout multipliers) and their costs | `src/data/upgrades.ts` |
+| Global upgrades (Heat/payout multipliers, the Fixer) and their costs | `src/data/upgrades.ts` |
+| Milestones/achievements (name, description, reward)  | `src/data/milestones.ts`  |
 | Recruited-member name pool                   | `src/data/names.ts`           |
 
 The **simulation/economy logic** is separate from the UI, in `src/engine/`:
@@ -99,10 +100,11 @@ The **simulation/economy logic** is separate from the UI, in `src/engine/`:
 | `engine/types.ts`           | Core data model + the after-action report types                     |
 | `engine/selectors.ts`       | Pure derived reads: crew power, costs, Heat, roles, statuses         |
 | `engine/heat.ts`            | Heat settle/add helpers (timestamp-based)                            |
-| `engine/resolution.ts`      | Per-member resolution, success estimate, and the play-by-play report |
-| `engine/heists.ts`          | Launch (crew/role/size checks) + collect                            |
-| `engine/economy.ts`         | Cash sinks: buy/upgrade/recruit/gear/skill/upgrades                  |
-| `engine/state.ts`           | Initial state, offline resolution, save/load (localStorage)          |
+| `engine/resolution.ts`      | Per-member resolution, success estimate, notoriety power, the contract, and the play-by-play report |
+| `engine/heists.ts`          | Launch (crew/role/size checks) + collect (+ career stats)           |
+| `engine/economy.ts`         | Cash sinks + prestige ("go legit" → Notoriety)                      |
+| `engine/milestones.ts`      | Milestone conditions + awarding                                     |
+| `engine/state.ts`           | Initial state, offline resolution (incl. the Fixer), save/load       |
 
 UI lives in `src/ui/` and only reads state + dispatches actions — it never computes economy, Heat,
 or success itself, so the UI and engine can't disagree. The React ↔ engine bridge is
@@ -123,6 +125,14 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
   - Tier 4 ($120k): 1 hour / 5 hours
   - Tier 5 ($600k): 12 hours
 - Resources: Cash and Heat (heat builds as you run crews and cools over real time)
+- Meta-progression / long game:
+  - **Prestige** ("go legit") — retire a run for permanent **Notoriety**; each point
+    is +5% take and +0.15 power to every member, forever (compounds across runs).
+  - **Milestones** — a career achievements track with one-time rewards.
+  - **Syndicate Contract** — a repeatable endgame job (unlocks with tier 5) that
+    escalates in difficulty and payout every time you clear it.
+  - **The Fixer** — a late upgrade that auto-collects and re-runs each crew's last
+    job while you're away (up to the offline cap), for a real idle payoff.
 
 It's intentionally shallow but complete end to end — enough to feel the
 safehouse → crew → member → heist loop. Expand it by editing the data files above.
