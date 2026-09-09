@@ -33,6 +33,7 @@ import {
   prestige,
   recruitMember,
   refreshHeat,
+  resolveOffline,
   saveGame,
   upgradeSafehouse,
   upgradeSkill,
@@ -59,6 +60,7 @@ type Action =
   | { type: 'upgradeSkill'; memberId: string }
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'prestige'; now: number }
+  | { type: 'dev'; op: 'cash' | 'notoriety' | 'finish' | 'ff'; amount?: number; now: number }
   | { type: 'refreshHeat'; now: number }
   | { type: 'dismissReport' }
   | { type: 'replace'; game: GameState; message?: string };
@@ -104,6 +106,49 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(ui, buyUpgrade(ui.game, action.upgradeId));
     case 'prestige':
       return applyResult(ui, prestige(ui.game, action.now));
+    case 'dev': {
+      // Dev/test helpers (only reachable from the ?dev=1 panel).
+      const g = ui.game;
+      const amt = action.amount ?? 0;
+      let state = g;
+      let message = 'dev';
+      switch (action.op) {
+        case 'cash':
+          state = { ...g, cash: g.cash + amt, lifetimeCash: g.lifetimeCash + amt, careerCash: g.careerCash + amt };
+          message = `+$${amt.toLocaleString('en-US')} (dev)`;
+          break;
+        case 'notoriety':
+          state = { ...g, notoriety: g.notoriety + amt };
+          message = `+${amt} Notoriety (dev)`;
+          break;
+        case 'finish':
+          state = { ...g, activeHeists: g.activeHeists.map((a) => ({ ...a, endsAt: action.now })) };
+          message = 'Active jobs finished (dev)';
+          break;
+        case 'ff': {
+          // Simulate having been away `amt` ms: shift timestamps back, then run
+          // the real offline resolution (so heat cools and the Fixer fires).
+          const shifted: GameState = {
+            ...g,
+            heatUpdatedAt: g.heatUpdatedAt - amt,
+            lastSaved: g.lastSaved - amt,
+            activeHeists: g.activeHeists.map((a) => ({
+              ...a,
+              startedAt: a.startedAt - amt,
+              endsAt: a.endsAt - amt,
+            })),
+          };
+          const summary = resolveOffline(shifted, action.now);
+          state = summary.state;
+          message =
+            summary.autoCollected > 0
+              ? `Fixer ran ${summary.autoCollected} job(s) (dev)`
+              : 'Fast-forwarded (dev)';
+          break;
+        }
+      }
+      return applyResult(ui, { ok: true, state, message });
+    }
     case 'refreshHeat':
       return { ...ui, game: refreshHeat(ui.game, action.now) };
     case 'replace':
@@ -150,6 +195,7 @@ interface GameContextValue {
     buyUpgrade: (upgradeId: string) => void;
     prestige: () => void;
     dismissReport: () => void;
+    dev: (op: 'cash' | 'notoriety' | 'finish' | 'ff', amount?: number) => void;
     save: () => void;
     reset: () => void;
   };
@@ -228,6 +274,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
       prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
       dismissReport: () => dispatch({ type: 'dismissReport' }),
+      dev: (op, amount) => dispatch({ type: 'dev', op, amount, now: Date.now() }),
       save,
       reset,
     }),

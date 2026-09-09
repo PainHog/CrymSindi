@@ -1,6 +1,7 @@
 import { GameProvider } from '../store/GameContext';
 import { ActiveHeists } from './components/ActiveHeists';
 import { HeistList } from './components/HeistList';
+import { DevPanel } from './components/DevPanel';
 import { MilestonesPanel } from './components/MilestonesPanel';
 import { PrestigePanel } from './components/PrestigePanel';
 import { ReportModal } from './components/ReportModal';
@@ -39,6 +40,7 @@ export default function App() {
 
         <Toast />
         <ReportModal />
+        <DevPanel />
       </div>
     </GameProvider>
   );

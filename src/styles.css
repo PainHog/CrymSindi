@@ -888,6 +888,36 @@ body::after {
 .heist-card[data-tier='6'] .heist-icon-wrap { color: #cbb0f5; }
 .heist-card[data-tier='6'] .stamp-tier { color: #cbb0f5; }
 
+/* ---- Dev/test panel (only shown with ?dev=1) ---- */
+.dev-panel {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  max-width: 250px;
+  padding: 8px 10px;
+  background: #120e1a;
+  border: 1px dashed #6a4fb0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #000a;
+}
+.dev-title { font-family: var(--font-display); font-size: 10px; letter-spacing: 2px; color: #b98cf0; }
+.dev-btn {
+  font: 600 11px var(--font-body);
+  color: var(--ink);
+  background: #1e1830;
+  border: 1px solid #3a2f5a;
+  border-radius: 6px;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+.dev-btn:hover { background: #2a2145; }
+.dev-btn.danger { color: var(--crimson); border-color: #5a3238; }
+
 @media (prefers-reduced-motion: reduce) {
   .progress-fill.running { animation: none; }
   .heat-fill.critical { animation: none; }

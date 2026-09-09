@@ -42,9 +42,25 @@ npm test         # run the unit tests once (Vitest)
 npm run test:watch
 ```
 
-The tests cover the two things most worth locking down: the **heist resolution math**
-(success chance, payout, roll-at-collect success/failure) and the **timestamp-based
-offline/idle + heat-cooldown math** (including the offline cap).
+The tests cover the core systems: the **per-member resolution + payout math**, the
+**timestamp-based offline/idle + heat-cooldown math** (including the offline cap and the
+Fixer), **save/load** validation, the **economy**, and the **meta-progression**
+(prestige/notoriety/milestones/contract).
+
+## Dev / test mode
+
+Append **`?dev=1`** to the URL (e.g. `http://localhost:5173/?dev=1`) to show a hidden
+dev panel (bottom-left) for testing without waiting or grinding:
+
+- **+$10k / +$1M** — add cash (also raises lifetime/career, so tiers unlock)
+- **+5 Notor.** — add Notoriety
+- **Finish jobs** — mark all in-progress heists ready to collect now
+- **+1h / +6h / +12h** — fast-forward: simulates having been away that long (long heists
+  finish, heat cools, and the Fixer auto-runs), so you can test the 12-hour job and the
+  whole progression in seconds
+- **Reset** — clear the save
+
+The panel only renders when `?dev=1` is present, so it never ships to players.
 
 ---
 
