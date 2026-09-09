@@ -17,8 +17,8 @@ function hot(heat: number, at = T0): GameState {
 describe('deriveHeat (timestamp-based cooldown)', () => {
   it('cools linearly with elapsed real time', () => {
     const state = hot(100);
-    // coolPerSec 0.6 default -> after 10s, 6 points gone
-    expect(deriveHeat(state, T0 + 10 * SEC)).toBeCloseTo(100 - 0.6 * 10, 5);
+    // after 10s, heatCoolPerSec * 10 points are gone
+    expect(deriveHeat(state, T0 + 10 * SEC)).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
   });
 
   it('never drops below zero', () => {
@@ -40,8 +40,8 @@ describe('deriveHeat (timestamp-based cooldown)', () => {
 
   it('respects the heat-cooldown-speed upgrade multiplier', () => {
     const state: GameState = { ...hot(100), purchasedUpgradeIds: ['corrupt_official'] };
-    // corrupt_official = +50% cooldown speed -> 0.6 * 1.5 = 0.9/sec
-    expect(deriveHeat(state, T0 + 10 * SEC)).toBeCloseTo(100 - 0.9 * 10, 5);
+    // corrupt_official = +50% cooldown speed
+    expect(deriveHeat(state, T0 + 10 * SEC)).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 1.5 * 10, 5);
   });
 });
 
@@ -49,13 +49,13 @@ describe('heat mutation helpers', () => {
   it('settleHeat bakes in cooldown and resets the clock', () => {
     const state = hot(100);
     const settled = settleHeat(state, T0 + 10 * SEC);
-    expect(settled.heat).toBeCloseTo(94, 5);
+    expect(settled.heat).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
     expect(settled.heatUpdatedAt).toBe(T0 + 10 * SEC);
   });
 
   it('addHeat settles first, then adds, clamped to maxHeat', () => {
     const state = hot(100);
-    // cool 10s (-6 -> 94), then add 20 -> 114 clamped to 100
+    // cool 10s, then add 20 -> still over maxHeat, so clamped
     const bumped = addHeat(state, 20, T0 + 10 * SEC);
     expect(bumped.heat).toBe(CONFIG.maxHeat);
   });
@@ -98,14 +98,14 @@ describe('resolveOffline (idle/offline resolution)', () => {
   it('settles heat forward across the away period', () => {
     const saved = hot(100);
     const summary = resolveOffline({ ...saved, lastSaved: T0 }, T0 + 10 * SEC);
-    expect(summary.state.heat).toBeCloseTo(94, 5);
+    expect(summary.state.heat).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
   });
 });
 
 describe('saveGame', () => {
   it('returns a state with heat settled to now (works without localStorage)', () => {
     const saved = saveGame(hot(100), T0 + 10 * SEC);
-    expect(saved.heat).toBeCloseTo(94, 5);
+    expect(saved.heat).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
     expect(saved.lastSaved).toBe(T0 + 10 * SEC);
   });
 });

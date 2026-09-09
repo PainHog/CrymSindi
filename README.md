@@ -102,8 +102,14 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
 
 - 1 starting safehouse (room to buy a 2nd and to expand capacity), crews of up to 3 members
 - 4 roles, 5 gear items, 4 global upgrades
-- Two tiers of heists (Tier 2 unlocks at $3,000 lifetime earnings)
-- Resources: Cash and Heat
+- Ten heists across five tiers, gated by lifetime earnings, spanning a full
+  duration ladder for both quick check-ins and long idle sessions:
+  - Tier 1 (always on): 20s / 45s / 90s
+  - Tier 2 ($3k): 5 min / 10 min
+  - Tier 3 ($20k): 15 min / 30 min
+  - Tier 4 ($120k): 1 hour / 5 hours
+  - Tier 5 ($600k): 12 hours
+- Resources: Cash and Heat (heat builds as you run crews and cools over real time)
 
 It's intentionally shallow but complete end to end — enough to feel the
 safehouse → crew → member → heist loop. Expand it by editing the data files above.

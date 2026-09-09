@@ -6,9 +6,13 @@ export function formatCash(n: number): string {
 
 export function formatDuration(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds));
-  const m = Math.floor(s / 60);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
   const rem = s % 60;
-  return `${m}:${rem.toString().padStart(2, '0')}`;
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  // Show h:mm:ss for jobs an hour or longer, mm:ss otherwise.
+  if (h > 0) return `${h}:${pad(m)}:${pad(rem)}`;
+  return `${m}:${pad(rem)}`;
 }
 
 /** Countdown from milliseconds remaining, floored at 0. */

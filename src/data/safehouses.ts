@@ -25,8 +25,8 @@ export interface SafehouseTier {
 // Ordered chain: index N upgrades to index N+1.
 export const SAFEHOUSE_TIERS: SafehouseTier[] = [
   { id: 'lockup', name: 'Backstreet Lockup', crewSlots: 1, upgradeCost: 0 },
-  { id: 'warehouse', name: 'Riverside Warehouse', crewSlots: 2, upgradeCost: 1200 },
-  { id: 'compound', name: 'Fortified Compound', crewSlots: 3, upgradeCost: 4500 },
+  { id: 'warehouse', name: 'Riverside Warehouse', crewSlots: 2, upgradeCost: 400 },
+  { id: 'compound', name: 'Fortified Compound', crewSlots: 3, upgradeCost: 3000 },
 ];
 
 export const SAFEHOUSE_TIERS_BY_ID: Record<SafehouseTierId, SafehouseTier> =

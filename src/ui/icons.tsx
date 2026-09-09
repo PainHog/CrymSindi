@@ -25,7 +25,12 @@ export type IconName =
   | 'atm_skim'
   | 'warehouse_job'
   | 'bank_vault'
-  | 'casino_heist';
+  | 'casino_heist'
+  | 'jewelry'
+  | 'cargo'
+  | 'convoy'
+  | 'datacenter'
+  | 'centralbank';
 
 function Svg({
   size,
@@ -190,6 +195,46 @@ function paths(name: IconName): ReactNode {
           <path d="M12 3.6v2.6M12 17.8v2.6M3.6 12h2.6M17.8 12h2.6M6 6l1.9 1.9M18 6l-1.9 1.9M6 18l1.9-1.9M18 18l-1.9-1.9" />
         </>
       );
+    case 'jewelry': // cut gem
+      return (
+        <>
+          <path d="M6 9 8.5 5h7L18 9l-6 10z" />
+          <path d="M6 9h12M9.5 9 12 19M14.5 9 12 19M8.5 5l1 4M15.5 5l-1 4" />
+        </>
+      );
+    case 'cargo': // shipping container
+      return (
+        <>
+          <rect x="3" y="7.5" width="18" height="9" rx="1" />
+          <path d="M7 7.5v9M11 7.5v9M15 7.5v9M19 7.5v9" />
+        </>
+      );
+    case 'convoy': // armored truck
+      return (
+        <>
+          <path d="M2.5 7h10.5v9H2.5z" />
+          <path d="M13 10h4l3 3v3h-7z" />
+          <circle cx="6.2" cy="17.5" r="1.5" />
+          <circle cx="16.4" cy="17.5" r="1.5" />
+        </>
+      );
+    case 'datacenter': // server racks
+      return (
+        <>
+          <rect x="3.5" y="4.5" width="17" height="6" rx="1" />
+          <rect x="3.5" y="13.5" width="17" height="6" rx="1" />
+          <path d="M10 7.5h7M10 16.5h7" />
+          <path d="M6.5 7.5h.01M6.5 16.5h.01" />
+        </>
+      );
+    case 'centralbank': // bank facade
+      return (
+        <>
+          <path d="M3 9 12 4l9 5" />
+          <path d="M4.5 9v8M9 9v8M12 9v8M15 9v8M19.5 9v8" />
+          <path d="M3 20h18" />
+        </>
+      );
     default:
       return <circle cx="12" cy="12" r="8.4" />;
   }
@@ -236,6 +281,21 @@ export function RoleIcon({
   return <Icon name={roleIconName(role)} size={size} className={className} />;
 }
 
+// Maps a heist id to its icon. Add an entry when you add a heist; unknown ids
+// fall back to a generic target icon so new content still renders.
+const HEIST_ICON: Record<string, IconName> = {
+  smash_grab: 'smash_grab',
+  atm_skim: 'atm_skim',
+  warehouse_job: 'warehouse_job',
+  bank_vault: 'bank_vault',
+  casino_heist: 'casino_heist',
+  jewelry_exchange: 'jewelry',
+  cargo_port: 'cargo',
+  armored_convoy: 'convoy',
+  data_center: 'datacenter',
+  central_bank: 'centralbank',
+};
+
 export function HeistIcon({
   id,
   size = 22,
@@ -245,15 +305,7 @@ export function HeistIcon({
   size?: number;
   className?: string;
 }) {
-  const known: IconName[] = [
-    'smash_grab',
-    'atm_skim',
-    'warehouse_job',
-    'bank_vault',
-    'casino_heist',
-  ];
-  const name = (known as string[]).includes(id) ? (id as IconName) : 'target';
-  return <Icon name={name} size={size} className={className} />;
+  return <Icon name={HEIST_ICON[id] ?? 'target'} size={size} className={className} />;
 }
 
 /** A "dossier mugshot": role-tinted panel with a bust silhouette + role badge. */

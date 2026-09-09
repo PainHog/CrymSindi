@@ -70,8 +70,8 @@ describe('save / load round-trip', () => {
   it('settles heat forward across an away period on load', () => {
     const hot = { ...createInitialState(T0), heat: 100, heatUpdatedAt: T0 };
     saveGame(hot, T0);
-    const loaded = loadGame(T0 + 10 * SEC); // 0.6/s -> 6 points cooled
-    expect(loaded!.state.heat).toBeCloseTo(94, 5);
+    const loaded = loadGame(T0 + 10 * SEC);
+    expect(loaded!.state.heat).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
   });
 
   it('clearSave removes the save', () => {

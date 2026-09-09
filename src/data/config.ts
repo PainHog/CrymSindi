@@ -50,15 +50,15 @@ export const CONFIG: Config = {
   saveKey: 'heist-crew-idle/save/v1',
 
   // ---- Starting conditions -------------------------------------------------
-  startingCash: 300,
+  startingCash: 350,
   startingHeat: 0,
   startingMemberSkill: 3, // skill of the free starting member
   crewMaxMembers: 3, // how many members a crew can hold
 
   // ---- Heat (risk meter) ---------------------------------------------------
   maxHeat: 100, // heat is clamped to [0, maxHeat]
-  heatCoolPerSec: 0.6, // base heat points that cool per real second
-  offlineCapSec: 8 * 60 * 60, // cap passive effects (heat cooldown) at 8 hours
+  heatCoolPerSec: 0.3, // base heat points that cool per real second (~5.5 min for a full bar)
+  offlineCapSec: 12 * 60 * 60, // cap passive effects (heat cooldown) at 12 hours
 
   // ---- Success-chance model ------------------------------------------------
   // chance = successBase + successSlope * (crewPower - difficulty)
@@ -68,7 +68,7 @@ export const CONFIG: Config = {
   successSlope: 0.02, // per point of (crewPower - difficulty)
   successMin: 0.05,
   successMax: 0.97,
-  heatSuccessPenalty: 0.25, // at full heat, subtract up to this from the chance
+  heatSuccessPenalty: 0.35, // at full heat, subtract up to this from the chance
 
   // ---- Economy: safehouses -------------------------------------------------
   // Cost to buy the next NEW safehouse = base * mult^(safehousesOwned - 1).
@@ -77,7 +77,7 @@ export const CONFIG: Config = {
 
   // ---- Economy: crews ------------------------------------------------------
   // Cost to form the next NEW crew = base * mult^(crewsOwned - 1).
-  newCrewBaseCost: 400,
+  newCrewBaseCost: 250,
   newCrewCostMult: 3,
 
   // ---- Economy: recruiting -------------------------------------------------
@@ -94,7 +94,7 @@ export const CONFIG: Config = {
   // ---- Progression gates ---------------------------------------------------
   // Map of heist tier -> lifetime cash (total ever earned) required to unlock.
   // Tier 1 is always unlocked. Add more entries to gate future tiers.
-  tierUnlocks: { 2: 3000 } as Record<number, number>,
+  tierUnlocks: { 2: 3000, 3: 20000, 4: 120000, 5: 600000 } as Record<number, number>,
 
   // ---- Client pacing (UI only, never the source of truth) ------------------
   autosaveIntervalMs: 15000,
