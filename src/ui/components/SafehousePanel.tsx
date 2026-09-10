@@ -5,6 +5,8 @@ import { ROLES, ROLES_BY_ID } from '../../data/roles';
 import { SAFEHOUSE_TIERS_BY_ID, safehouseTierIndex, SAFEHOUSE_TIERS } from '../../data/safehouses';
 import {
   activeHeistForCrew,
+  contractHeistDef,
+  crewPower,
   getMember,
   memberEffectiveSkill,
   nextCrewCost,
@@ -115,8 +117,13 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
   const { game, actions } = useGame();
   const onHeist = crew.status === 'onHeist';
   const active = activeHeistForCrew(game, crew.id);
-  const heist = active ? HEISTS_BY_ID[active.heistId] : undefined;
+  const heist = active
+    ? active.contractLevel != null
+      ? contractHeistDef(active.contractLevel)
+      : HEISTS_BY_ID[active.heistId]
+    : undefined;
   const openSeats = crew.maxMembers - crew.memberIds.length;
+  const power = crewPower(game, crew);
 
   return (
     <div className={`crew-card ${onHeist ? 'locked' : ''}`}>
@@ -128,6 +135,11 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
           {crewLabel(index)}
         </span>
         <span className="crew-head-right">
+          {crew.memberIds.length > 0 && (
+            <span className="crew-power" title="Total crew power (member skill + gear + notoriety)">
+              ⚡ {Math.round(power)}
+            </span>
+          )}
           <span className="crew-size">
             {crew.memberIds.length}/{crew.maxMembers}
           </span>
@@ -140,10 +152,7 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
       </div>
 
       {onHeist && heist && active && (
-        <>
-          <div className="crew-tape">On the job — do not disturb</div>
-          <CrewJobStatus heistName={heist.name} endsAt={active.endsAt} />
-        </>
+        <CrewJobStatus heistName={heist.name} activeId={active.id} endsAt={active.endsAt} />
       )}
 
       <div className="member-list">
@@ -189,18 +198,37 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
   );
 }
 
-function CrewJobStatus({ heistName, endsAt }: { heistName: string; endsAt: number }) {
+function CrewJobStatus({
+  heistName,
+  activeId,
+  endsAt,
+}: {
+  heistName: string;
+  activeId: string;
+  endsAt: number;
+}) {
+  const { actions } = useGame();
   const now = useNow();
   const ready = now >= endsAt;
   return (
-    <p className="active-note" style={{ marginBottom: 8 }}>
-      <Icon name="clock" size={13} /> {heistName} ·{' '}
-      {ready ? (
-        <strong style={{ color: 'var(--brass)' }}>ready to collect</strong>
-      ) : (
-        formatCountdown(endsAt - now)
+    <>
+      <div className={`crew-tape ${ready ? 'ready' : ''}`}>
+        {ready ? 'Ready to collect' : 'On the job — do not disturb'}
+      </div>
+      <p className="active-note" style={{ marginBottom: ready ? 8 : 0 }}>
+        <Icon name="clock" size={13} /> {heistName} ·{' '}
+        {ready ? (
+          <strong style={{ color: 'var(--brass)' }}>done</strong>
+        ) : (
+          formatCountdown(endsAt - now)
+        )}
+      </p>
+      {ready && (
+        <button className="btn small primary block" onClick={() => actions.collect(activeId)}>
+          Collect the take
+        </button>
       )}
-    </p>
+    </>
   );
 }
 

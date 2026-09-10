@@ -3,6 +3,7 @@ import { ActiveHeists } from './components/ActiveHeists';
 import { HeistList } from './components/HeistList';
 import { DevPanel } from './components/DevPanel';
 import { MilestonesPanel } from './components/MilestonesPanel';
+import { OnboardingBanner } from './components/OnboardingBanner';
 import { PrestigePanel } from './components/PrestigePanel';
 import { ReportModal } from './components/ReportModal';
 import { ResourceBar } from './components/ResourceBar';
@@ -17,6 +18,7 @@ export default function App() {
       <div className="app">
         <TopBar />
         <ResourceBar />
+        <OnboardingBanner />
 
         <main className="layout">
           <div className="col col-main">

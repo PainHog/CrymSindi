@@ -152,7 +152,31 @@ export function collectHeist(
     next = addHeat(next, report.heatAdded, now, config);
   }
 
-  return { ok: true, state: next, message: report.headline, report };
+  const message =
+    report.payout > 0 ? `${report.headline} · +$${report.payout.toLocaleString('en-US')}` : report.headline;
+  return { ok: true, state: next, message, report };
+}
+
+/** Collect every finished heist at once (bulk). Returns a summary; individual
+ *  collect still resolves the seeded outcome and updates stats/contract. */
+export function collectAllReady(
+  state: GameState,
+  now: number,
+  config: Config = CONFIG,
+): { state: GameState; collected: number; earned: number } {
+  const readyIds = state.activeHeists.filter((a) => now >= a.endsAt).map((a) => a.id);
+  let s = state;
+  let collected = 0;
+  let earned = 0;
+  for (const id of readyIds) {
+    const res = collectHeist(s, id, now, undefined, config);
+    if (res.ok) {
+      s = res.state;
+      collected += 1;
+      earned += res.report?.payout ?? 0;
+    }
+  }
+  return { state: s, collected, earned };
 }
 
 /** Settle heat to `now` without any other change (used on focus/visibility). */

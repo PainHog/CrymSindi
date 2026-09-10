@@ -25,6 +25,7 @@ import {
   buySafehouse,
   buyUpgrade,
   clearSave,
+  collectAllReady,
   collectHeist,
   createInitialState,
   formCrew,
@@ -52,6 +53,7 @@ interface UIState {
 type Action =
   | { type: 'launch'; heistId: string; crewId: string; now: number; seed: number }
   | { type: 'collect'; id: string; now: number }
+  | { type: 'collectAll'; now: number }
   | { type: 'buySafehouse' }
   | { type: 'upgradeSafehouse'; safehouseId: string }
   | { type: 'formCrew'; safehouseId: string }
@@ -87,6 +89,17 @@ function reducer(ui: UIState, action: Action): UIState {
       const res = collectHeist(ui.game, action.id, action.now);
       const nextUi = applyResult(ui, res);
       return { ...nextUi, report: res.ok && res.report ? res.report : ui.report };
+    }
+    case 'collectAll': {
+      const { state, collected, earned } = collectAllReady(ui.game, action.now);
+      if (collected === 0) {
+        return { ...ui, message: 'Nothing ready to collect.', messageId: ui.messageId + 1 };
+      }
+      return applyResult(ui, {
+        ok: true,
+        state,
+        message: `Collected ${collected} job${collected > 1 ? 's' : ''} · +$${Math.round(earned).toLocaleString('en-US')}`,
+      });
     }
     case 'dismissReport':
       return { ...ui, report: null };
@@ -186,6 +199,7 @@ interface GameContextValue {
   actions: {
     launch: (heistId: string, crewId: string) => void;
     collect: (id: string) => void;
+    collectAll: () => void;
     buySafehouse: () => void;
     upgradeSafehouse: (safehouseId: string) => void;
     formCrew: (safehouseId: string) => void;
@@ -265,6 +279,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           seed: Math.floor(Math.random() * 0x100000000),
         }),
       collect: (id) => dispatch({ type: 'collect', id, now: Date.now() }),
+      collectAll: () => dispatch({ type: 'collectAll', now: Date.now() }),
       buySafehouse: () => dispatch({ type: 'buySafehouse' }),
       upgradeSafehouse: (safehouseId) => dispatch({ type: 'upgradeSafehouse', safehouseId }),
       formCrew: (safehouseId) => dispatch({ type: 'formCrew', safehouseId }),

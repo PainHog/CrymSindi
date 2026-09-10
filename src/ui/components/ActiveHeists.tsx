@@ -1,5 +1,5 @@
 import { HEISTS_BY_ID } from '../../data/heists';
-import { heistStatusAt } from '../../engine';
+import { contractHeistDef, heistStatusAt } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCountdown, pct } from '../format';
 import { HeistIcon, Icon } from '../icons';
@@ -8,21 +8,30 @@ export function ActiveHeists() {
   const { game, actions } = useGame();
   const now = useNow();
 
+  const readyCount = game.activeHeists.filter((a) => now >= a.endsAt).length;
+
   return (
     <section className="panel">
-      <h2 className="panel-title">
-        <span className="panel-ico">
-          <Icon name="target" size={17} />
-        </span>
-        On the job
-      </h2>
+      <div className="panel-title row">
+        <h2>
+          <Icon name="target" size={17} /> On the job
+        </h2>
+        {readyCount >= 2 && (
+          <button className="btn small primary" onClick={actions.collectAll}>
+            Collect all ({readyCount})
+          </button>
+        )}
+      </div>
 
       {game.activeHeists.length === 0 ? (
         <p className="empty">No crews are out right now. Send one on a job.</p>
       ) : (
         <div className="active-list">
           {game.activeHeists.map((active) => {
-            const heist = HEISTS_BY_ID[active.heistId];
+            const heist =
+              active.contractLevel != null
+                ? contractHeistDef(active.contractLevel)
+                : HEISTS_BY_ID[active.heistId];
             const crewIdx = game.crews.findIndex((c) => c.id === active.crewId);
             const status = heistStatusAt(active.endsAt, now);
             const ready = status === 'ready';

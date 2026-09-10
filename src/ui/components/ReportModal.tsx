@@ -113,9 +113,20 @@ export function ReportModal() {
           </section>
         )}
 
-        <button className="btn primary block" onClick={actions.dismissReport}>
-          Close debrief
-        </button>
+        <div className="report-actions">
+          <button
+            className="btn"
+            onClick={() => {
+              actions.launch(report.heistId, report.crewId);
+              actions.dismissReport();
+            }}
+          >
+            <Icon name="target" size={13} /> Run it again
+          </button>
+          <button className="btn primary" onClick={actions.dismissReport}>
+            Close debrief
+          </button>
+        </div>
       </div>
     </div>
   );

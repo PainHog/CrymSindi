@@ -3,7 +3,7 @@ import { CONFIG } from '../data/config';
 import { HEISTS_BY_ID } from '../data/heists';
 import type { RoleId } from '../data/roles';
 import { createInitialState } from './state';
-import { launchHeist, collectHeist } from './heists';
+import { launchHeist, collectHeist, collectAllReady } from './heists';
 import {
   estimateSuccess,
   memberPassChance,
@@ -218,5 +218,22 @@ describe('launch + collect integration', () => {
     expect(collected.report).toBeTruthy();
     expect(collected.report!.members).toHaveLength(3);
     expect(getCrew(collected.state, 'c1')!.status).toBe('idle');
+  });
+
+  it('collectAllReady collects every finished heist at once', () => {
+    const state = makeState([
+      { role: 'driver', skill: 6 },
+      { role: 'muscle', skill: 6 },
+      { role: 'hacker', skill: 6 },
+    ]);
+    const launched = launchHeist(state, 'smash_grab', 'c1', T0);
+    expect(launched.ok).toBe(true);
+    if (!launched.ok) return;
+    const endsAt = launched.state.activeHeists[0].endsAt;
+
+    const summary = collectAllReady(launched.state, endsAt);
+    expect(summary.collected).toBe(1);
+    expect(summary.state.activeHeists).toHaveLength(0);
+    expect(getCrew(summary.state, 'c1')!.status).toBe('idle');
   });
 });
