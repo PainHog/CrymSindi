@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { CONFIG } from '../../data/config';
-import { GEAR, GEAR_BY_ID } from '../../data/gear';
+import { GEAR_BY_ID, gearForRole } from '../../data/gear';
 import type { GearDef } from '../../data/gear';
 import { ROLES_BY_ID } from '../../data/roles';
 import { skillUpgradeCost } from '../../engine';
@@ -215,12 +215,10 @@ function Beat({ beat }: { beat: MemberBeat }) {
   );
 }
 
-/** Cheapest unowned gear for a member, preferring their role-affinity piece. */
+/** Cheapest unowned gear a member's role is allowed to buy. */
 function bestGearFor(member: Member): GearDef | undefined {
-  const unowned = GEAR.filter((g) => !member.gearIds.includes(g.id));
-  if (unowned.length === 0) return undefined;
-  const affinity = unowned.filter((g) => g.roleAffinity === member.role);
-  return (affinity.length ? affinity : unowned).slice().sort((a, b) => a.cost - b.cost)[0];
+  const buyable = gearForRole(member.role).filter((g) => !member.gearIds.includes(g.id));
+  return buyable.slice().sort((a, b) => a.cost - b.cost)[0];
 }
 
 /** One-click action for a member-targeted recommendation (train / gear). */

@@ -1,5 +1,5 @@
 import { CONFIG } from '../../data/config';
-import { GEAR } from '../../data/gear';
+import { GEAR, gearAllowedForRole } from '../../data/gear';
 import { HEISTS_BY_ID } from '../../data/heists';
 import { ROLES, ROLES_BY_ID } from '../../data/roles';
 import { SAFEHOUSE_TIERS_BY_ID, safehouseTierIndex, SAFEHOUSE_TIERS } from '../../data/safehouses';
@@ -239,7 +239,9 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
   const gearBonus = effective - member.skill;
   const skillCost = skillUpgradeCost(member);
   const maxed = member.skill >= CONFIG.maxMemberSkill;
-  const unowned = GEAR.filter((g) => !member.gearIds.includes(g.id));
+  const unowned = GEAR.filter(
+    (g) => gearAllowedForRole(g, member.role) && !member.gearIds.includes(g.id),
+  );
 
   return (
     <div className={`member-row ${locked ? 'dim' : ''}`} data-role={member.role}>
@@ -286,7 +288,7 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
                 disabled={game.cash < g.cost}
                 title={
                   g.description +
-                  (g.roleAffinity ? ` (best for ${ROLES_BY_ID[g.roleAffinity]?.name})` : '')
+                  (g.role ? ` (${ROLES_BY_ID[g.role]?.name} only)` : ' (any role)')
                 }
                 onClick={() => actions.buyGear(member.id, g.id)}
               >

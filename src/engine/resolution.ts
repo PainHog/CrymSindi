@@ -14,7 +14,7 @@
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
-import { GEAR } from '../data/gear';
+import { gearForRole } from '../data/gear';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import type { RoleId } from '../data/roles';
@@ -428,7 +428,7 @@ function buildRecommendations(
     if (weak.effectiveSkill < config.maxMemberSkill) {
       recs.push({ kind: 'skill', memberId: weak.memberId, text: `Train ${weak.name} (skill ${weak.effectiveSkill}) — the weak link this run.` });
     }
-    if (weak.gearIds.length < GEAR.length) {
+    if (weak.gearIds.length < gearForRole(weak.role).length) {
       recs.push({ kind: 'gear', memberId: weak.memberId, text: `Gear up ${weak.name} — better tools lift their odds.` });
     }
   }

@@ -9,7 +9,7 @@
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
-import { GEAR_BY_ID } from '../data/gear';
+import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
 import { pickName } from '../data/names';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
@@ -179,6 +179,9 @@ export function buyGear(state: GameState, memberId: string, gearId: string): Act
 
   const gear = GEAR_BY_ID[gearId];
   if (!gear) return { ok: false, error: 'Unknown gear.' };
+  if (!gearAllowedForRole(gear, member.role)) {
+    return { ok: false, error: `${gear.name} isn't for a ${member.role}.` };
+  }
   if (member.gearIds.includes(gearId)) {
     return { ok: false, error: 'That member already owns this gear.' };
   }

@@ -36,14 +36,13 @@ export function getSafehouse(state: GameState, id: string): Safehouse | undefine
 
 // ---- Skill / power ----------------------------------------------------------
 
-/** A member's effective skill including gear bonuses (flat + role affinity). */
+/** A member's effective skill including owned-gear bonuses. */
 export function memberEffectiveSkill(member: Member): number {
   let skill = member.skill;
   for (const gearId of member.gearIds) {
     const gear = GEAR_BY_ID[gearId];
     if (!gear) continue;
     skill += gear.skillBonus;
-    if (gear.roleAffinity === member.role) skill += gear.affinityBonus ?? 0;
   }
   return skill;
 }
