@@ -1,5 +1,6 @@
 import { GameProvider } from '../store/GameContext';
 import { ActiveHeists } from './components/ActiveHeists';
+import { DailyRewardBanner } from './components/DailyRewardBanner';
 import { HeistList } from './components/HeistList';
 import { DevPanel } from './components/DevPanel';
 import { MilestonesPanel } from './components/MilestonesPanel';
@@ -10,9 +11,11 @@ import { ResourceBar } from './components/ResourceBar';
 import { SafehousePanel } from './components/SafehousePanel';
 import { ScreenShake } from './components/ScreenShake';
 import { SoundFx } from './components/SoundFx';
+import { TabTitle } from './components/TabTitle';
 import { Toast } from './components/Toast';
 import { TopBar } from './components/TopBar';
 import { UpgradePanel } from './components/UpgradePanel';
+import { WelcomeBackModal } from './components/WelcomeBackModal';
 
 export default function App() {
   return (
@@ -22,6 +25,7 @@ export default function App() {
           <TopBar />
           <ResourceBar />
           <OnboardingBanner />
+          <DailyRewardBanner />
 
           <main className="layout">
             <div className="col col-main">
@@ -50,8 +54,10 @@ export default function App() {
           off-screen during the shake. */}
       <Toast />
       <ReportModal />
+      <WelcomeBackModal />
       <DevPanel />
       <SoundFx />
+      <TabTitle />
     </GameProvider>
   );
 }

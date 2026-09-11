@@ -248,6 +248,9 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
       contractLevel: state.contractLevel,
       stats: state.stats,
       milestonesEarned: state.milestonesEarned,
+      // The login streak is real-time, not run-scoped — keep it across prestige.
+      dailyClaimDay: state.dailyClaimDay,
+      dailyStreak: state.dailyStreak,
     },
     message: `Went legit. +${gain} Notoriety (now ${state.notoriety + gain}).`,
   };

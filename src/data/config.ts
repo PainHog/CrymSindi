@@ -65,6 +65,12 @@ export interface Config {
 
   tierUnlocks: Record<number, number>;
 
+  // Daily reward: reward = dailyRewardBase * (1 + dailyStreakBonus*(streakDay-1))
+  // * (unlocked tier), so it stays relevant as the player progresses.
+  dailyRewardBase: number;
+  dailyStreakBonus: number;
+  dailyStreakMax: number; // streak multiplier stops growing past this many days
+
   autosaveIntervalMs: number;
   uiTickMs: number;
 }
@@ -157,6 +163,11 @@ export const CONFIG: Config = {
   // Map of heist tier -> lifetime cash (total ever earned) required to unlock.
   // Tier 1 is always unlocked. Add more entries to gate future tiers.
   tierUnlocks: { 2: 1500, 3: 20000, 4: 120000, 5: 600000 } as Record<number, number>,
+
+  // ---- Daily reward --------------------------------------------------------
+  dailyRewardBase: 500,
+  dailyStreakBonus: 0.5, // +50% of base per consecutive day
+  dailyStreakMax: 7,
 
   // ---- Client pacing (UI only, never the source of truth) ------------------
   autosaveIntervalMs: 15000,

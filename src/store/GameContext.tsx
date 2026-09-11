@@ -24,6 +24,7 @@ import {
   buyGear,
   buySafehouse,
   buyUpgrade,
+  claimDaily,
   clearSave,
   collectAllReady,
   collectHeist,
@@ -52,6 +53,14 @@ export type GameEvent =
   | { kind: 'prestige' }
   | { kind: 'error' };
 
+/** What happened while the player was away, shown once on return. */
+export interface AwaySummary {
+  awayMs: number;
+  readyCount: number;
+  autoCollected: number;
+  autoEarned: number;
+}
+
 interface UIState {
   game: GameState;
   message: string | null;
@@ -59,6 +68,7 @@ interface UIState {
   report: HeistReport | null;
   event: GameEvent | null;
   eventId: number;
+  away: AwaySummary | null;
 }
 
 type Action =
@@ -73,9 +83,11 @@ type Action =
   | { type: 'upgradeSkill'; memberId: string }
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'prestige'; now: number }
+  | { type: 'claimDaily'; now: number }
   | { type: 'dev'; op: 'cash' | 'notoriety' | 'finish' | 'ff'; amount?: number; now: number }
   | { type: 'refreshHeat'; now: number }
   | { type: 'dismissReport' }
+  | { type: 'dismissAway' }
   | { type: 'replace'; game: GameState; message?: string };
 
 function applyResult(ui: UIState, result: ActionResult, okEvent?: GameEvent): UIState {
@@ -142,6 +154,8 @@ function reducer(ui: UIState, action: Action): UIState {
     }
     case 'dismissReport':
       return { ...ui, report: null };
+    case 'dismissAway':
+      return { ...ui, away: null };
     case 'buySafehouse':
       return applyResult(ui, buySafehouse(ui.game), { kind: 'purchase' });
     case 'upgradeSafehouse':
@@ -158,6 +172,27 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(ui, buyUpgrade(ui.game, action.upgradeId), { kind: 'purchase' });
     case 'prestige':
       return applyResult(ui, prestige(ui.game, action.now), { kind: 'prestige' });
+    case 'claimDaily': {
+      const res = claimDaily(ui.game, action.now);
+      if (!res.ok) {
+        return {
+          ...ui,
+          message: res.error,
+          messageId: ui.messageId + 1,
+          event: { kind: 'error' },
+          eventId: ui.eventId + 1,
+        };
+      }
+      return applyResult(
+        ui,
+        {
+          ok: true,
+          state: res.state,
+          message: `Daily reward · +${formatCash(res.reward)} (day ${res.streak} streak)`,
+        },
+        { kind: 'collect', payout: res.reward, success: true, flawless: false },
+      );
+    }
     case 'dev': {
       // Dev/test helpers (only reachable from the ?dev=1 panel).
       const g = ui.game;
@@ -219,15 +254,21 @@ function init(): UIState {
   const now = Date.now();
   const loaded = loadGame(now);
   if (loaded) {
-    let msg: string | null = null;
-    if (loaded.autoCollected > 0) {
-      msg = `The Fixer ran ${loaded.autoCollected} job${loaded.autoCollected > 1 ? 's' : ''} while you were out — +${formatCash(loaded.autoEarned)}.`;
-    } else if (loaded.readyCount > 0) {
-      msg = `Welcome back. ${loaded.readyCount} heist${loaded.readyCount > 1 ? 's' : ''} ready to collect.`;
-    }
-    return { game: loaded.state, message: msg, messageId: 0, report: null, event: null, eventId: 0 };
+    // Show a "while you were away" summary whenever something actually happened
+    // (a heist finished, or the Fixer collected) — for everyone, not just Fixer
+    // owners. A quick reload with nothing pending shows nothing.
+    const away: AwaySummary | null =
+      loaded.autoCollected > 0 || loaded.readyCount > 0
+        ? {
+            awayMs: loaded.awayMs,
+            readyCount: loaded.readyCount,
+            autoCollected: loaded.autoCollected,
+            autoEarned: loaded.autoEarned,
+          }
+        : null;
+    return { game: loaded.state, message: null, messageId: 0, report: null, event: null, eventId: 0, away };
   }
-  return { game: createInitialState(now), message: null, messageId: 0, report: null, event: null, eventId: 0 };
+  return { game: createInitialState(now), message: null, messageId: 0, report: null, event: null, eventId: 0, away: null };
 }
 
 interface GameContextValue {
@@ -237,6 +278,7 @@ interface GameContextValue {
   report: HeistReport | null;
   event: GameEvent | null;
   eventId: number;
+  away: AwaySummary | null;
   actions: {
     launch: (heistId: string, crewId: string) => void;
     collect: (id: string) => void;
@@ -249,7 +291,9 @@ interface GameContextValue {
     upgradeSkill: (memberId: string) => void;
     buyUpgrade: (upgradeId: string) => void;
     prestige: () => void;
+    claimDaily: () => void;
     dismissReport: () => void;
+    dismissAway: () => void;
     dev: (op: 'cash' | 'notoriety' | 'finish' | 'ff', amount?: number) => void;
     save: () => void;
     reset: () => void;
@@ -329,7 +373,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       upgradeSkill: (memberId) => dispatch({ type: 'upgradeSkill', memberId }),
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
       prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
+      claimDaily: () => dispatch({ type: 'claimDaily', now: Date.now() }),
       dismissReport: () => dispatch({ type: 'dismissReport' }),
+      dismissAway: () => dispatch({ type: 'dismissAway' }),
       dev: (op, amount) => dispatch({ type: 'dev', op, amount, now: Date.now() }),
       save,
       reset,
@@ -345,9 +391,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       report: ui.report,
       event: ui.event,
       eventId: ui.eventId,
+      away: ui.away,
       actions,
     }),
-    [ui.game, ui.message, ui.messageId, ui.report, ui.event, ui.eventId, actions],
+    [ui.game, ui.message, ui.messageId, ui.report, ui.event, ui.eventId, ui.away, actions],
   );
 
   return (

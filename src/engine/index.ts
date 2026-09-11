@@ -1,6 +1,8 @@
 // Public engine API. UI imports from here; the simulation stays framework-free.
 export * from './types';
+export * from './format';
 export * from './selectors';
+export * from './daily';
 export * from './heat';
 export * from './resolution';
 export * from './heists';

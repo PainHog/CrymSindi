@@ -53,6 +53,8 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     contractLevel: 0,
     stats: { heistsCompleted: 0, heistsSucceeded: 0, flawless: 0, biggestScore: 0 },
     milestonesEarned: [],
+    dailyClaimDay: -1,
+    dailyStreak: 0,
     lastSaved: now,
     nextId: 4,
   };
@@ -272,6 +274,10 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     notoriety: Math.max(0, state.notoriety),
     prestigeCount: Math.max(0, Math.floor(state.prestigeCount)),
     contractLevel: Math.max(0, Math.floor(state.contractLevel)),
+    // Default the daily-reward fields so a legacy save (written before they
+    // existed) or an edited one loads cleanly.
+    dailyClaimDay: isFiniteNum(state.dailyClaimDay) ? Math.floor(state.dailyClaimDay) : -1,
+    dailyStreak: isFiniteNum(state.dailyStreak) ? Math.max(0, Math.floor(state.dailyStreak)) : 0,
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
     members: state.members.map((m) => ({
       ...m,

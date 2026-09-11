@@ -67,6 +67,17 @@ describe('save / load round-trip', () => {
     expect(loaded!.readyCount).toBe(1);
   });
 
+  it('defaults the daily-reward fields for a legacy save that predates them', () => {
+    const legacy = createInitialState(T0) as unknown as Record<string, unknown>;
+    delete legacy.dailyClaimDay;
+    delete legacy.dailyStreak;
+    g.localStorage!.setItem(CONFIG.saveKey, JSON.stringify(legacy));
+    const loaded = loadGame(T0);
+    expect(loaded).not.toBeNull();
+    expect(loaded!.state.dailyClaimDay).toBe(-1);
+    expect(loaded!.state.dailyStreak).toBe(0);
+  });
+
   it('settles heat forward across an away period on load', () => {
     const hot = { ...createInitialState(T0), heat: 100, heatUpdatedAt: T0 };
     saveGame(hot, T0);

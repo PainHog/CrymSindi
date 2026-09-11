@@ -93,6 +93,10 @@ export interface GameState {
   stats: CareerStats;
   /** Milestone ids already awarded. */
   milestonesEarned: string[];
+  /** Day index (see daily.ts) of the last claimed daily reward; -1 if never. */
+  dailyClaimDay: number;
+  /** Consecutive-day login streak, for the daily reward. */
+  dailyStreak: number;
 
   /** Timestamp of the last save; used for offline resolution + display. */
   lastSaved: number;
