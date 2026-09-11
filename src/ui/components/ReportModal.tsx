@@ -58,7 +58,7 @@ export function ReportModal() {
   return (
     <div className="modal-backdrop" onClick={actions.dismissReport}>
       <div
-        className="report"
+        className={`report${report.perfect ? ' flawless' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={`Debrief: ${report.heistName}`}

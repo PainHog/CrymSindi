@@ -111,9 +111,12 @@ const CUES: Record<SfxName, (c: AudioContext) => void> = {
   error: (c) => tone(c, { freq: 150, dur: 0.12, type: 'square', gain: 0.1 }),
 };
 
-/** Play a cue (no-op when muted or audio is unavailable). */
+/** Play a cue (no-op when muted, unavailable, or the tab is hidden). */
 export function playSfx(name: SfxName): void {
   if (muted) return;
+  // Don't schedule tones while backgrounded — a suspended context would queue
+  // them to play in a stale cluster on refocus.
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
   const c = getCtx();
   if (!c) return;
   try {

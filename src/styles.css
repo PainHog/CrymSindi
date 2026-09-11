@@ -977,8 +977,6 @@ body::after {
 .dev-btn.danger { color: var(--crimson); border-color: #5a3238; }
 
 /* --- Juice: cash count-up flash, coin burst, stamp slam, ready pop, shake --- */
-/* Cash abbreviates now, so it never needs the tile's clip — let coins escape. */
-.stat.cash { overflow: visible; }
 .stat.cash.gain .stat-value { animation: cash-flash 600ms ease-out; }
 @keyframes cash-flash {
   0% { color: #fff; text-shadow: 0 0 22px var(--brass); transform: scale(1.09); }
@@ -1025,13 +1023,15 @@ body::after {
   100% { transform: scale(1); }
 }
 
-.shake-root.shake { animation: shake 430ms ease-in-out; }
-@keyframes shake {
+/* A flawless debrief shakes the modal card itself (it covers the screen on a
+   collect, so shaking the app behind it would be invisible). Runs after pop-in. */
+.report.flawless { animation: pop-in 0.18s ease-out, report-shake 0.42s ease-in-out 0.18s; }
+@keyframes report-shake {
   0%, 100% { transform: translate(0, 0); }
-  20% { transform: translate(-3px, 1px) rotate(-0.15deg); }
-  40% { transform: translate(3px, -1px) rotate(0.15deg); }
-  60% { transform: translate(-2px, 1px); }
-  80% { transform: translate(2px, -1px); }
+  20% { transform: translate(-4px, 1px) rotate(-0.2deg); }
+  40% { transform: translate(4px, -1px) rotate(0.2deg); }
+  60% { transform: translate(-3px, 1px); }
+  80% { transform: translate(3px, -1px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1043,7 +1043,7 @@ body::after {
   .stamp-badge, .stamp-ready { animation: none; }
   .stat.cash.gain .stat-value { animation: none; }
   .active-card.ready { animation: none; }
-  .shake-root.shake { animation: none; }
+  .report.flawless { animation: none; }
   .coin-burst { display: none; }
 }
 
