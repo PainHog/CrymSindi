@@ -12,6 +12,7 @@ import type { Config } from '../data/config';
 import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
 import { pickUniqueName } from '../data/names';
 import { PERKS_BY_ID, perkCost } from '../data/perks';
+import { traitForId } from '../data/traits';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
 import { UPGRADES_BY_ID } from '../data/upgrades';
@@ -156,6 +157,7 @@ export function recruitMember(
     role: roleId,
     skill: role.baseSkill,
     gearIds: [],
+    traitId: traitForId(state.nextId),
   };
 
   const next = spend(state, cost);

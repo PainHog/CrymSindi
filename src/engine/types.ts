@@ -18,6 +18,8 @@ export interface Member {
   role: RoleId;
   skill: number;
   gearIds: GearId[];
+  /** Optional trait modifying effective skill (see data/traits.ts). */
+  traitId?: string;
 }
 
 export type CrewStatus = 'idle' | 'onHeist';
@@ -127,6 +129,8 @@ export interface MemberBeat {
   role: RoleId;
   effectiveSkill: number;
   gearIds: GearId[];
+  /** Display name of the member's trait, if any. */
+  trait?: string;
   /** Whether this member cleared their check. */
   passed: boolean;
   /** The roll (0..1) and the chance they needed to beat it. */
@@ -179,6 +183,8 @@ export interface HeistReport {
 
   members: MemberBeat[];
   missingRoleCoverage: RoleId[];
+  /** Names of crew synergies that were active this run. */
+  synergies: string[];
   factors: HeistFactor[];
   recommendations: Recommendation[];
 }

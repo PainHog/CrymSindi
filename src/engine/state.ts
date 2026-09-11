@@ -41,9 +41,9 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     ],
     // A starter crew that can attempt the tier-1 jobs out of the gate.
     members: [
-      { id: 'm1', name: 'Vic Marlow', role: 'driver', skill, gearIds: [] },
-      { id: 'm2', name: 'Rey Okafor', role: 'hacker', skill, gearIds: [] },
-      { id: 'm3', name: 'Sal Petrov', role: 'muscle', skill, gearIds: [] },
+      { id: 'm1', name: 'Vic Marlow', role: 'driver', skill, gearIds: [], traitId: 'veteran' },
+      { id: 'm2', name: 'Rey Okafor', role: 'hacker', skill, gearIds: [], traitId: 'steady' },
+      { id: 'm3', name: 'Sal Petrov', role: 'muscle', skill, gearIds: [], traitId: 'brawler' },
     ],
     activeHeists: [],
     purchasedUpgradeIds: [],

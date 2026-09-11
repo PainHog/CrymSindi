@@ -19,9 +19,12 @@ import { formatCash } from './format';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import type { RoleId } from '../data/roles';
+import { TRAITS_BY_ID } from '../data/traits';
 import {
   clamp,
   crewPower,
+  crewSynergyNames,
+  crewSynergyPower,
   deriveHeat,
   getMember,
   heatGainMult,
@@ -123,9 +126,10 @@ export function estimateSuccess(
   if (members.length < minMembersFor(heist, config)) return 0;
 
   const heat = deriveHeat(state, now, config);
+  const synergy = crewSynergyPower(members);
   const per = members.map((m) => ({
     role: m.role,
-    p: memberPassChance(memberPower(state, m, config), heist.difficulty, heat, config),
+    p: memberPassChance(memberPower(state, m, config) + synergy, heist.difficulty, heat, config),
   }));
 
   const pCount = poissonBinomialAtLeast(per.map((x) => x.p), requiredPassesFor(heist, config));
@@ -230,9 +234,11 @@ export function resolveHeist(
     .map((id) => getMember(state, id))
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
 
+  const synergy = crewSynergyPower(members);
+
   // Per-member checks (one rng() per member, in crew order).
   const beats: MemberBeat[] = members.map((m) => {
-    const eff = memberPower(state, m, config);
+    const eff = memberPower(state, m, config) + synergy;
     const chance = memberPassChance(eff, heist.difficulty, heat, config);
     const roll = rng();
     const passed = roll < chance;
@@ -243,6 +249,7 @@ export function resolveHeist(
       role: m.role,
       effectiveSkill: eff,
       gearIds: m.gearIds,
+      trait: m.traitId ? TRAITS_BY_ID[m.traitId]?.name : undefined,
       passed,
       roll,
       chance,
@@ -316,6 +323,7 @@ export function resolveHeist(
     heatAtResolve: heat,
     members: beats,
     missingRoleCoverage,
+    synergies: crewSynergyNames(members),
     factors: buildFactors(beats, heist, heat, passCount, requiredPasses, missingRoleCoverage, perfect, perfectBonus, config),
     recommendations: buildRecommendations(beats, heat, passCount, requiredPasses, missingRoleCoverage, success, perfect, crewSize, config),
   };

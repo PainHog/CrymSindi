@@ -95,8 +95,8 @@ describe('prestige', () => {
       { perks: { reputation: 10, connections: 3 } },
     );
     const report = resolveWithNotoriety(s);
-    // Connections lvl 3 = +0.5*3 = +1.5 effective skill per member.
-    expect(report.members[0].effectiveSkill).toBeCloseTo(5 + 1.5, 5);
+    // Base 5 + Connections lvl 3 (+1.5) + Tight Unit synergy (3 distinct roles, +1) = 7.5.
+    expect(report.members[0].effectiveSkill).toBeCloseTo(5 + 1.5 + 1, 5);
     // Reputation lvl 10 = notorietyMult 1.5x on the take.
     expect(report.payout).toBeGreaterThan(0);
   });

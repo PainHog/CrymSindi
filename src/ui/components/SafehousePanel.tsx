@@ -2,6 +2,7 @@ import { CONFIG } from '../../data/config';
 import { GEAR, gearAllowedForRole } from '../../data/gear';
 import { HEISTS_BY_ID } from '../../data/heists';
 import { ROLES, ROLES_BY_ID } from '../../data/roles';
+import { TRAITS_BY_ID } from '../../data/traits';
 import { SAFEHOUSE_TIERS_BY_ID, safehouseTierIndex, SAFEHOUSE_TIERS } from '../../data/safehouses';
 import {
   activeHeistForCrew,
@@ -251,6 +252,11 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
         <div className="member-main">
           <span className="member-name">{member.name}</span>
           <span className="member-role">{role?.name ?? member.role}</span>
+          {member.traitId && TRAITS_BY_ID[member.traitId] && (
+            <span className="trait-chip" title={TRAITS_BY_ID[member.traitId].description}>
+              {TRAITS_BY_ID[member.traitId].name}
+            </span>
+          )}
           <span className="member-skill">
             skill {effective}
             {gearBonus > 0 && (

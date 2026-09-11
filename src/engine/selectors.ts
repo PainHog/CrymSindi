@@ -11,6 +11,8 @@ import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { GEAR_BY_ID } from '../data/gear';
 import { HEISTS_BY_ID } from '../data/heists';
+import { TRAITS_BY_ID } from '../data/traits';
+import { activeSynergies, synergyPower } from '../data/synergies';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import type { RoleId } from '../data/roles';
@@ -36,7 +38,7 @@ export function getSafehouse(state: GameState, id: string): Safehouse | undefine
 
 // ---- Skill / power ----------------------------------------------------------
 
-/** A member's effective skill including owned-gear bonuses. */
+/** A member's effective skill including owned-gear bonuses and their trait. */
 export function memberEffectiveSkill(member: Member): number {
   let skill = member.skill;
   for (const gearId of member.gearIds) {
@@ -44,7 +46,17 @@ export function memberEffectiveSkill(member: Member): number {
     if (!gear) continue;
     skill += gear.skillBonus;
   }
+  if (member.traitId) skill += TRAITS_BY_ID[member.traitId]?.skillBonus ?? 0;
   return skill;
+}
+
+/** Flat effective-skill bonus every member gets from the crew's active synergies. */
+export function crewSynergyPower(members: Member[]): number {
+  return synergyPower(members.map((m) => m.role));
+}
+/** Names of the crew's active synergies (for display). */
+export function crewSynergyNames(members: Member[]): string[] {
+  return activeSynergies(members.map((m) => m.role)).map((s) => s.name);
 }
 
 /** A member's effective skill including the global Notoriety aura. */

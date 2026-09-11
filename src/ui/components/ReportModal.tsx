@@ -212,6 +212,15 @@ function Summary({ report }: { report: HeistReport }) {
           needed {report.requiredPasses} clean · difficulty {report.difficulty} · heat{' '}
           {Math.round(report.heatAtResolve)}
         </span>
+        {report.synergies.length > 0 && (
+          <div className="synergy-row">
+            {report.synergies.map((s) => (
+              <span className="synergy-chip" key={s}>
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -227,6 +236,7 @@ function Beat({ beat }: { beat: MemberBeat }) {
         <div className="beat-top">
           <span className="beat-name">{beat.name}</span>
           <span className="beat-role">{role?.name ?? beat.role}</span>
+          {beat.trait && <span className="beat-trait">{beat.trait}</span>}
           <span className={`beat-q q-${beat.quality}`}>{QUALITY_LABEL[beat.quality]}</span>
         </div>
         <p className="beat-detail">{beat.detail}</p>
