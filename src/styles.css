@@ -977,6 +977,8 @@ body::after {
 .dev-btn.danger { color: var(--crimson); border-color: #5a3238; }
 
 /* --- Juice: cash count-up flash, coin burst, stamp slam, ready pop, shake --- */
+/* Cash abbreviates now, so it never needs the tile's clip — let coins escape. */
+.stat.cash { overflow: visible; }
 .stat.cash.gain .stat-value { animation: cash-flash 600ms ease-out; }
 @keyframes cash-flash {
   0% { color: #fff; text-shadow: 0 0 22px var(--brass); transform: scale(1.09); }

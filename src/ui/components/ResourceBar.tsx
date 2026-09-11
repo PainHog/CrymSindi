@@ -21,8 +21,8 @@ export function ResourceBar() {
   const coolPerSec = CONFIG.heatCoolPerSec * heatCoolRateMult(game);
   const { level, word } = heatStatus(heatFrac);
 
-  // Cash juice: animated count-up, a flash, and a coin burst when it rises.
-  const displayCash = useCountUp(game.cash);
+  // Cash juice: count up on gains, snap on spends, plus a flash and coin burst.
+  const displayCash = useCountUp(game.cash, 500, true);
   const prevCash = useRef(game.cash);
   const [gaining, setGaining] = useState(false);
   const [burst, setBurst] = useState(0);

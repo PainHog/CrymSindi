@@ -9,7 +9,6 @@
 
 export type SfxName =
   | 'launch'
-  | 'collect'
   | 'success'
   | 'fail'
   | 'purchase'
@@ -30,17 +29,37 @@ function readMuted(): boolean {
   }
 }
 
-function getCtx(): AudioContext | null {
-  if (typeof window === 'undefined') return null;
-  const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AC) return null;
+/** Create + resume the context. Only call this from a user gesture. */
+function arm(): void {
+  if (typeof window === 'undefined') return;
   if (!ctx) {
+    const AC =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AC) return;
     try {
       ctx = new AC();
     } catch {
-      return null;
+      ctx = null;
+      return;
     }
   }
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+}
+
+// Arm audio on the first real user gesture, so a non-gesture cue (e.g. a
+// ready-to-collect ping right after load) never spawns a suspended context or
+// a "not allowed to start" console warning.
+if (typeof window !== 'undefined') {
+  const onGesture = () => arm();
+  for (const ev of ['pointerdown', 'keydown', 'touchstart'] as const) {
+    window.addEventListener(ev, onGesture, { once: true, passive: true });
+  }
+}
+
+/** The context, or null if audio hasn't been armed by a gesture yet. */
+function getCtx(): AudioContext | null {
+  if (!ctx) return null;
   if (ctx.state === 'suspended') ctx.resume().catch(() => {});
   return ctx;
 }
@@ -67,6 +86,10 @@ function tone(c: AudioContext, o: ToneOpts): void {
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
   osc.connect(g);
   g.connect(c.destination);
+  osc.onended = () => {
+    osc.disconnect();
+    g.disconnect();
+  };
   osc.start(t0);
   osc.stop(t0 + o.dur + 0.03);
 }
@@ -77,10 +100,6 @@ function arpeggio(c: AudioContext, freqs: number[], step: number, type: Oscillat
 
 const CUES: Record<SfxName, (c: AudioContext) => void> = {
   launch: (c) => tone(c, { freq: 200, slideTo: 420, dur: 0.18, type: 'sawtooth', gain: 0.12 }),
-  collect: (c) => {
-    tone(c, { freq: 600, dur: 0.07, type: 'triangle', gain: 0.18 });
-    tone(c, { freq: 920, dur: 0.09, delay: 0.05, type: 'triangle', gain: 0.15 });
-  },
   success: (c) => arpeggio(c, [523, 659, 784], 0.075, 'triangle', 0.16), // C-E-G
   fail: (c) => tone(c, { freq: 300, slideTo: 110, dur: 0.34, type: 'sawtooth', gain: 0.14 }),
   purchase: (c) => tone(c, { freq: 520, dur: 0.06, type: 'square', gain: 0.1 }),
@@ -116,7 +135,7 @@ export function setMuted(next: boolean): void {
   } catch {
     /* storage may be blocked */
   }
-  if (!next) getCtx();
+  if (!next) arm(); // unmuting is a gesture — safe to create/resume here
 }
 
 export function toggleMuted(): boolean {

@@ -42,12 +42,15 @@ export default function App() {
               concept build.
             </p>
           </footer>
-
-          <Toast />
-          <ReportModal />
-          <DevPanel />
         </div>
       </ScreenShake>
+
+      {/* Fixed overlays live OUTSIDE ScreenShake: a transform on the shake
+          wrapper would otherwise become their containing block and yank them
+          off-screen during the shake. */}
+      <Toast />
+      <ReportModal />
+      <DevPanel />
       <SoundFx />
     </GameProvider>
   );

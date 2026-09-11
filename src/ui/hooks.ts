@@ -16,20 +16,26 @@ export function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Animate a display number toward `value` (ease-out cubic). Snaps instantly
- * under reduced motion. Each change animates from the previous target.
+ * Animate a display number toward `value` (ease-out cubic), always starting
+ * from what's currently on screen so back-to-back changes don't jump. Snaps
+ * instantly under reduced motion, and (with `snapOnDecrease`) when the value
+ * drops — so spending cash doesn't count downward.
  */
-export function useCountUp(value: number, durationMs = 500): number {
+export function useCountUp(value: number, durationMs = 500, snapOnDecrease = false): number {
   const reduce = usePrefersReducedMotion();
   const [display, setDisplay] = useState(value);
-  const prev = useRef(value);
+  const displayRef = useRef(value);
   const raf = useRef(0);
 
+  const set = (v: number) => {
+    displayRef.current = v;
+    setDisplay(v);
+  };
+
   useEffect(() => {
-    const from = prev.current;
-    prev.current = value;
-    if (reduce || durationMs <= 0 || from === value) {
-      setDisplay(value);
+    const from = displayRef.current;
+    if (reduce || durationMs <= 0 || from === value || (snapOnDecrease && value < from)) {
+      set(value);
       return;
     }
     let start = 0;
@@ -37,13 +43,18 @@ export function useCountUp(value: number, durationMs = 500): number {
       if (!start) start = t;
       const p = Math.min(1, (t - start) / durationMs);
       const eased = 1 - Math.pow(1 - p, 3);
-      setDisplay(from + (value - from) * eased);
-      if (p < 1) raf.current = requestAnimationFrame(step);
-      else setDisplay(value);
+      if (p < 1) {
+        set(from + (value - from) * eased);
+        raf.current = requestAnimationFrame(step);
+      } else {
+        set(value);
+      }
     };
     raf.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf.current);
-  }, [value, reduce, durationMs]);
+    // `set`/displayRef are stable; intentionally keyed on value/reduce/duration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, reduce, durationMs, snapOnDecrease]);
 
   return display;
 }
