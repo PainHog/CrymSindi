@@ -103,11 +103,14 @@ not by touching systems.
 | Costs, crew min/max, resolution + payout constants, Heat math, offline cap, unlock thresholds | `src/data/config.ts` |
 | Roles (Hacker, Muscle, Driver, Lookout, …), recruit cost, base skill | `src/data/roles.ts` |
 | Safehouse tiers + crew-slot capacity / upgrade costs | `src/data/safehouses.ts` |
-| Gear / tools and their skill bonuses         | `src/data/gear.ts`            |
+| Gear / tools (role-locked, three-tier lines) and their skill bonuses | `src/data/gear.ts`    |
 | Heists — roles required, duration, payoutPerSec, Heat, difficulty, tier | `src/data/heists.ts` |
 | Global upgrades (Heat/payout multipliers, the Fixer) and their costs | `src/data/upgrades.ts` |
 | Milestones/achievements (name, description, reward)  | `src/data/milestones.ts`  |
-| Recruited-member name pool                   | `src/data/names.ts`           |
+| Notoriety perks (the prestige tree) — effects live in `config.ts` | `src/data/perks.ts`  |
+| Member traits (flat skill modifiers, assigned at recruit) | `src/data/traits.ts`     |
+| Crew synergies (composition bonuses)         | `src/data/synergies.ts`       |
+| Recruited-member name pool (first × last grid) | `src/data/names.ts`         |
 
 The **simulation/economy logic** is separate from the UI, in `src/engine/`:
 
@@ -116,15 +119,18 @@ The **simulation/economy logic** is separate from the UI, in `src/engine/`:
 | `engine/types.ts`           | Core data model + the after-action report types                     |
 | `engine/selectors.ts`       | Pure derived reads: crew power, costs, Heat, roles, statuses         |
 | `engine/heat.ts`            | Heat settle/add helpers (timestamp-based)                            |
-| `engine/resolution.ts`      | Per-member resolution, success estimate, notoriety power, the contract, and the play-by-play report |
+| `engine/resolution.ts`      | Per-member resolution (skill + gear + trait + notoriety + synergy), success estimate, the contract, and the play-by-play report |
 | `engine/heists.ts`          | Launch (crew/role/size checks) + collect (+ career stats)           |
-| `engine/economy.ts`         | Cash sinks + prestige ("go legit" → Notoriety)                      |
+| `engine/economy.ts`         | Cash sinks + prestige ("go legit" → Notoriety) + perk purchases     |
+| `engine/monetization.ts`    | Premium currency (Marks) + rewarded-ad reward grants (no network)   |
+| `engine/daily.ts`           | Daily login reward + streak                                         |
 | `engine/milestones.ts`      | Milestone conditions + awarding                                     |
+| `engine/format.ts`          | Number/cash formatting (K/M/B/T, affordability-safe rounding)       |
 | `engine/state.ts`           | Initial state, offline resolution (incl. the Fixer), save/load       |
 
 UI lives in `src/ui/` and only reads state + dispatches actions — it never computes economy, Heat,
 or success itself, so the UI and engine can't disagree. The React ↔ engine bridge is
-`src/store/GameContext.tsx` (also handles autosave and save-on-close).
+`src/store/GameContext.tsx` (persists on every state change and on tab close).
 
 ---
 
@@ -133,6 +139,7 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
 - 1 starting safehouse (room to buy a 2nd and to expand capacity); a starting crew of 3, crews of
   up to 8 members (min 3 to run a heist)
 - 4 roles, 12 gear items (a three-tier line locked to each role), 4 global upgrades
+- 6 member traits (assigned at recruit) and 3 crew synergies (composition bonuses)
 - Ten heists across five tiers, gated by lifetime earnings, spanning a full
   duration ladder for both quick check-ins and long idle sessions:
   - Tier 1 (always on): 20s / 45s / 90s
@@ -142,13 +149,22 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
   - Tier 5 ($600k): 12 hours
 - Resources: Cash and Heat (heat builds as you run crews and cools over real time)
 - Meta-progression / long game:
-  - **Prestige** ("go legit") — retire a run for permanent **Notoriety**; each point
-    is +5% take and +0.15 power to every member, forever (compounds across runs).
+  - **Prestige** ("go legit") — retire a run for permanent **Notoriety**, spent in a
+    perk tree (Reputation, Connections, Clean Hands, War Chest, Old Loyalties) whose
+    levels persist across every future run.
   - **Milestones** — a career achievements track with one-time rewards.
   - **Syndicate Contract** — a repeatable endgame job (unlocks with tier 5) that
     escalates in difficulty and payout every time you clear it.
   - **The Fixer** — a late upgrade that auto-collects and re-runs each crew's last
     job while you're away (up to the offline cap), for a real idle payoff.
+- Retention & feel:
+  - **Daily reward** with a consecutive-day streak; a **"while you were away"** summary
+    on return; a live **tab-title** ready-to-collect count.
+  - **Juice**: animated cash count-up + coin burst, a FLAWLESS stamp, ready pops, a
+    debrief shake, and synthesized Web Audio cues (all respect reduced-motion).
+  - **Monetization (stubbed, no network yet)**: a **Marks** premium currency and
+    rewarded-ad hooks (double-the-take, skip-cooldown) behind a swappable provider —
+    a real SDK/store drops in at launch (see `src/monetization/`).
 
 It's intentionally shallow but complete end to end — enough to feel the
 safehouse → crew → member → heist loop. Expand it by editing the data files above.
