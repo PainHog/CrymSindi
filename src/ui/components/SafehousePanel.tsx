@@ -137,7 +137,10 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
         </span>
         <span className="crew-head-right">
           {crew.memberIds.length > 0 && (
-            <span className="crew-power" title="Total crew power (member skill + gear + notoriety)">
+            <span
+              className="crew-power"
+              title="Total crew power (skill + gear + traits + notoriety + crew synergies)"
+            >
               ⚡ {Math.round(power)}
             </span>
           )}

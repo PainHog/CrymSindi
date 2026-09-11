@@ -33,7 +33,8 @@ export const TRAITS_BY_ID: Record<TraitId, TraitDef> = Object.fromEntries(
 
 /** Deterministic trait for a member's numeric id (varied, pure — no RNG). */
 export function traitForId(numericId: number): TraitId {
-  // A cheap integer hash so consecutive recruits don't just cycle in order.
-  const h = (Math.abs(Math.trunc(numericId)) * 2654435761) >>> 0;
+  // Math.imul keeps this a true 32-bit hash (a plain float multiply loses the
+  // low bits past ~3.4M and would collapse to only half the traits).
+  const h = Math.imul(Math.abs(Math.trunc(numericId)) | 0, 2654435761) >>> 0;
   return TRAITS[h % TRAITS.length].id;
 }

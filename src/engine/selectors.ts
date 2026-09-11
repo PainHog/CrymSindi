@@ -64,12 +64,15 @@ export function memberPower(state: GameState, member: Member, config: Config = C
   return memberEffectiveSkill(member) + notorietySkillBonus(state, config);
 }
 
-/** Sum of member power (incl. Notoriety) across a crew. */
+/** Sum of member power across a crew — including trait, Notoriety, and the
+ *  per-member crew-synergy bonus, so it matches the power resolution actually
+ *  uses. */
 export function crewPower(state: GameState, crew: Crew): number {
-  return crew.memberIds.reduce((sum, id) => {
-    const m = getMember(state, id);
-    return sum + (m ? memberPower(state, m) : 0);
-  }, 0);
+  const members = crew.memberIds
+    .map((id) => getMember(state, id))
+    .filter((m): m is Member => Boolean(m));
+  const synergy = crewSynergyPower(members);
+  return members.reduce((sum, m) => sum + memberPower(state, m) + synergy, 0);
 }
 
 /** Roles present in a crew (distinct set). */
