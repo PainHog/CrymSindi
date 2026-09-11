@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { showRewardedAd, type AdPlacement } from '../monetization/ads';
+import { rewardedAdsAvailable, showRewardedAd, type AdPlacement } from '../monetization/ads';
 
 /** True when the viewer has asked for reduced motion; updates live. */
 export function usePrefersReducedMotion(): boolean {
@@ -67,7 +67,14 @@ export function useCountUp(value: number, durationMs = 500, snapOnDecrease = fal
 export function useRewardedAd() {
   const [watching, setWatching] = useState(false);
   const mounted = useRef(true);
-  useEffect(() => () => { mounted.current = false; }, []);
+  // Set true on (re)mount too — StrictMode's mount/cleanup/remount would
+  // otherwise leave it false and wedge `watching` on after the first ad.
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const watch = useCallback(async (placement: AdPlacement): Promise<boolean> => {
     setWatching(true);
@@ -79,5 +86,5 @@ export function useRewardedAd() {
     }
   }, []);
 
-  return { watching, watch };
+  return { watching, watch, available: rewardedAdsAvailable() };
 }

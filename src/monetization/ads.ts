@@ -32,9 +32,9 @@ export const STUB_AD_MS = 700;
  */
 export const stubRewardedAdProvider: RewardedAdProvider = {
   isAvailable: () => true,
-  show: (placement: AdPlacement) =>
+  show: (_placement: AdPlacement) =>
     new Promise<RewardedResult>((resolve) => {
-      // A real provider would render an ad unit here. The stub just waits.
+      // A real provider would render an ad unit for `_placement` here. The stub just waits.
       if (typeof window === 'undefined') {
         resolve({ completed: true });
         return;

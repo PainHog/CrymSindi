@@ -8,10 +8,14 @@ import { HeistIcon, Icon } from '../icons';
 export function ActiveHeists() {
   const { game, actions } = useGame();
   const now = useNow();
-  const { watching, watch } = useRewardedAd();
+  const { watching, watch, available } = useRewardedAd();
 
-  const skip = async (id: string) => {
-    if (await watch('skip_cooldown')) actions.skipCooldown(id);
+  const skip = async (id: string, endsAt: number) => {
+    if (!(await watch('skip_cooldown'))) return;
+    // If the job finished on its own during the ad, quietly skip the dispatch
+    // (it would just be a no-op error). The take is already collectable.
+    if (Date.now() >= endsAt) return;
+    actions.skipCooldown(id);
   };
 
   const readyCount = game.activeHeists.filter((a) => now >= a.endsAt).length;
@@ -80,14 +84,16 @@ export function ActiveHeists() {
                     <p className="active-note">
                       <Icon name="crew" size={12} /> Crew locked until you collect.
                     </p>
-                    <button
-                      className="btn tiny ghost skip-btn"
-                      disabled={watching}
-                      title="Watch a short ad to finish this job now"
-                      onClick={() => skip(active.id)}
-                    >
-                      {watching ? 'Ad…' : 'Skip · ad'}
-                    </button>
+                    {available && (
+                      <button
+                        className="btn tiny ghost skip-btn"
+                        disabled={watching}
+                        title="Watch a short ad to finish this job now"
+                        onClick={() => skip(active.id, active.endsAt)}
+                      >
+                        {watching ? 'Ad…' : 'Skip · ad'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

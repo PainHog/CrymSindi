@@ -23,7 +23,7 @@ export function ReportModal() {
   const { report, actions } = useGame();
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<Element | null>(null);
-  const { watching, watch } = useRewardedAd();
+  const { watching, watch, available } = useRewardedAd();
   const [doubled, setDoubled] = useState(false);
   // Reset the one-time double-take offer whenever a new debrief opens.
   useEffect(() => setDoubled(false), [report]);
@@ -123,7 +123,7 @@ export function ReportModal() {
         )}
 
         <div className="report-actions">
-          {report.payout > 0 && !doubled && (
+          {available && report.success && report.payout > 0 && !doubled && (
             <button
               className="btn ad-btn"
               disabled={watching}

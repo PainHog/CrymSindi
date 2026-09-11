@@ -12,7 +12,7 @@ import type { Config } from '../data/config';
 import type { ActionResult, GameState } from './types';
 
 /** Grant premium currency (from the stubbed IAP or a "free Marks" ad). */
-export function grantMarks(state: GameState, amount: number, config: Config = CONFIG): ActionResult {
+export function grantMarks(state: GameState, amount: number): ActionResult {
   const n = Math.max(0, Math.floor(amount));
   if (n <= 0) return { ok: false, error: 'Nothing to grant.' };
   return { ok: true, state: { ...state, marks: state.marks + n }, message: `+${n} Marks.` };

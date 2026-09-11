@@ -12,7 +12,7 @@ import { Icon } from '../icons';
 export function PremiumPanel() {
   const { game, actions } = useGame();
   const now = useNow();
-  const { watching, watch } = useRewardedAd();
+  const { watching, watch, available } = useRewardedAd();
 
   const running = game.activeHeists.some((a) => now < a.endsAt);
   const canFinishAll = running && game.marks >= CONFIG.finishAllMarksCost;
@@ -33,7 +33,7 @@ export function PremiumPanel() {
       </div>
       <p className="vault-sub">Premium currency — the store opens at launch.</p>
       <div className="vault-actions">
-        <button className="btn small" disabled={watching} onClick={freeMarks}>
+        <button className="btn small" disabled={watching || !available} onClick={freeMarks}>
           {watching ? 'Ad…' : `Free Marks · watch (+${CONFIG.marksPerAdReward})`}
         </button>
         <button
