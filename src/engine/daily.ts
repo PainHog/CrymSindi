@@ -15,7 +15,10 @@ import type { GameState } from './types';
 
 const DAY_MS = 86_400_000;
 
-/** UTC day index for a timestamp. */
+/**
+ * UTC day index for a timestamp. The reset is UTC midnight (not local), chosen
+ * so the boundary is deterministic and testable from the timestamp alone.
+ */
 export function dayIndexFor(ms: number): number {
   return Math.floor(ms / DAY_MS);
 }
@@ -53,9 +56,10 @@ export function claimDaily(state: GameState, now: number, config: Config = CONFI
     ok: true,
     state: {
       ...state,
+      // Spendable cash only — deliberately NOT lifetimeCash/careerCash, so a
+      // login reward can't advance tier/prestige gates or auto-earn milestones
+      // (a clock-forward faucet), matching the capped-offline design.
       cash: state.cash + reward,
-      lifetimeCash: state.lifetimeCash + reward,
-      careerCash: state.careerCash + reward,
       dailyClaimDay: dayIndexFor(now),
       dailyStreak: streak,
     },

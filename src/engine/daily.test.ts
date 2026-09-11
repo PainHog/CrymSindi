@@ -21,8 +21,9 @@ describe('daily reward', () => {
     expect(r.streak).toBe(1);
     expect(r.reward).toBe(CONFIG.dailyRewardBase); // day 1, tier 1
     expect(r.state.cash).toBe(s.cash + r.reward);
-    expect(r.state.lifetimeCash).toBe(s.lifetimeCash + r.reward);
-    expect(r.state.careerCash).toBe(s.careerCash + r.reward);
+    // Spendable cash only — must not advance the tier/prestige/milestone gates.
+    expect(r.state.lifetimeCash).toBe(s.lifetimeCash);
+    expect(r.state.careerCash).toBe(s.careerCash);
     expect(canClaimDaily(r.state, T0 + 1000)).toBe(false);
     expect(claimDaily(r.state, T0 + 1000).ok).toBe(false);
   });

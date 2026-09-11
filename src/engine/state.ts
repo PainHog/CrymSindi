@@ -117,9 +117,14 @@ export function resolveOffline(
 
   const settledHeat = deriveHeat(s, now, config);
   const readyCount = s.activeHeists.filter((a) => now >= a.endsAt).length;
+  // Self-heal a daily-claim day that's ahead of "now" (a clock that was set
+  // forward then corrected, or an edited save) — otherwise the daily reward
+  // would stay locked until real time caught up. Day index = floor(ms / 1 day).
+  const today = Math.floor(now / 86_400_000);
+  const dailyClaimDay = Math.min(s.dailyClaimDay, today);
 
   return {
-    state: { ...s, heat: settledHeat, heatUpdatedAt: now, lastSaved: now },
+    state: { ...s, heat: settledHeat, heatUpdatedAt: now, lastSaved: now, dailyClaimDay },
     readyCount,
     awayMs,
     autoCollected,

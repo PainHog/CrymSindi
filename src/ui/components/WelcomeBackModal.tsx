@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGame } from '../../store/GameContext';
 import { formatCash } from '../format';
+
+const FOCUSABLE = 'button, [href], input, [tabindex]:not([tabindex="-1"])';
 
 function humanizeAway(ms: number): string {
   const s = Math.round(ms / 1000);
@@ -19,14 +21,38 @@ function humanizeAway(ms: number): string {
  *  just Fixer owners. Only mounted when something actually happened. */
 export function WelcomeBackModal() {
   const { away, actions } = useGame();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<Element | null>(null);
 
   useEffect(() => {
     if (!away) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') actions.dismissAway();
+    returnFocusRef.current = document.activeElement;
+    dialogRef.current?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        actions.dismissAway();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
+      if (!nodes || nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (returnFocusRef.current instanceof HTMLElement) returnFocusRef.current.focus();
+    };
   }, [away, actions]);
 
   if (!away) return null;
@@ -39,6 +65,8 @@ export function WelcomeBackModal() {
         role="dialog"
         aria-modal="true"
         aria-label="While you were away"
+        tabIndex={-1}
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="welcome-title">While you were away</h3>

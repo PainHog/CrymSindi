@@ -78,6 +78,16 @@ describe('save / load round-trip', () => {
     expect(loaded!.state.dailyStreak).toBe(0);
   });
 
+  it('self-heals a daily-claim day set ahead of now (clock skew / edited save)', () => {
+    const today = Math.floor(T0 / 86_400_000);
+    const ahead = { ...createInitialState(T0), dailyClaimDay: today + 5 };
+    saveGame(ahead, T0);
+    const loaded = loadGame(T0);
+    expect(loaded).not.toBeNull();
+    // Clamped down to today, so the daily isn't locked for 5 real days.
+    expect(loaded!.state.dailyClaimDay).toBe(today);
+  });
+
   it('settles heat forward across an away period on load', () => {
     const hot = { ...createInitialState(T0), heat: 100, heatUpdatedAt: T0 };
     saveGame(hot, T0);
