@@ -71,6 +71,11 @@ export interface Config {
   dailyStreakBonus: number;
   dailyStreakMax: number; // streak multiplier stops growing past this many days
 
+  // Monetization ("Marks" premium currency). Plumbed, not wired to a store yet.
+  marksPerAdReward: number; // Marks from a "free Marks" rewarded ad
+  iapMarksGrant: number; // Marks from the (stubbed) in-app purchase
+  finishAllMarksCost: number; // Marks to instantly finish all active heists
+
   autosaveIntervalMs: number;
   uiTickMs: number;
 }
@@ -168,6 +173,11 @@ export const CONFIG: Config = {
   dailyRewardBase: 500,
   dailyStreakBonus: 0.5, // +50% of base per consecutive day
   dailyStreakMax: 7,
+
+  // ---- Monetization (stubbed) ----------------------------------------------
+  marksPerAdReward: 2,
+  iapMarksGrant: 20,
+  finishAllMarksCost: 1,
 
   // ---- Client pacing (UI only, never the source of truth) ------------------
   autosaveIntervalMs: 15000,

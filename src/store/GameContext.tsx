@@ -29,14 +29,18 @@ import {
   collectAllReady,
   collectHeist,
   createInitialState,
+  finishAllNow,
   formCrew,
+  grantMarks,
   launchHeist,
   loadGame,
   prestige,
   recruitMember,
   refreshHeat,
   resolveOffline,
+  rewardBonusCash,
   saveGame,
+  skipCooldown,
   upgradeSafehouse,
   upgradeSkill,
   type ActionResult,
@@ -84,6 +88,10 @@ type Action =
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'prestige'; now: number }
   | { type: 'claimDaily'; now: number }
+  | { type: 'grantMarks'; amount: number }
+  | { type: 'rewardBonusCash'; amount: number }
+  | { type: 'skipCooldown'; id: string; now: number }
+  | { type: 'finishAll'; now: number }
   | { type: 'dev'; op: 'cash' | 'notoriety' | 'finish' | 'ff'; amount?: number; now: number }
   | { type: 'refreshHeat'; now: number }
   | { type: 'dismissReport' }
@@ -152,6 +160,19 @@ function reducer(ui: UIState, action: Action): UIState {
         { kind: 'collect', payout: earned, success: true, flawless: false },
       );
     }
+    case 'grantMarks':
+      return applyResult(ui, grantMarks(ui.game, action.amount), { kind: 'purchase' });
+    case 'rewardBonusCash':
+      return applyResult(ui, rewardBonusCash(ui.game, action.amount), {
+        kind: 'collect',
+        payout: action.amount,
+        success: true,
+        flawless: false,
+      });
+    case 'skipCooldown':
+      return applyResult(ui, skipCooldown(ui.game, action.id, action.now), { kind: 'purchase' });
+    case 'finishAll':
+      return applyResult(ui, finishAllNow(ui.game, action.now), { kind: 'purchase' });
     case 'dismissReport':
       return { ...ui, report: null };
     case 'dismissAway':
@@ -292,6 +313,10 @@ interface GameContextValue {
     buyUpgrade: (upgradeId: string) => void;
     prestige: () => void;
     claimDaily: () => void;
+    grantMarks: (amount: number) => void;
+    rewardBonusCash: (amount: number) => void;
+    skipCooldown: (id: string) => void;
+    finishAll: () => void;
     dismissReport: () => void;
     dismissAway: () => void;
     dev: (op: 'cash' | 'notoriety' | 'finish' | 'ff', amount?: number) => void;
@@ -374,6 +399,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
       prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
       claimDaily: () => dispatch({ type: 'claimDaily', now: Date.now() }),
+      grantMarks: (amount) => dispatch({ type: 'grantMarks', amount }),
+      rewardBonusCash: (amount) => dispatch({ type: 'rewardBonusCash', amount }),
+      skipCooldown: (id) => dispatch({ type: 'skipCooldown', id, now: Date.now() }),
+      finishAll: () => dispatch({ type: 'finishAll', now: Date.now() }),
       dismissReport: () => dispatch({ type: 'dismissReport' }),
       dismissAway: () => dispatch({ type: 'dismissAway' }),
       dev: (op, amount) => dispatch({ type: 'dev', op, amount, now: Date.now() }),

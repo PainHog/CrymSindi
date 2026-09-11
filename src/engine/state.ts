@@ -55,6 +55,7 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     milestonesEarned: [],
     dailyClaimDay: -1,
     dailyStreak: 0,
+    marks: 0,
     lastSaved: now,
     nextId: 4,
   };
@@ -283,6 +284,7 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     // existed) or an edited one loads cleanly.
     dailyClaimDay: isFiniteNum(state.dailyClaimDay) ? Math.floor(state.dailyClaimDay) : -1,
     dailyStreak: isFiniteNum(state.dailyStreak) ? Math.max(0, Math.floor(state.dailyStreak)) : 0,
+    marks: isFiniteNum(state.marks) ? Math.max(0, Math.floor(state.marks)) : 0,
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
     members: state.members.map((m) => ({
       ...m,

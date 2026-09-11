@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CONFIG } from '../../data/config';
 import { GEAR_BY_ID, gearForRole } from '../../data/gear';
 import type { GearDef } from '../../data/gear';
@@ -7,6 +7,7 @@ import { skillUpgradeCost } from '../../engine';
 import type { BeatQuality, HeistReport, Member, MemberBeat, Recommendation } from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { crewLabel, formatCash, pct } from '../format';
+import { useRewardedAd } from '../hooks';
 import { Avatar, HeistIcon, Icon } from '../icons';
 
 const QUALITY_LABEL: Record<BeatQuality, string> = {
@@ -22,6 +23,10 @@ export function ReportModal() {
   const { report, actions } = useGame();
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<Element | null>(null);
+  const { watching, watch } = useRewardedAd();
+  const [doubled, setDoubled] = useState(false);
+  // Reset the one-time double-take offer whenever a new debrief opens.
+  useEffect(() => setDoubled(false), [report]);
 
   useEffect(() => {
     if (!report) return;
@@ -114,6 +119,21 @@ export function ReportModal() {
         )}
 
         <div className="report-actions">
+          {report.payout > 0 && !doubled && (
+            <button
+              className="btn ad-btn"
+              disabled={watching}
+              title="Watch a short ad to double this take"
+              onClick={async () => {
+                if (await watch('double_take')) {
+                  actions.rewardBonusCash(report.payout);
+                  setDoubled(true);
+                }
+              }}
+            >
+              {watching ? 'Ad…' : `Double the take · +${formatCash(report.payout)}`}
+            </button>
+          )}
           <button
             className="btn"
             onClick={() => {

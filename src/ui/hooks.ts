@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { showRewardedAd, type AdPlacement } from '../monetization/ads';
 
 /** True when the viewer has asked for reduced motion; updates live. */
 export function usePrefersReducedMotion(): boolean {
@@ -57,4 +58,26 @@ export function useCountUp(value: number, durationMs = 500, snapOnDecrease = fal
   }, [value, reduce, durationMs, snapOnDecrease]);
 
   return display;
+}
+
+/**
+ * Drives a rewarded-ad flow: `watch(placement)` shows the (stubbed) ad and
+ * resolves true if it completed. `watching` gates the UI while it plays.
+ */
+export function useRewardedAd() {
+  const [watching, setWatching] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => () => { mounted.current = false; }, []);
+
+  const watch = useCallback(async (placement: AdPlacement): Promise<boolean> => {
+    setWatching(true);
+    try {
+      const { completed } = await showRewardedAd(placement);
+      return completed;
+    } finally {
+      if (mounted.current) setWatching(false);
+    }
+  }, []);
+
+  return { watching, watch };
 }

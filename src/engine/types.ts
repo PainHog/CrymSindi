@@ -97,6 +97,9 @@ export interface GameState {
   dailyClaimDay: number;
   /** Consecutive-day login streak, for the daily reward. */
   dailyStreak: number;
+  /** Premium currency ("Marks"). Persists across prestige. Monetization is
+   *  plumbed but not wired to any store/SDK yet (see src/monetization). */
+  marks: number;
 
   /** Timestamp of the last save; used for offline resolution + display. */
   lastSaved: number;

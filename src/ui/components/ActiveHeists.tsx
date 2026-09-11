@@ -1,12 +1,18 @@
 import { HEISTS_BY_ID } from '../../data/heists';
 import { contractHeistDef, heistStatusAt } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
+import { useRewardedAd } from '../hooks';
 import { crewLabel, formatCountdown, pct } from '../format';
 import { HeistIcon, Icon } from '../icons';
 
 export function ActiveHeists() {
   const { game, actions } = useGame();
   const now = useNow();
+  const { watching, watch } = useRewardedAd();
+
+  const skip = async (id: string) => {
+    if (await watch('skip_cooldown')) actions.skipCooldown(id);
+  };
 
   const readyCount = game.activeHeists.filter((a) => now >= a.endsAt).length;
 
@@ -70,9 +76,19 @@ export function ActiveHeists() {
                     Collect the take
                   </button>
                 ) : (
-                  <p className="active-note">
-                    <Icon name="crew" size={12} /> Crew locked until you collect.
-                  </p>
+                  <div className="active-foot">
+                    <p className="active-note">
+                      <Icon name="crew" size={12} /> Crew locked until you collect.
+                    </p>
+                    <button
+                      className="btn tiny ghost skip-btn"
+                      disabled={watching}
+                      title="Watch a short ad to finish this job now"
+                      onClick={() => skip(active.id)}
+                    >
+                      {watching ? 'Ad…' : 'Skip · ad'}
+                    </button>
+                  </div>
                 )}
               </div>
             );

@@ -5,6 +5,7 @@ import { HeistList } from './components/HeistList';
 import { DevPanel } from './components/DevPanel';
 import { MilestonesPanel } from './components/MilestonesPanel';
 import { OnboardingBanner } from './components/OnboardingBanner';
+import { PremiumPanel } from './components/PremiumPanel';
 import { PrestigePanel } from './components/PrestigePanel';
 import { ReportModal } from './components/ReportModal';
 import { ResourceBar } from './components/ResourceBar';
@@ -31,6 +32,7 @@ export default function App() {
             <UpgradePanel />
             <PrestigePanel />
             <MilestonesPanel />
+            <PremiumPanel />
           </div>
           <div className="col col-side">
             <ActiveHeists />

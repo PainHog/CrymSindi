@@ -251,6 +251,8 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
       // The login streak is real-time, not run-scoped — keep it across prestige.
       dailyClaimDay: state.dailyClaimDay,
       dailyStreak: state.dailyStreak,
+      // Premium currency persists across prestige.
+      marks: state.marks,
     },
     message: `Went legit. +${gain} Notoriety (now ${state.notoriety + gain}).`,
   };
