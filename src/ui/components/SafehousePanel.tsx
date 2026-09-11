@@ -286,10 +286,7 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
                 key={g.id}
                 className="btn tiny ghost"
                 disabled={game.cash < g.cost}
-                title={
-                  g.description +
-                  (g.role ? ` (${ROLES_BY_ID[g.role]?.name} only)` : ' (any role)')
-                }
+                title={`${g.description} (${ROLES_BY_ID[g.role]?.name} only)`}
                 onClick={() => actions.buyGear(member.id, g.id)}
               >
                 +{g.name} · {formatCash(g.cost)}

@@ -132,7 +132,7 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
 
 - 1 starting safehouse (room to buy a 2nd and to expand capacity); a starting crew of 3, crews of
   up to 8 members (min 3 to run a heist)
-- 4 roles, 10 gear items (2 universal + a two-tier line locked to each role), 4 global upgrades
+- 4 roles, 12 gear items (a three-tier line locked to each role), 4 global upgrades
 - Ten heists across five tiers, gated by lifetime earnings, spanning a full
   duration ladder for both quick check-ins and long idle sessions:
   - Tier 1 (always on): 20s / 45s / 90s

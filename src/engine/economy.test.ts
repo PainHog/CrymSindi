@@ -126,17 +126,14 @@ describe('member upgrades', () => {
     expect(dup.ok).toBe(false);
   });
 
-  it('blocks role-locked gear on the wrong role but allows universal gear', () => {
+  it('blocks gear that belongs to another role', () => {
     const state = rich();
     // m3 is the muscle; a laptop is hacker-only — a laptop for muscle makes no sense.
-    const wrong = buyGear(state, 'm3', 'laptop');
-    expect(wrong.ok).toBe(false);
+    expect(buyGear(state, 'm3', 'laptop').ok).toBe(false);
+    // Getaway tuning is driver-only — also off-limits to the muscle.
+    expect(buyGear(state, 'm3', 'tuning').ok).toBe(false);
     // The muscle's own line is fine.
-    const right = buyGear(state, 'm3', 'armor');
-    expect(right.ok).toBe(true);
-    // Universal gear works for any role.
-    const universal = buyGear(state, 'm3', 'lockpicks');
-    expect(universal.ok).toBe(true);
+    expect(buyGear(state, 'm3', 'armor').ok).toBe(true);
   });
 });
 
