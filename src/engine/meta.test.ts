@@ -63,7 +63,7 @@ describe('prestige', () => {
     const s: GameState = {
       ...createInitialState(T0),
       cash: 50000,
-      lifetimeCash: 200000,
+      lifetimeCash: 700000,
       careerCash: 900000,
       contractLevel: 4,
       notoriety: 3,
@@ -76,7 +76,7 @@ describe('prestige', () => {
     const n = res.state;
     expect(n.cash).toBe(CONFIG.startingCash); // fresh operation
     expect(n.lifetimeCash).toBe(0);
-    expect(n.notoriety).toBe(3 + notorietyGainFor(200000)); // 3 + 8
+    expect(n.notoriety).toBe(3 + notorietyGainFor(700000)); // gain from a 700k run
     expect(n.prestigeCount).toBe(1);
     expect(n.careerCash).toBe(900000); // preserved
     expect(n.contractLevel).toBe(4); // preserved
@@ -142,7 +142,7 @@ describe('endgame contract', () => {
         { role: 'lookout', skill: 15 },
         { role: 'hacker', skill: 15 },
       ],
-      { lifetimeCash: 600000, contractLevel: 0 },
+      { lifetimeCash: CONFIG.tierUnlocks[5], contractLevel: 0 },
     );
     expect(maxUnlockedTier(s)).toBe(5);
     expect(contractUnlocked(s)).toBe(true);

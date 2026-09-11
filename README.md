@@ -143,10 +143,12 @@ or success itself, so the UI and engine can't disagree. The React ↔ engine bri
 - Ten heists across five tiers, gated by lifetime earnings, spanning a full
   duration ladder for both quick check-ins and long idle sessions:
   - Tier 1 (always on): 20s / 45s / 90s
-  - Tier 2 ($3k): 5 min / 10 min
-  - Tier 3 ($20k): 15 min / 30 min
-  - Tier 4 ($120k): 1 hour / 5 hours
-  - Tier 5 ($600k): 12 hours
+  - Tier 2 ($2k): 5 min / 10 min
+  - Tier 3 ($30k): 15 min / 30 min
+  - Tier 4 ($180k): 1 hour / 5 hours
+  - Tier 5 ($1.2M): 12 hours
+  - Payout per second climbs geometrically by tier, so a higher tier is always
+    the better take-per-minute once your crew can clear it.
 - Resources: Cash and Heat (heat builds as you run crews and cools over real time)
 - Meta-progression / long game:
   - **Prestige** ("go legit") — retire a run for permanent **Notoriety**, spent in a

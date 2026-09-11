@@ -98,7 +98,7 @@ export const CONFIG: Config = {
 
   // ---- Heat (risk meter) ---------------------------------------------------
   maxHeat: 100, // heat is clamped to [0, maxHeat]
-  heatCoolPerSec: 0.05, // base heat points that cool per real second (~33 min for a full bar) - persists across long jobs so chaining big scores actually raises standing heat
+  heatCoolPerSec: 0.08, // base heat points that cool per real second (~21 min for a full bar) - persists across long jobs so chaining big scores actually raises standing heat
   offlineCapSec: 12 * 60 * 60, // cap passive effects (heat cooldown) at 12 hours
 
   // ---- Per-member resolution model -----------------------------------------
@@ -132,7 +132,7 @@ export const CONFIG: Config = {
   qualitySlack: 3,
 
   // ---- Prestige / Notoriety ------------------------------------------------
-  prestigeThreshold: 100000,
+  prestigeThreshold: 600000,
   notorietyDivisor: 2500,
   perkReputationPct: 0.05,
   perkConnectionsPower: 0.5,
@@ -172,7 +172,7 @@ export const CONFIG: Config = {
   // ---- Progression gates ---------------------------------------------------
   // Map of heist tier -> lifetime cash (total ever earned) required to unlock.
   // Tier 1 is always unlocked. Add more entries to gate future tiers.
-  tierUnlocks: { 2: 1500, 3: 20000, 4: 120000, 5: 600000 } as Record<number, number>,
+  tierUnlocks: { 2: 2000, 3: 30000, 4: 180000, 5: 1200000 } as Record<number, number>,
 
   // ---- Daily reward --------------------------------------------------------
   dailyRewardBase: 500,
