@@ -45,6 +45,30 @@ describe('formatNumber / formatCash', () => {
     expect(formatNumber(1240.1, 'ceil')).toBe('1,241');
   });
 
+  it('an exact unit boundary is not nudged by float error (ceil/floor)', () => {
+    // 1.11 * 100 === 111.00000000000001 — ceil must not jump to 1.12M.
+    expect(formatCash(1_110_000, 'ceil')).toBe('$1.11M');
+    expect(formatCash(1_090_000, 'ceil')).toBe('$1.09M');
+    expect(formatCash(1_120_000, 'ceil')).toBe('$1.12M');
+    expect(formatCash(1_130_000, 'floor')).toBe('$1.13M');
+    expect(formatCash(2_030_000, 'floor')).toBe('$2.03M');
+    // Exact whole units stay exact under both directions.
+    expect(formatCash(600_000, 'ceil')).toBe('$600K');
+    expect(formatCash(600_000, 'floor')).toBe('$600K');
+    expect(formatCash(1_000_000, 'ceil')).toBe('$1M');
+  });
+
+  it('floors/ceils a negative in the direction that never overstates it', () => {
+    // floor(-599,900) is -600,000 (more negative), never less-negative.
+    expect(formatCash(-599_900, 'floor')).toBe('-$600K');
+    expect(formatCash(-599_900, 'ceil')).toBe('-$599K');
+  });
+
+  it('has no "1000Dc" sliver just below the scientific threshold', () => {
+    expect(formatNumber(9.999e35)).toBe('1.00e+36');
+    expect(formatNumber(9.999e35, 'ceil')).toBe('1.00e+36');
+  });
+
   it('degrades safely on non-finite and beyond-table values', () => {
     expect(formatNumber(NaN)).toBe('0');
     expect(formatNumber(Infinity)).toBe('0');
