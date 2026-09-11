@@ -69,6 +69,15 @@ describe('formatNumber / formatCash', () => {
     expect(formatNumber(9.999e35, 'ceil')).toBe('1.00e+36');
   });
 
+  it('respects the rounding mode in scientific notation too', () => {
+    // ceil must not understate a cost, floor must not overstate a balance.
+    expect(formatCash(1.008e36, 'ceil')).toBe('$1.01e+36');
+    expect(formatCash(1.0051e36, 'floor')).toBe('$1.00e+36');
+    // The abbreviate final-tier band that previously understated on ceil:
+    expect(formatCash(9.991e35, 'ceil')).toBe('$1.00e+36'); // >= 9.991e35, no understate
+    expect(formatCash(9.991e35, 'floor')).toBe('$999Dc'); // 9.99e35 <= 9.991e35, stays in-unit
+  });
+
   it('degrades safely on non-finite and beyond-table values', () => {
     expect(formatNumber(NaN)).toBe('0');
     expect(formatNumber(Infinity)).toBe('0');

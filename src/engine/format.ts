@@ -37,6 +37,22 @@ function pickDecimals(scaled: number): number {
   return scaled < 10 ? 2 : scaled < 100 ? 1 : 0;
 }
 
+/**
+ * Scientific notation that respects the rounding mode (JS toExponential always
+ * rounds to nearest), so the floor/ceil affordability contract holds past the
+ * last unit too. Only ever called for large positive magnitudes (exp >= 35).
+ */
+function toExpMode(v: number, mode: RoundMode): string {
+  if (v === 0) return (0).toExponential(2);
+  let exp = Math.floor(Math.log10(v));
+  let mant = roundTo(v / Math.pow(10, exp), 2, mode);
+  if (mant >= 10) {
+    mant /= 10;
+    exp++;
+  }
+  return `${mant.toFixed(2)}e+${exp}`;
+}
+
 /** Abbreviate a non-negative value to e.g. "1.24M", "600K", "2.76B". */
 function abbreviate(v: number, mode: RoundMode): string {
   let tier = 0;
@@ -56,7 +72,7 @@ function abbreviate(v: number, mode: RoundMode): string {
   }
   // Past the last unit it still rounds to 1000 — fall back to scientific rather
   // than printing "1000Dc".
-  if (scaled >= 1000) return v.toExponential(2);
+  if (scaled >= 1000) return toExpMode(v, mode);
   let str = scaled.toFixed(decimals);
   if (str.includes('.')) str = str.replace(/\.?0+$/, ''); // 1.20 -> 1.2, 1.00 -> 1
   return str + UNITS[tier];
@@ -72,7 +88,7 @@ export function formatNumber(n: number, mode: RoundMode = 'round'): string {
   const m: RoundMode = neg && mode !== 'round' ? (mode === 'floor' ? 'ceil' : 'floor') : mode;
   const sign = neg ? '-' : '';
   if (abs < ABBREVIATE_AT) return sign + applyMode(abs, m).toLocaleString('en-US');
-  if (abs >= SCIENTIFIC_AT) return sign + abs.toExponential(2);
+  if (abs >= SCIENTIFIC_AT) return sign + toExpMode(abs, m);
   return sign + abbreviate(abs, m);
 }
 
