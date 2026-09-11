@@ -10,7 +10,7 @@
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
-import { pickName } from '../data/names';
+import { pickUniqueName } from '../data/names';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
 import { UPGRADES_BY_ID } from '../data/upgrades';
@@ -151,7 +151,7 @@ export function recruitMember(
 
   const member: Member = {
     id: `m${state.nextId}`,
-    name: pickName(state.nextId),
+    name: pickUniqueName(state.nextId, state.members.map((m) => m.name)),
     role: roleId,
     skill: role.baseSkill,
     gearIds: [],

@@ -89,17 +89,32 @@ describe('resolveHeist outcomes', () => {
     expect(report.heatAdded).toBe(0);
   });
 
-  it('a failed run still salvages a fraction of the base and adds fail heat', () => {
+  it('a total wipe pays nothing but still adds fail heat', () => {
     const state = makeState([
       { role: 'driver', skill: 5 },
       { role: 'muscle', skill: 5 },
       { role: 'hacker', skill: 5 },
     ]);
-    const report = resolveHeist(state, smash, getCrew(state, 'c1')!, T0, seq(0.999));
+    const report = resolveHeist(state, smash, getCrew(state, 'c1')!, T0, seq(0.999)); // everyone fails
     expect(report.success).toBe(false);
-    // salvage = base(120) * failPayoutFrac(0.2) = 24
-    expect(report.payout).toBe(24);
+    expect(report.passCount).toBe(0);
+    // nobody passed -> no salvage
+    expect(report.payout).toBe(0);
     expect(report.heatAdded).toBeCloseTo(smash.failHeatBonus, 5);
+  });
+
+  it('a partial failure salvages in proportion to how close the crew came', () => {
+    const state = makeState([
+      { role: 'driver', skill: 5 },
+      { role: 'muscle', skill: 5 },
+      { role: 'hacker', skill: 5 },
+    ]);
+    // 1 of the 2 required passes lands -> fail, but half the salvage.
+    const report = resolveHeist(state, smash, getCrew(state, 'c1')!, T0, seq(0, 0.999, 0.999));
+    expect(report.success).toBe(false);
+    expect(report.passCount).toBe(1);
+    // base(120) * failPayoutFrac(0.2) * clamp(1/2) = 12
+    expect(report.payout).toBe(12);
   });
 
   it('scales the take by how many passed', () => {

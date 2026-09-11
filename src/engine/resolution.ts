@@ -283,7 +283,10 @@ export function resolveHeist(
       perfectBonus = payout - before;
     }
   } else {
-    payout = Math.round(base * config.failPayoutFrac * mult);
+    // A blown run only salvages in proportion to how close the crew came, so a
+    // total wipe (nobody passed) pays nothing and can't be farmed.
+    const progress = requiredPasses > 0 ? clamp(passCount / requiredPasses, 0, 1) : 0;
+    payout = Math.round(base * config.failPayoutFrac * mult * progress);
   }
   const heatAdded = success ? 0 : heist.failHeatBonus * heatGainMult(state);
 
