@@ -11,6 +11,7 @@ import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
 import { pickUniqueName } from '../data/names';
+import { PERKS_BY_ID, perkCost } from '../data/perks';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
 import { UPGRADES_BY_ID } from '../data/upgrades';
@@ -238,10 +239,16 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
   }
   const gain = notorietyGainFor(state.lifetimeCash, config);
   const fresh = createInitialState(now, config);
+  const perks = state.perks;
+  // Perk effects that shape the fresh run:
+  const keepUpgrades = (perks['old_loyalties'] ?? 0) > 0;
+  const warChest = (perks['war_chest'] ?? 0) * config.perkWarChestCash;
   return {
     ok: true,
     state: {
       ...fresh,
+      cash: fresh.cash + warChest,
+      purchasedUpgradeIds: keepUpgrades ? state.purchasedUpgradeIds : fresh.purchasedUpgradeIds,
       notoriety: state.notoriety + gain,
       prestigeCount: state.prestigeCount + 1,
       careerCash: state.careerCash,
@@ -251,10 +258,30 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
       // The login streak is real-time, not run-scoped — keep it across prestige.
       dailyClaimDay: state.dailyClaimDay,
       dailyStreak: state.dailyStreak,
-      // Premium currency persists across prestige.
+      // Premium currency and the perk tree persist across prestige.
       marks: state.marks,
+      perks: state.perks,
     },
     message: `Went legit. +${gain} Notoriety (now ${state.notoriety + gain}).`,
+  };
+}
+
+/** Spend Notoriety on the next level of a perk (see data/perks.ts). */
+export function buyPerk(state: GameState, perkId: string): ActionResult {
+  const perk = PERKS_BY_ID[perkId];
+  if (!perk) return { ok: false, error: 'Unknown perk.' };
+  const level = state.perks[perkId] ?? 0;
+  if (level >= perk.maxLevel) return { ok: false, error: 'That perk is maxed.' };
+  const cost = perkCost(perk, level + 1);
+  if (state.notoriety < cost) return { ok: false, error: 'Not enough Notoriety.' };
+  return {
+    ok: true,
+    state: {
+      ...state,
+      notoriety: state.notoriety - cost,
+      perks: { ...state.perks, [perkId]: level + 1 },
+    },
+    message: `${perk.name} → level ${level + 1}.`,
   };
 }
 

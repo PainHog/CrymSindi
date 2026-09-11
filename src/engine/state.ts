@@ -9,6 +9,7 @@
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
+import { PERKS_BY_ID } from '../data/perks';
 import { SAFEHOUSE_TIERS } from '../data/safehouses';
 import { deriveHeat, hasFixer } from './selectors';
 import { collectHeist, launchHeist } from './heists';
@@ -56,6 +57,7 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     dailyClaimDay: -1,
     dailyStreak: 0,
     marks: 0,
+    perks: {},
     lastSaved: now,
     nextId: 4,
   };
@@ -269,6 +271,17 @@ function isValidSave(value: unknown): value is GameState {
   return crewsOk && membersOk && safehousesOk && activeOk;
 }
 
+/** Keep only known perks, each clamped to [0, its maxLevel]. */
+function sanitizePerks(raw: unknown): Record<string, number> {
+  const src = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const out: Record<string, number> = {};
+  for (const [id, def] of Object.entries(PERKS_BY_ID)) {
+    const v = src[id];
+    if (isFiniteNum(v) && v > 0) out[id] = Math.min(def.maxLevel, Math.floor(v));
+  }
+  return out;
+}
+
 /** Clamp a loaded save into legal ranges so an edited/legacy value can't produce
  *  an absurd UI state (skill past the cap, negative or infinite cash, etc.). */
 function clampState(state: GameState, config: Config = CONFIG): GameState {
@@ -285,6 +298,7 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     dailyClaimDay: isFiniteNum(state.dailyClaimDay) ? Math.floor(state.dailyClaimDay) : -1,
     dailyStreak: isFiniteNum(state.dailyStreak) ? Math.max(0, Math.floor(state.dailyStreak)) : 0,
     marks: isFiniteNum(state.marks) ? Math.max(0, Math.floor(state.marks)) : 0,
+    perks: sanitizePerks(state.perks),
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
     members: state.members.map((m) => ({
       ...m,

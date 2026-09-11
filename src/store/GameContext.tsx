@@ -22,6 +22,7 @@ import { CONFIG } from '../data/config';
 import {
   awardMilestones,
   buyGear,
+  buyPerk,
   buySafehouse,
   buyUpgrade,
   claimDaily,
@@ -88,6 +89,7 @@ type Action =
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'prestige'; now: number }
   | { type: 'claimDaily'; now: number }
+  | { type: 'buyPerk'; perkId: string }
   | { type: 'grantMarks'; amount: number }
   | { type: 'rewardBonusCash'; amount: number }
   | { type: 'skipCooldown'; id: string; now: number }
@@ -193,6 +195,8 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(ui, buyUpgrade(ui.game, action.upgradeId), { kind: 'purchase' });
     case 'prestige':
       return applyResult(ui, prestige(ui.game, action.now), { kind: 'prestige' });
+    case 'buyPerk':
+      return applyResult(ui, buyPerk(ui.game, action.perkId), { kind: 'purchase' });
     case 'claimDaily': {
       const res = claimDaily(ui.game, action.now);
       if (!res.ok) {
@@ -313,6 +317,7 @@ interface GameContextValue {
     buyUpgrade: (upgradeId: string) => void;
     prestige: () => void;
     claimDaily: () => void;
+    buyPerk: (perkId: string) => void;
     grantMarks: (amount: number) => void;
     rewardBonusCash: (amount: number) => void;
     skipCooldown: (id: string) => void;
@@ -399,6 +404,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
       prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
       claimDaily: () => dispatch({ type: 'claimDaily', now: Date.now() }),
+      buyPerk: (perkId) => dispatch({ type: 'buyPerk', perkId }),
       grantMarks: (amount) => dispatch({ type: 'grantMarks', amount }),
       rewardBonusCash: (amount) => dispatch({ type: 'rewardBonusCash', amount }),
       skipCooldown: (id) => dispatch({ type: 'skipCooldown', id, now: Date.now() }),

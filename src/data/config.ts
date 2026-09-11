@@ -38,8 +38,11 @@ export interface Config {
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
-  notorietyMultPerPoint: number; // each point = +this to the global payout multiplier
-  notorietySkillPerPoint: number; // each point adds this to every member's effective skill
+  // Notoriety is spent in a perk tree (see data/perks.ts). Per-level effects:
+  perkReputationPct: number; // Reputation: +this payout multiplier per level
+  perkConnectionsPower: number; // Connections: +this effective skill per level (all members)
+  perkCleanHandsPct: number; // Clean Hands: +this to the heat cooldown rate per level
+  perkWarChestCash: number; // War Chest: +this starting cash per level (applied at prestige)
 
   // Endgame repeatable "Syndicate Contract" (unlocks with tier 5).
   contractBaseDifficulty: number;
@@ -131,8 +134,10 @@ export const CONFIG: Config = {
   // ---- Prestige / Notoriety ------------------------------------------------
   prestigeThreshold: 100000,
   notorietyDivisor: 2500,
-  notorietyMultPerPoint: 0.05, // +5% take per point (compounds over prestiges)
-  notorietySkillPerPoint: 0.15, // +power per point so you can beat harder content
+  perkReputationPct: 0.05,
+  perkConnectionsPower: 0.5,
+  perkCleanHandsPct: 0.25,
+  perkWarChestCash: 750,
 
   // ---- Endgame "Syndicate Contract" (repeatable, escalates) ----------------
   contractBaseDifficulty: 54,

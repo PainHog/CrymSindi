@@ -1,5 +1,6 @@
 import { GameProvider } from '../store/GameContext';
 import { ActiveHeists } from './components/ActiveHeists';
+import { AscensionPanel } from './components/AscensionPanel';
 import { DailyRewardBanner } from './components/DailyRewardBanner';
 import { HeistList } from './components/HeistList';
 import { DevPanel } from './components/DevPanel';
@@ -31,6 +32,7 @@ export default function App() {
             <SafehousePanel />
             <UpgradePanel />
             <PrestigePanel />
+            <AscensionPanel />
             <MilestonesPanel />
             <PremiumPanel />
           </div>

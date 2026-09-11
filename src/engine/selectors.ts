@@ -96,8 +96,10 @@ function upgradeProduct(
 }
 
 export const heatGainMult = (s: GameState) => upgradeProduct(s, 'heatGainMult');
-export const heatCoolRateMult = (s: GameState) => upgradeProduct(s, 'heatCoolRateMult');
 export const payoutMult = (s: GameState) => upgradeProduct(s, 'payoutMult');
+/** Heat cools faster with the Clean Hands perk on top of any upgrades. */
+export const heatCoolRateMult = (s: GameState, config: Config = CONFIG) =>
+  upgradeProduct(s, 'heatCoolRateMult') * (1 + config.perkCleanHandsPct * perkLevel(s, 'clean_hands'));
 
 /** Does any purchased upgrade grant the offline auto-collect Fixer? */
 export function hasFixer(state: GameState): boolean {
@@ -106,13 +108,18 @@ export function hasFixer(state: GameState): boolean {
 
 // ---- Notoriety (meta-progression) ------------------------------------------
 
-/** Permanent global payout multiplier from Notoriety. */
-export function notorietyMult(state: GameState, config: Config = CONFIG): number {
-  return 1 + config.notorietyMultPerPoint * state.notoriety;
+/** Purchased level of a Notoriety perk (0 if unowned). */
+export function perkLevel(state: GameState, perkId: string): number {
+  return state.perks?.[perkId] ?? 0;
 }
-/** Flat power every member gains from Notoriety (lets you beat harder content). */
+
+/** Permanent global payout multiplier from the Reputation perk. */
+export function notorietyMult(state: GameState, config: Config = CONFIG): number {
+  return 1 + config.perkReputationPct * perkLevel(state, 'reputation');
+}
+/** Flat power every member gains from the Connections perk. */
 export function notorietySkillBonus(state: GameState, config: Config = CONFIG): number {
-  return config.notorietySkillPerPoint * state.notoriety;
+  return config.perkConnectionsPower * perkLevel(state, 'connections');
 }
 /** Notoriety you'd earn by retiring now (from this run's lifetime cash). */
 export function notorietyGainFor(lifetimeCash: number, config: Config = CONFIG): number {

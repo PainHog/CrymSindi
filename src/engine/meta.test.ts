@@ -46,10 +46,10 @@ describe('notoriety', () => {
     // floor(sqrt(200000 / 2500)) = floor(sqrt(80)) = 8
     expect(notorietyGainFor(200000)).toBe(8);
   });
-  it('multiplier and skill bonus scale with points', () => {
-    const s = { ...createInitialState(T0), notoriety: 10 };
-    expect(notorietyMult(s)).toBeCloseTo(1 + 0.05 * 10, 5);
-    expect(notorietySkillBonus(s)).toBeCloseTo(0.15 * 10, 5);
+  it('multiplier and skill bonus scale with perk levels', () => {
+    const s = { ...createInitialState(T0), perks: { reputation: 10, connections: 10 } };
+    expect(notorietyMult(s)).toBeCloseTo(1 + 0.05 * 10, 5); // Reputation
+    expect(notorietySkillBonus(s)).toBeCloseTo(0.5 * 10, 5); // Connections
   });
 });
 
@@ -85,19 +85,19 @@ describe('prestige', () => {
     expect(n.crews[0].memberIds).toHaveLength(3); // fresh starter crew
   });
 
-  it('notoriety raises every member power and the take', () => {
+  it('perks raise every member power and the take', () => {
     const s = makeState(
       [
         { role: 'hacker', skill: 5 },
         { role: 'muscle', skill: 5 },
         { role: 'driver', skill: 5 },
       ],
-      { notoriety: 10 },
+      { perks: { reputation: 10, connections: 3 } },
     );
     const report = resolveWithNotoriety(s);
-    // each member's effective skill includes +0.15*10 = +1.5
+    // Connections lvl 3 = +0.5*3 = +1.5 effective skill per member.
     expect(report.members[0].effectiveSkill).toBeCloseTo(5 + 1.5, 5);
-    // payout is multiplied by notorietyMult (1.5x here) on top of the base take
+    // Reputation lvl 10 = notorietyMult 1.5x on the take.
     expect(report.payout).toBeGreaterThan(0);
   });
 });

@@ -28,10 +28,9 @@ export function PrestigePanel() {
         Go legit
       </h2>
       <p className="prestige-blurb">
-        Retire the operation for permanent <strong>Notoriety</strong>. Every point is{' '}
-        <strong>+{pct(CONFIG.notorietyMultPerPoint)} take</strong> and{' '}
-        <strong>+{CONFIG.notorietySkillPerPoint} power</strong> to every member — forever, across
-        every future crew. Each run you push further earns more.
+        Retire the operation for permanent <strong>Notoriety</strong>, then spend it in the{' '}
+        <strong>Notoriety</strong> tree below on perks that last across every future run — more
+        take, sharper crews, kept upgrades. The further you push each run, the more you bank.
       </p>
 
       <div className="prestige-stats">

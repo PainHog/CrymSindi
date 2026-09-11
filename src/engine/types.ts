@@ -100,6 +100,9 @@ export interface GameState {
   /** Premium currency ("Marks"). Persists across prestige. Monetization is
    *  plumbed but not wired to any store/SDK yet (see src/monetization). */
   marks: number;
+  /** Purchased Notoriety perk levels, keyed by perk id (see data/perks.ts).
+   *  Persists across prestige; drives the notoriety bonuses. */
+  perks: Record<string, number>;
 
   /** Timestamp of the last save; used for offline resolution + display. */
   lastSaved: number;
