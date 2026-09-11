@@ -42,12 +42,16 @@ export function ReportModal() {
       if (e.key !== 'Tab') return;
       const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
       if (!nodes || nodes.length === 0) return;
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
+      const list = Array.from(nodes);
+      const first = list[0];
+      const last = list[list.length - 1];
+      // Wrap at the edges AND when focus sits on the dialog container itself
+      // (focused on open), so the first keystroke can't tab out to the page.
+      const within = list.includes(document.activeElement as HTMLElement);
+      if (e.shiftKey && (document.activeElement === first || !within)) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (!e.shiftKey && (document.activeElement === last || !within)) {
         e.preventDefault();
         first.focus();
       }
