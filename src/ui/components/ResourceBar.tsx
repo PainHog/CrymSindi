@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { CONFIG } from '../../data/config';
 import { deriveHeat, heatCoolRateMult, notorietyMult } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
 import { formatCash, pct } from '../format';
+import { useCountUp } from '../hooks';
 import { Icon } from '../icons';
 
 function heatStatus(frac: number): { level: string; word: string } {
@@ -19,16 +21,38 @@ export function ResourceBar() {
   const coolPerSec = CONFIG.heatCoolPerSec * heatCoolRateMult(game);
   const { level, word } = heatStatus(heatFrac);
 
+  // Cash juice: animated count-up, a flash, and a coin burst when it rises.
+  const displayCash = useCountUp(game.cash);
+  const prevCash = useRef(game.cash);
+  const [gaining, setGaining] = useState(false);
+  const [burst, setBurst] = useState(0);
+  useEffect(() => {
+    const increased = game.cash > prevCash.current;
+    prevCash.current = game.cash;
+    if (!increased) return;
+    setGaining(true);
+    setBurst((b) => b + 1);
+    const id = window.setTimeout(() => setGaining(false), 650);
+    return () => window.clearTimeout(id);
+  }, [game.cash]);
+
   return (
     <div className="resourcebar">
-      <div className="stat cash">
+      <div className={`stat cash ${gaining ? 'gain' : ''}`}>
         <span className="stat-icon">
           <Icon name="cash" size={22} />
         </span>
         <div className="stat-body">
           <span className="stat-label">Cash on hand</span>
-          <span className="stat-value">{formatCash(game.cash)}</span>
+          <span className="stat-value">{formatCash(displayCash)}</span>
         </div>
+        {burst > 0 && (
+          <div className="coin-burst" key={burst} aria-hidden="true">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span className="coin" style={{ '--i': i } as CSSProperties} key={i} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="stat heat">

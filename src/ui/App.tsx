@@ -8,6 +8,8 @@ import { PrestigePanel } from './components/PrestigePanel';
 import { ReportModal } from './components/ReportModal';
 import { ResourceBar } from './components/ResourceBar';
 import { SafehousePanel } from './components/SafehousePanel';
+import { ScreenShake } from './components/ScreenShake';
+import { SoundFx } from './components/SoundFx';
 import { Toast } from './components/Toast';
 import { TopBar } from './components/TopBar';
 import { UpgradePanel } from './components/UpgradePanel';
@@ -15,35 +17,38 @@ import { UpgradePanel } from './components/UpgradePanel';
 export default function App() {
   return (
     <GameProvider>
-      <div className="app">
-        <TopBar />
-        <ResourceBar />
-        <OnboardingBanner />
+      <ScreenShake>
+        <div className="app">
+          <TopBar />
+          <ResourceBar />
+          <OnboardingBanner />
 
-        <main className="layout">
-          <div className="col col-main">
-            <SafehousePanel />
-            <UpgradePanel />
-            <PrestigePanel />
-            <MilestonesPanel />
-          </div>
-          <div className="col col-side">
-            <ActiveHeists />
-            <HeistList />
-          </div>
-        </main>
+          <main className="layout">
+            <div className="col col-main">
+              <SafehousePanel />
+              <UpgradePanel />
+              <PrestigePanel />
+              <MilestonesPanel />
+            </div>
+            <div className="col col-side">
+              <ActiveHeists />
+              <HeistList />
+            </div>
+          </main>
 
-        <footer className="footer">
-          <p>
-            Active idle heist management · progress is resolved from real timestamps · a proof of
-            concept build.
-          </p>
-        </footer>
+          <footer className="footer">
+            <p>
+              Active idle heist management · progress is resolved from real timestamps · a proof of
+              concept build.
+            </p>
+          </footer>
 
-        <Toast />
-        <ReportModal />
-        <DevPanel />
-      </div>
+          <Toast />
+          <ReportModal />
+          <DevPanel />
+        </div>
+      </ScreenShake>
+      <SoundFx />
     </GameProvider>
   );
 }

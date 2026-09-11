@@ -42,12 +42,23 @@ import {
   type GameState,
   type HeistReport,
 } from '../engine';
+import { formatCash } from '../ui/format';
+
+/** A one-shot signal for the juice/sound layer. `eventId` makes each one unique. */
+export type GameEvent =
+  | { kind: 'launch' }
+  | { kind: 'collect'; payout: number; success: boolean; flawless: boolean }
+  | { kind: 'purchase' }
+  | { kind: 'prestige' }
+  | { kind: 'error' };
 
 interface UIState {
   game: GameState;
   message: string | null;
   messageId: number;
   report: HeistReport | null;
+  event: GameEvent | null;
+  eventId: number;
 }
 
 type Action =
@@ -67,15 +78,29 @@ type Action =
   | { type: 'dismissReport' }
   | { type: 'replace'; game: GameState; message?: string };
 
-function applyResult(ui: UIState, result: ActionResult): UIState {
+function applyResult(ui: UIState, result: ActionResult, okEvent?: GameEvent): UIState {
   if (result.ok) {
     const { state, earned } = awardMilestones(result.state);
     const message = earned.length
       ? `Milestone: ${earned.map((m) => m.name).join(', ')}`
       : (result.message ?? ui.message);
-    return { ...ui, game: state, message, messageId: ui.messageId + 1 };
+    const event = okEvent ?? null;
+    return {
+      ...ui,
+      game: state,
+      message,
+      messageId: ui.messageId + 1,
+      event,
+      eventId: event ? ui.eventId + 1 : ui.eventId,
+    };
   }
-  return { ...ui, message: result.error, messageId: ui.messageId + 1 };
+  return {
+    ...ui,
+    message: result.error,
+    messageId: ui.messageId + 1,
+    event: { kind: 'error' },
+    eventId: ui.eventId + 1,
+  };
 }
 
 function reducer(ui: UIState, action: Action): UIState {
@@ -84,10 +109,20 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(
         ui,
         launchHeist(ui.game, action.heistId, action.crewId, action.now, action.seed),
+        { kind: 'launch' },
       );
     case 'collect': {
       const res = collectHeist(ui.game, action.id, action.now);
-      const nextUi = applyResult(ui, res);
+      const event: GameEvent | undefined =
+        res.ok && res.report
+          ? {
+              kind: 'collect',
+              payout: res.report.payout,
+              success: res.report.success,
+              flawless: res.report.perfect,
+            }
+          : undefined;
+      const nextUi = applyResult(ui, res, event);
       return { ...nextUi, report: res.ok && res.report ? res.report : ui.report };
     }
     case 'collectAll': {
@@ -95,30 +130,34 @@ function reducer(ui: UIState, action: Action): UIState {
       if (collected === 0) {
         return { ...ui, message: 'Nothing ready to collect.', messageId: ui.messageId + 1 };
       }
-      return applyResult(ui, {
-        ok: true,
-        state,
-        message: `Collected ${collected} job${collected > 1 ? 's' : ''} · +$${Math.round(earned).toLocaleString('en-US')}`,
-      });
+      return applyResult(
+        ui,
+        {
+          ok: true,
+          state,
+          message: `Collected ${collected} job${collected > 1 ? 's' : ''} · +${formatCash(earned)}`,
+        },
+        { kind: 'collect', payout: earned, success: true, flawless: false },
+      );
     }
     case 'dismissReport':
       return { ...ui, report: null };
     case 'buySafehouse':
-      return applyResult(ui, buySafehouse(ui.game));
+      return applyResult(ui, buySafehouse(ui.game), { kind: 'purchase' });
     case 'upgradeSafehouse':
-      return applyResult(ui, upgradeSafehouse(ui.game, action.safehouseId));
+      return applyResult(ui, upgradeSafehouse(ui.game, action.safehouseId), { kind: 'purchase' });
     case 'formCrew':
-      return applyResult(ui, formCrew(ui.game, action.safehouseId));
+      return applyResult(ui, formCrew(ui.game, action.safehouseId), { kind: 'purchase' });
     case 'recruit':
-      return applyResult(ui, recruitMember(ui.game, action.crewId, action.roleId));
+      return applyResult(ui, recruitMember(ui.game, action.crewId, action.roleId), { kind: 'purchase' });
     case 'buyGear':
-      return applyResult(ui, buyGear(ui.game, action.memberId, action.gearId));
+      return applyResult(ui, buyGear(ui.game, action.memberId, action.gearId), { kind: 'purchase' });
     case 'upgradeSkill':
-      return applyResult(ui, upgradeSkill(ui.game, action.memberId));
+      return applyResult(ui, upgradeSkill(ui.game, action.memberId), { kind: 'purchase' });
     case 'buyUpgrade':
-      return applyResult(ui, buyUpgrade(ui.game, action.upgradeId));
+      return applyResult(ui, buyUpgrade(ui.game, action.upgradeId), { kind: 'purchase' });
     case 'prestige':
-      return applyResult(ui, prestige(ui.game, action.now));
+      return applyResult(ui, prestige(ui.game, action.now), { kind: 'prestige' });
     case 'dev': {
       // Dev/test helpers (only reachable from the ?dev=1 panel).
       const g = ui.game;
@@ -128,7 +167,7 @@ function reducer(ui: UIState, action: Action): UIState {
       switch (action.op) {
         case 'cash':
           state = { ...g, cash: g.cash + amt, lifetimeCash: g.lifetimeCash + amt, careerCash: g.careerCash + amt };
-          message = `+$${amt.toLocaleString('en-US')} (dev)`;
+          message = `+${formatCash(amt)} (dev)`;
           break;
         case 'notoriety':
           state = { ...g, notoriety: g.notoriety + amt };
@@ -182,13 +221,13 @@ function init(): UIState {
   if (loaded) {
     let msg: string | null = null;
     if (loaded.autoCollected > 0) {
-      msg = `The Fixer ran ${loaded.autoCollected} job${loaded.autoCollected > 1 ? 's' : ''} while you were out — +$${Math.round(loaded.autoEarned).toLocaleString('en-US')}.`;
+      msg = `The Fixer ran ${loaded.autoCollected} job${loaded.autoCollected > 1 ? 's' : ''} while you were out — +${formatCash(loaded.autoEarned)}.`;
     } else if (loaded.readyCount > 0) {
       msg = `Welcome back. ${loaded.readyCount} heist${loaded.readyCount > 1 ? 's' : ''} ready to collect.`;
     }
-    return { game: loaded.state, message: msg, messageId: 0, report: null };
+    return { game: loaded.state, message: msg, messageId: 0, report: null, event: null, eventId: 0 };
   }
-  return { game: createInitialState(now), message: null, messageId: 0, report: null };
+  return { game: createInitialState(now), message: null, messageId: 0, report: null, event: null, eventId: 0 };
 }
 
 interface GameContextValue {
@@ -196,6 +235,8 @@ interface GameContextValue {
   message: string | null;
   messageId: number;
   report: HeistReport | null;
+  event: GameEvent | null;
+  eventId: number;
   actions: {
     launch: (heistId: string, crewId: string) => void;
     collect: (id: string) => void;
@@ -302,9 +343,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       message: ui.message,
       messageId: ui.messageId,
       report: ui.report,
+      event: ui.event,
+      eventId: ui.eventId,
       actions,
     }),
-    [ui.game, ui.message, ui.messageId, ui.report, actions],
+    [ui.game, ui.message, ui.messageId, ui.report, ui.event, ui.eventId, actions],
   );
 
   return (
