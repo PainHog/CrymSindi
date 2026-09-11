@@ -13,6 +13,7 @@ import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { HEISTS_BY_ID } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
+import { formatCash } from './format';
 import { addHeat, settleHeat } from './heat';
 import {
   contractHeistDef,
@@ -153,7 +154,7 @@ export function collectHeist(
   }
 
   const message =
-    report.payout > 0 ? `${report.headline} · +$${report.payout.toLocaleString('en-US')}` : report.headline;
+    report.payout > 0 ? `${report.headline} · +${formatCash(report.payout)}` : report.headline;
   return { ok: true, state: next, message, report };
 }
 

@@ -54,7 +54,7 @@ export function PrestigePanel() {
       <button className="btn primary block" disabled={!can} onClick={onRetire}>
         {can
           ? `Retire crew — bank +${gain} Notoriety`
-          : `Unlocks at ${formatCash(CONFIG.prestigeThreshold)} lifetime take (you have ${formatCash(game.lifetimeCash)})`}
+          : `Unlocks at ${formatCash(CONFIG.prestigeThreshold)} lifetime take (you have ${formatCash(game.lifetimeCash, 'floor')})`}
       </button>
     </section>
   );

@@ -44,7 +44,7 @@ export function ResourceBar() {
         </span>
         <div className="stat-body">
           <span className="stat-label">Cash on hand</span>
-          <span className="stat-value">{formatCash(displayCash)}</span>
+          <span className="stat-value">{formatCash(displayCash, 'floor')}</span>
         </div>
         {burst > 0 && (
           <div className="coin-burst" key={burst} aria-hidden="true">
@@ -86,7 +86,7 @@ export function ResourceBar() {
         </span>
         <div className="stat-body">
           <span className="stat-label">Lifetime take</span>
-          <span className="stat-value">{formatCash(game.lifetimeCash)}</span>
+          <span className="stat-value">{formatCash(game.lifetimeCash, 'floor')}</span>
         </div>
       </div>
 

@@ -237,7 +237,7 @@ function RecAction({ rec }: { rec: Recommendation }) {
         disabled={maxed || game.cash < cost}
         onClick={() => actions.upgradeSkill(member.id)}
       >
-        {maxed ? 'Maxed' : `Train · ${formatCash(cost)}`}
+        {maxed ? 'Maxed' : `Train · ${formatCash(cost, 'ceil')}`}
       </button>
     );
   }
@@ -250,7 +250,7 @@ function RecAction({ rec }: { rec: Recommendation }) {
         disabled={game.cash < gear.cost}
         onClick={() => actions.buyGear(member.id, gear.id)}
       >
-        +{gear.name} · {formatCash(gear.cost)}
+        +{gear.name} · {formatCash(gear.cost, 'ceil')}
       </button>
     );
   }

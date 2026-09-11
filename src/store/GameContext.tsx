@@ -42,7 +42,7 @@ import {
   type GameState,
   type HeistReport,
 } from '../engine';
-import { formatCash } from '../ui/format';
+import { formatCash } from '../engine/format';
 
 /** A one-shot signal for the juice/sound layer. `eventId` makes each one unique. */
 export type GameEvent =

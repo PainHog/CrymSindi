@@ -31,7 +31,7 @@ export function SafehousePanel() {
           <Icon name="safehouse" size={17} /> Safehouses &amp; crews
         </h2>
         <button className="btn small" disabled={game.cash < buyCost} onClick={actions.buySafehouse}>
-          + Safehouse · {formatCash(buyCost)}
+          + Safehouse · {formatCash(buyCost, 'ceil')}
         </button>
       </div>
 
@@ -82,7 +82,7 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
             onClick={() => actions.upgradeSafehouse(safehouse.id)}
             title="More crew slots = more concurrent heists"
           >
-            Expand · {formatCash(upgradeCost)}
+            Expand · {formatCash(upgradeCost, 'ceil')}
           </button>
         ) : (
           <span className="stamp-badge stamp-tier">Max capacity</span>
@@ -104,7 +104,7 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
               disabled={game.cash < formCost}
               onClick={() => actions.formCrew(safehouse.id)}
             >
-              Form crew · {formatCash(formCost)}
+              Form crew · {formatCash(formCost, 'ceil')}
             </button>
           </div>
         ))}
@@ -187,7 +187,7 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
                   <span className="role-ico">
                     <RoleIcon role={role.id} size={13} />
                   </span>
-                  {role.name} · {formatCash(cost)}
+                  {role.name} · {formatCash(cost, 'ceil')}
                 </button>
               );
             })}
@@ -279,7 +279,7 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
               disabled={maxed || game.cash < skillCost}
               onClick={() => actions.upgradeSkill(member.id)}
             >
-              {maxed ? 'Skill maxed' : `Train · ${formatCash(skillCost)}`}
+              {maxed ? 'Skill maxed' : `Train · ${formatCash(skillCost, 'ceil')}`}
             </button>
             {unowned.map((g) => (
               <button
@@ -289,7 +289,7 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
                 title={`${g.description} (${ROLES_BY_ID[g.role]?.name} only)`}
                 onClick={() => actions.buyGear(member.id, g.id)}
               >
-                +{g.name} · {formatCash(g.cost)}
+                +{g.name} · {formatCash(g.cost, 'ceil')}
               </button>
             ))}
           </div>

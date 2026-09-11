@@ -104,7 +104,7 @@ function LockedHeist({ heist, lifetimeCash }: { heist: HeistDef; lifetimeCash: n
       </div>
       <p className="locked-note">
         <Icon name="vault" size={13} /> Unlocks at {formatCash(needed)} lifetime take (you have{' '}
-        {formatCash(lifetimeCash)})
+        {formatCash(lifetimeCash, 'floor')})
       </p>
     </div>
   );

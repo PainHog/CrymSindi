@@ -15,6 +15,7 @@
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { gearForRole } from '../data/gear';
+import { formatCash } from './format';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import type { RoleId } from '../data/roles';
@@ -389,7 +390,7 @@ function buildFactors(
     factors.push({
       label: 'Flawless bonus',
       positive: true,
-      note: `Everyone delivered — +$${perfectBonus.toLocaleString()} bonus.`,
+      note: `Everyone delivered — +${formatCash(perfectBonus)} bonus.`,
     });
   }
   return factors;

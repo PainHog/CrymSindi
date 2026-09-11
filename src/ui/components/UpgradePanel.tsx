@@ -43,7 +43,7 @@ export function UpgradePanel() {
                   disabled={game.cash < up.cost}
                   onClick={() => actions.buyUpgrade(up.id)}
                 >
-                  {formatCash(up.cost)}
+                  {formatCash(up.cost, 'ceil')}
                 </button>
               )}
             </div>
