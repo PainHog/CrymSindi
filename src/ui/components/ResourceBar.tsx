@@ -97,9 +97,7 @@ export function ResourceBar() {
         <div className="stat-body">
           <span className="stat-label">Notoriety</span>
           <span className="stat-value">{game.notoriety}</span>
-          <span className="stat-sub">
-            {game.notoriety > 0 ? 'to spend' : `+${pct(notorietyMult(game) - 1)} take`}
-          </span>
+          <span className="stat-sub">+{pct(notorietyMult(game) - 1)} take</span>
         </div>
       </div>
     </div>

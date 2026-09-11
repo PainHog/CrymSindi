@@ -186,7 +186,7 @@ export function contractUnlocked(state: GameState): boolean {
 export function deriveHeat(state: GameState, now: number, config: Config = CONFIG): number {
   const elapsedMs = Math.max(0, now - state.heatUpdatedAt);
   const cappedMs = Math.min(elapsedMs, config.offlineCapSec * 1000);
-  const coolRate = config.heatCoolPerSec * heatCoolRateMult(state);
+  const coolRate = config.heatCoolPerSec * heatCoolRateMult(state, config);
   const cooled = state.heat - coolRate * (cappedMs / 1000);
   return clamp(cooled, 0, config.maxHeat);
 }

@@ -241,7 +241,7 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
   }
   const gain = notorietyGainFor(state.lifetimeCash, config);
   const fresh = createInitialState(now, config);
-  const perks = state.perks;
+  const perks = state.perks ?? {};
   // Perk effects that shape the fresh run:
   const keepUpgrades = (perks['old_loyalties'] ?? 0) > 0;
   const warChest = (perks['war_chest'] ?? 0) * config.perkWarChestCash;
@@ -262,7 +262,7 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
       dailyStreak: state.dailyStreak,
       // Premium currency and the perk tree persist across prestige.
       marks: state.marks,
-      perks: state.perks,
+      perks,
     },
     message: `Went legit. +${gain} Notoriety (now ${state.notoriety + gain}).`,
   };
@@ -272,7 +272,8 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
 export function buyPerk(state: GameState, perkId: string): ActionResult {
   const perk = PERKS_BY_ID[perkId];
   if (!perk) return { ok: false, error: 'Unknown perk.' };
-  const level = state.perks[perkId] ?? 0;
+  const perks = state.perks ?? {};
+  const level = perks[perkId] ?? 0;
   if (level >= perk.maxLevel) return { ok: false, error: 'That perk is maxed.' };
   const cost = perkCost(perk, level + 1);
   if (state.notoriety < cost) return { ok: false, error: 'Not enough Notoriety.' };
@@ -281,7 +282,7 @@ export function buyPerk(state: GameState, perkId: string): ActionResult {
     state: {
       ...state,
       notoriety: state.notoriety - cost,
-      perks: { ...state.perks, [perkId]: level + 1 },
+      perks: { ...perks, [perkId]: level + 1 },
     },
     message: `${perk.name} → level ${level + 1}.`,
   };
