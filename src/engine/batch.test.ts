@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { gearForRole } from '../data/gear';
 import { createInitialState } from './state';
 import { fillCrew, gearUpCrew, sendAllIdle } from './batch';
 import { getCrew, getMember } from './selectors';
@@ -26,6 +27,29 @@ describe('sendAllIdle', () => {
     expect(res.ok).toBe(false);
   });
 
+  it('launches the idle crew while leaving a busy one untouched', () => {
+    const base = createInitialState(T0);
+    const busy: Crew = { ...base.crews[0], status: 'onHeist' };
+    const idle: Crew = { id: 'c2', safehouseId: 's1', memberIds: ['m1', 'm2', 'm3'], maxMembers: 8, status: 'idle' };
+    const res = sendAllIdle({ ...base, crews: [busy, idle] }, 'smash_grab', T0);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.state.activeHeists).toHaveLength(1); // only the idle crew launched
+    expect(getCrew(res.state, 'c1')!.status).toBe('onHeist'); // busy crew unchanged
+    expect(getCrew(res.state, 'c2')!.status).toBe('onHeist'); // idle crew now on the job
+  });
+
+  it('stops mid-burst once launches push Heat to the cap', () => {
+    const base = createInitialState(T0);
+    const c2: Crew = { id: 'c2', safehouseId: 's1', memberIds: ['m1', 'm2', 'm3'], maxMembers: 8, status: 'idle' };
+    // Start near max: the first smash_grab (+heatCost) maxes Heat, blocking the 2nd.
+    const hot: GameState = { ...base, heat: 96, heatUpdatedAt: T0, crews: [base.crews[0], c2] };
+    const res = sendAllIdle(hot, 'smash_grab', T0);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.state.activeHeists).toHaveLength(1); // 2nd crew blocked by maxed Heat
+  });
+
   it('errors when a locked heist is requested', () => {
     const res = sendAllIdle(createInitialState(T0), 'central_bank', T0); // tier 5, locked
     expect(res.ok).toBe(false);
@@ -45,6 +69,18 @@ describe('gearUpCrew', () => {
 
   it('errors when nothing is affordable', () => {
     expect(gearUpCrew({ ...createInitialState(T0), cash: 0 }, 'c1').ok).toBe(false);
+  });
+
+  it('errors when the crew is already fully geared', () => {
+    const base = createInitialState(T0);
+    const members = base.members.map((m) => ({ ...m, gearIds: gearForRole(m.role).map((g) => g.id) }));
+    expect(gearUpCrew({ ...base, members, cash: 100000 }, 'c1').ok).toBe(false);
+  });
+
+  it('refuses a crew that is on a job', () => {
+    const base = createInitialState(T0);
+    const busy: Crew = { ...base.crews[0], status: 'onHeist' };
+    expect(gearUpCrew({ ...base, crews: [busy], cash: 100000 }, 'c1').ok).toBe(false);
   });
 });
 

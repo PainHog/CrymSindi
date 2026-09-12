@@ -50,6 +50,7 @@ export function sendAllIdle(
 export function gearUpCrew(state: GameState, crewId: string): ActionResult {
   const crew = getCrew(state, crewId);
   if (!crew) return { ok: false, error: 'Unknown crew.' };
+  if (crew.status !== 'idle') return { ok: false, error: 'Cannot gear up a crew on a job.' };
 
   let s = state;
   let bought = 0;

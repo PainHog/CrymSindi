@@ -183,10 +183,10 @@ function UnlockedHeist({
           <button
             className="btn small send-all"
             disabled={heatMaxed}
-            title={`Launch this job with all ${eligibleIdle} idle crews that can run it`}
+            title={`Launch this job with all ${eligibleIdle} idle crews that can run it (Heat may cap how many go at once)`}
             onClick={() => onSendAll(heist.id)}
           >
-            <Icon name="target" size={12} /> Send all idle ({eligibleIdle})
+            <Icon name="target" size={12} /> Send all idle
           </button>
         )}
         {idleCrews.map(({ crew, index }) => {
