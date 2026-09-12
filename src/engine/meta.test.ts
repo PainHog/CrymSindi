@@ -63,12 +63,12 @@ describe('prestige', () => {
     const s: GameState = {
       ...createInitialState(T0),
       cash: 50000,
-      lifetimeCash: 700000,
-      careerCash: 900000,
+      lifetimeCash: 1600000, // past the tier-5 unlock + prestige threshold
+      careerCash: 1800000,
       contractLevel: 4,
       notoriety: 3,
       milestonesEarned: ['first_score'],
-      stats: { heistsCompleted: 20, heistsSucceeded: 18, flawless: 4, biggestScore: 40000 },
+      stats: { heistsCompleted: 20, heistsSucceeded: 18, flawless: 4, biggestScore: 400000 },
     };
     const res = prestige(s, T0);
     expect(res.ok).toBe(true);
@@ -76,9 +76,9 @@ describe('prestige', () => {
     const n = res.state;
     expect(n.cash).toBe(CONFIG.startingCash); // fresh operation
     expect(n.lifetimeCash).toBe(0);
-    expect(n.notoriety).toBe(3 + notorietyGainFor(700000)); // gain from a 700k run
+    expect(n.notoriety).toBe(3 + notorietyGainFor(1600000)); // gain from a 1.6M run
     expect(n.prestigeCount).toBe(1);
-    expect(n.careerCash).toBe(900000); // preserved
+    expect(n.careerCash).toBe(1800000); // preserved
     expect(n.contractLevel).toBe(4); // preserved
     expect(n.milestonesEarned).toContain('first_score');
     expect(n.stats.heistsCompleted).toBe(20);

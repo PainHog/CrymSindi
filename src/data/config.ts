@@ -132,7 +132,12 @@ export const CONFIG: Config = {
   qualitySlack: 3,
 
   // ---- Prestige / Notoriety ------------------------------------------------
-  prestigeThreshold: 600000,
+  // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is
+  // gated behind actually reaching the capstone you retire on — otherwise the
+  // concave notoriety curve makes retiring early optimal and the tier-5 content
+  // never gets played. Set a touch above the unlock so a capstone score lands
+  // first.
+  prestigeThreshold: 1500000,
   notorietyDivisor: 2500,
   perkReputationPct: 0.05,
   perkConnectionsPower: 0.5,
