@@ -160,21 +160,24 @@ describe('endgame contract', () => {
     expect(collected.state.contractLevel).toBe(1); // advanced
   });
 
-  it('stays unlocked after prestige resets the run (persistent career signal)', () => {
+  it('stays unlocked after prestige resets the run (persistent career signals)', () => {
     const fresh = createInitialState(T0);
-    // A post-prestige operation: run-local lifetimeCash is reset to 0, so the
-    // regular tiers re-lock, but career earnings and the contract level persist.
+    // A post-prestige operation that reached tier 5 but never launched the
+    // contract: run-local lifetimeCash reset to 0 (regular tiers re-lock) and
+    // contractLevel still 0, so ONLY the persistent careerCash clause can keep
+    // the contract open. (Guards the commit's headline mechanism in isolation:
+    // remove the careerCash clause and this assertion fails.)
     const postPrestige: GameState = {
       ...fresh,
       lifetimeCash: 0,
       careerCash: CONFIG.tierUnlocks[5],
-      contractLevel: 3,
+      contractLevel: 0,
     };
     expect(maxUnlockedTier(postPrestige)).toBe(1); // regular tiers re-locked
-    expect(contractUnlocked(postPrestige)).toBe(true); // but the contract remains
+    expect(contractUnlocked(postPrestige)).toBe(true); // careerCash keeps it open
 
-    // Even with careerCash below the threshold, a level already cleared keeps it
-    // available (survives a later upward threshold change).
+    // A cleared level keeps it available even with careerCash below the
+    // threshold (survives a later upward threshold change) — isolates clause 3.
     expect(contractUnlocked({ ...fresh, careerCash: 0, contractLevel: 2 })).toBe(true);
 
     // A brand-new operation that has never reached tier 5 has no contract.

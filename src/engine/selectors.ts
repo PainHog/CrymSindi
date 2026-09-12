@@ -178,19 +178,23 @@ export function heistDefFor(heistId: string, state: GameState, config: Config = 
  * regular tier gates read run-local `lifetimeCash`, which prestige resets to 0
  * (so tiers 2-5 re-lock and you re-climb them — the intended prestige loop). But
  * the contract's cleared level persists across prestige, so re-locking it would
- * strand a player who's been grinding it. Gate it on persistent signals too:
- *   - careerCash (cumulative-ever earnings; preserved across prestige) reaching
- *     the tier-5 threshold means you've qualified at least once, and it never
- *     decreases — the primary persistent signal.
- *   - contractLevel > 0 is a belt-and-suspenders that also survives a later
- *     upward change to the tier-5 threshold (a rebalance shouldn't lock a player
- *     out of a contract they've already cleared).
+ * strand a player who's been grinding it. Gate it on persistent signals:
+ *   - careerCash (cumulative-ever earnings, preserved across prestige and never
+ *     decreasing) reaching the tier-5 threshold — the primary signal, and the
+ *     one that carries a player who reached tier 5 but hadn't launched the
+ *     contract yet.
+ *   - contractLevel > 0 — already cleared it at least once; also survives a
+ *     later upward change to the tier-5 threshold.
+ * The run-local maxUnlockedTier check is kept as a defensive fallback: in normal
+ * play careerCash >= lifetimeCash, so it's subsumed by the careerCash clause —
+ * but a hand-edited/corrupt save can present lifetimeCash >= tier5 > careerCash,
+ * and there it's the only clause that keeps a legitimately tier-5 run unlocked.
  */
 export function contractUnlocked(state: GameState, config: Config = CONFIG): boolean {
   const tier5Cash = config.tierUnlocks[5] ?? Infinity;
   return (
-    maxUnlockedTier(state, config) >= 5 || // this run has reached tier 5
-    state.careerCash >= tier5Cash || // ever reached it (persists past prestige)
+    maxUnlockedTier(state, config) >= 5 || // run-local fallback (corrupt-save safe)
+    state.careerCash >= tier5Cash || // ever reached tier 5 (persists past prestige)
     state.contractLevel > 0 // already cleared it at least once
   );
 }
