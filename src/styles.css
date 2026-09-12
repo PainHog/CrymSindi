@@ -957,6 +957,34 @@ body::after {
   .onboarding { flex-direction: column; align-items: stretch; }
 }
 
+/* Contextual coaching hints (Heat, prestige) — steel accent to read as a
+   distinct, in-the-moment note vs the gold "how to play" intro. */
+.coach-tip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(180deg, #1a2230, #141a24);
+  border: 1px solid #34506a;
+  border-left: 3px solid var(--steel);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.coach-tip-icon { color: var(--steel); flex: none; display: inline-grid; place-items: center; }
+.coach-tip-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.coach-tip-title {
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--steel);
+}
+.coach-tip-text { font-size: 13px; color: var(--ink-dim); line-height: 1.45; }
+.coach-tip .btn { flex: none; }
+@media (max-width: 620px) {
+  .coach-tip { flex-direction: column; align-items: stretch; }
+}
+
 /* ---- Dev/test panel (only shown with ?dev=1) ---- */
 .dev-panel {
   position: fixed;

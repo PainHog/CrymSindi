@@ -1,6 +1,7 @@
 import { GameProvider } from '../store/GameContext';
 import { ActiveHeists } from './components/ActiveHeists';
 import { AscensionPanel } from './components/AscensionPanel';
+import { CoachTips } from './components/CoachTips';
 import { DailyRewardBanner } from './components/DailyRewardBanner';
 import { HeistList } from './components/HeistList';
 import { DevPanel } from './components/DevPanel';
@@ -26,6 +27,7 @@ export default function App() {
         <ResourceBar />
         <OnboardingBanner />
         <DailyRewardBanner />
+        <CoachTips />
 
         <main className="layout">
           <div className="col col-main">
