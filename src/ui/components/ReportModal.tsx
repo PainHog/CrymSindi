@@ -32,8 +32,10 @@ function ReportBody({ report }: { report: HeistReport }) {
   const { game, actions } = useGame();
   // Bucketed Heat drives the relaunch memo below (re-eval ~every 12s as Heat
   // cools), instead of a raw useNow() that would re-render the whole debrief —
-  // and re-run the Poisson-binomial estimate — 4x/sec.
-  const { roundedHeat } = useHeatSnapshot(game);
+  // and re-run the Poisson-binomial estimate — 4x/sec. heatMaxed is the exact
+  // boundary the launch gate flips on, so it's a memo dep too: it clears the
+  // block the instant Heat drops below max, not ~6s later when roundedHeat ticks.
+  const { roundedHeat, heatMaxed } = useHeatSnapshot(game);
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<Element | null>(null);
   const { watching, watch, available } = useRewardedAd();
@@ -87,9 +89,10 @@ function ReportBody({ report }: { report: HeistReport }) {
     const crew = getCrew(game, report.crewId);
     const chance = !block && heist && crew ? estimateSuccess(game, heist, crew, now) : 0;
     return { block, chance };
-    // roundedHeat is the time-bucketed input; game covers the rest.
+    // heatMaxed flips the launch gate at the boundary; roundedHeat buckets the
+    // displayed chance; game covers everything else.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game, roundedHeat, report.heistId, report.crewId]);
+  }, [game, roundedHeat, heatMaxed, report.heistId, report.crewId]);
 
   return (
     <div className="modal-backdrop" onClick={actions.dismissReport}>
