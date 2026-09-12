@@ -76,7 +76,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 8,
     heatCost: 14,
     failHeatBonus: 16,
-    difficulty: 14,
+    difficulty: 10,
   },
 
   // ---- Tier 2: bigger, longer jobs (unlock via lifetime cash) --------------
@@ -90,7 +90,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 12,
     heatCost: 34,
     failHeatBonus: 20,
-    difficulty: 30,
+    difficulty: 12,
   },
   {
     id: 'casino_heist',
@@ -102,7 +102,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 15,
     heatCost: 48,
     failHeatBonus: 28,
-    difficulty: 34,
+    difficulty: 14,
   },
 
   // ---- Tier 3: long jobs to leave running (unlock ~$20k lifetime) ----------
@@ -116,7 +116,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 24,
     heatCost: 38,
     failHeatBonus: 28,
-    difficulty: 41,
+    difficulty: 20,
   },
   {
     id: 'cargo_port',
@@ -128,7 +128,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 30,
     heatCost: 50,
     failHeatBonus: 34,
-    difficulty: 45,
+    difficulty: 22,
   },
 
   // ---- Tier 4: multi-hour scores (unlock ~$120k lifetime) ------------------
@@ -142,7 +142,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 48,
     heatCost: 62,
     failHeatBonus: 40,
-    difficulty: 49,
+    difficulty: 31,
   },
   {
     id: 'data_center',
@@ -154,7 +154,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 62,
     heatCost: 78,
     failHeatBonus: 50,
-    difficulty: 53,
+    difficulty: 33,
   },
 
   // ---- Tier 5: the overnight big score (unlock ~$600k lifetime) ------------
@@ -165,10 +165,10 @@ export const HEISTS: HeistDef[] = [
     description: 'The one you retire on. Launch it, sleep on it. ~12 hours.',
     requiredRoles: ['hacker', 'muscle', 'driver'],
     durationSec: 12 * 60 * 60,
-    payoutPerSec: 96,
+    payoutPerSec: 112,
     heatCost: 92,
     failHeatBonus: 60,
-    difficulty: 56,
+    difficulty: 44,
   },
 ];
 

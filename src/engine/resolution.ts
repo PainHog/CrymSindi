@@ -82,11 +82,16 @@ export function makeRng(seed: number): () => number {
 
 /** Minimum crew size to even attempt a job (roles + passes + global floor). */
 export function minMembersFor(heist: HeistDef, config: Config = CONFIG): number {
-  return Math.max(
+  // One member of slack over the passes needed, so the MINIMUM crew isn't forced
+  // into a flawless run (every member passing) to clear the job — it can absorb
+  // a single blown roll. Capped at the crew-size limit, so a very high-difficulty
+  // escalating contract can still bottom out at "everyone must pass".
+  const need = Math.max(
     config.minCrewForHeist,
     heist.requiredRoles.length,
-    requiredPassesFor(heist, config),
+    requiredPassesFor(heist, config) + 1,
   );
+  return Math.min(config.crewMaxMembers, need);
 }
 
 // ---- Preview estimate (honest, from the per-member model) -------------------

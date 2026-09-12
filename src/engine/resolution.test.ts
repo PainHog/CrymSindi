@@ -61,10 +61,11 @@ describe('resolution numbers', () => {
 
   it('requiredPasses and minMembers scale with difficulty', () => {
     expect(requiredPassesFor(HEISTS_BY_ID['smash_grab'])).toBe(2);
-    expect(requiredPassesFor(HEISTS_BY_ID['bank_vault'])).toBe(3); // 2 + floor(28/18)
-    expect(requiredPassesFor(HEISTS_BY_ID['central_bank'])).toBe(5); // 2 + floor(70/18)
-    expect(minMembersFor(HEISTS_BY_ID['smash_grab'])).toBe(3);
-    expect(minMembersFor(HEISTS_BY_ID['central_bank'])).toBe(5);
+    expect(requiredPassesFor(HEISTS_BY_ID['cargo_port'])).toBe(3); // 2 + floor(22/18)
+    expect(requiredPassesFor(HEISTS_BY_ID['central_bank'])).toBe(4); // 2 + floor(44/18)
+    // minMembers = max(floor, roles, requiredPasses + 1 slack), capped at crewMax
+    expect(minMembersFor(HEISTS_BY_ID['smash_grab'])).toBe(3); // max(3, 0, 2+1)
+    expect(minMembersFor(HEISTS_BY_ID['central_bank'])).toBe(5); // max(3, 3, 4+1)
   });
 });
 
@@ -148,7 +149,7 @@ describe('resolveHeist outcomes', () => {
   });
 
   it('fails a high-difficulty job when too few members pass', () => {
-    const central = HEISTS_BY_ID['central_bank']; // requiredPasses 5
+    const central = HEISTS_BY_ID['central_bank']; // requiredPasses 4
     const state = makeState([
       { role: 'hacker', skill: 20 },
       { role: 'muscle', skill: 20 },
@@ -156,7 +157,7 @@ describe('resolveHeist outcomes', () => {
     ]);
     const report = resolveHeist(state, central, getCrew(state, 'c1')!, T0, seq(0)); // all 3 pass
     expect(report.passCount).toBe(3);
-    expect(report.requiredPasses).toBe(5);
+    expect(report.requiredPasses).toBe(4);
     expect(report.success).toBe(false); // roles covered, but not enough hands
     expect(report.recommendations.some((r) => r.kind === 'crewSize')).toBe(true);
   });

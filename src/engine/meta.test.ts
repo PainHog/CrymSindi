@@ -141,6 +141,7 @@ describe('endgame contract', () => {
         { role: 'driver', skill: 15 },
         { role: 'lookout', skill: 15 },
         { role: 'hacker', skill: 15 },
+        { role: 'muscle', skill: 15 }, // contract needs requiredPasses(5) + 1 slack = 6
       ],
       { lifetimeCash: CONFIG.tierUnlocks[5], contractLevel: 0 },
     );
