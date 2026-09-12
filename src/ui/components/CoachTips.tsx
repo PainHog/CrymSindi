@@ -70,7 +70,7 @@ export function CoachTips() {
   });
   // Ids whose condition has fired this session; grows monotonically so a tip
   // doesn't disappear when its (instantaneous) condition later goes false.
-  const [triggered, setTriggered] = useState<Set<string>>(new Set());
+  const [triggered, setTriggered] = useState<Set<string>>(() => new Set());
   useEffect(() => {
     const newly = TIPS.filter((t) => !triggered.has(t.id) && t.when(game, roundedHeat)).map((t) => t.id);
     if (newly.length > 0) setTriggered((prev) => new Set([...prev, ...newly]));
