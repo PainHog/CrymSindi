@@ -100,7 +100,7 @@ export const HEISTS: HeistDef[] = [
     requiredRoles: ['hacker', 'muscle', 'lookout'],
     durationSec: 600,
     payoutPerSec: 15,
-    heatCost: 48,
+    heatCost: 54, // > cool-over-duration (0.08*600=48) so chained runs actually build heat
     failHeatBonus: 28,
     difficulty: 14,
   },

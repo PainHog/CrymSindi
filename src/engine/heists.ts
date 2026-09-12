@@ -88,6 +88,11 @@ export function launchHeist(
   // launchBlockReason returned null, so a def exists (the '!' is sound here).
   const def = heist!;
 
+  // Ambient heat the moment we commit (BEFORE this job's own cost is added). The
+  // job resolves against this at collect, so launching while hot stays costly for
+  // long jobs too, while a cooled-down launch (heat ~0) is unaffected.
+  const heatAtLaunch = deriveHeat(state, now, config);
+
   // Heat is applied at launch (committing to a job raises heat immediately).
   let next = addHeat(state, def.heatCost * heatGainMult(state), now, config);
 
@@ -98,6 +103,7 @@ export function launchHeist(
     startedAt: now,
     endsAt: now + def.durationSec * 1000,
     seed: seed >>> 0,
+    heatAtLaunch,
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -144,7 +150,9 @@ export function collectHeist(
   // Determinism: outcome is fixed by the seed stored at launch (falls back to
   // Math.random only for pre-seed saves). Tests can still inject their own rng.
   const roll = rng ?? (active.seed != null ? makeRng(active.seed) : Math.random);
-  const report = resolveHeist(state, heist, crew, now, roll, config);
+  // Resolve against the heat captured at launch (older saves lack it and fall
+  // back to current heat inside resolveHeist).
+  const report = resolveHeist(state, heist, crew, now, roll, config, active.heatAtLaunch);
 
   let next = freeCrew(state);
 

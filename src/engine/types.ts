@@ -52,6 +52,11 @@ export interface ActiveHeist {
   /** For the repeatable Syndicate Contract: the contract level this run was
    *  launched at, so its (escalating) definition is stable across collect. */
   contractLevel?: number;
+  /** Ambient heat when this job was committed. The job resolves against THIS
+   *  heat (not the cooled-down collect-time heat), so launching while hot stays
+   *  costly even for a long job. Optional for backward compatibility with older
+   *  saves (which fall back to collect-time heat). */
+  heatAtLaunch?: number;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */

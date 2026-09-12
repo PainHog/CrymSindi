@@ -232,8 +232,13 @@ export function resolveHeist(
   now: number,
   rng: () => number = Math.random,
   config: Config = CONFIG,
+  // The heat the job is RESOLVED against. Defaults to current heat, but collect
+  // passes the heat captured at launch (see collectHeist / ActiveHeist.heatAtLaunch)
+  // so committing a job while hot stays costly even for a long job that fully
+  // cools before it's collected — otherwise heat never bites past the short tiers.
+  atHeat?: number,
 ): HeistReport {
-  const heat = deriveHeat(state, now, config);
+  const heat = atHeat ?? deriveHeat(state, now, config);
   const heatHigh = heat >= config.maxHeat * 0.4;
   const members = crew.memberIds
     .map((id) => getMember(state, id))

@@ -91,7 +91,10 @@ behind `import.meta.env.DEV`) so it's stripped from production bundles entirely.
 - **Crew locking.** An assigned crew is locked for the whole heist and stays locked after it
   finishes until you collect. Locked crews show as unavailable.
 - **Heat** rises when you launch a job and cools continuously over real time (capped for very long
-  absences). High Heat lowers every member's odds; at max Heat you can't launch until it cools.
+  absences). A job is resolved against the Heat it was **launched** under — not the cooled-down
+  Heat at collect — so committing a big score (or a burst of parallel crews) while hot genuinely
+  costs you, while a patient, cooled-down launch runs clean. At max Heat you can't launch until it
+  cools.
 - **Parallelism = more crews.** Because a heist locks a whole crew, running several at once means
   owning several crews, which needs safehouse capacity. That's the scaling fantasy.
 

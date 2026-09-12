@@ -186,6 +186,42 @@ describe('endgame contract', () => {
   });
 });
 
+describe('launch-time heat', () => {
+  const crew = [
+    { role: 'hacker' as RoleId, skill: 15 },
+    { role: 'muscle' as RoleId, skill: 15 },
+    { role: 'driver' as RoleId, skill: 15 },
+  ];
+
+  it('resolves against the heat the job was launched under, not the cooled collect-time heat', () => {
+    const hot: GameState = {
+      ...makeState(crew, { lifetimeCash: CONFIG.tierUnlocks[2] }), // unlock the tier-2 job
+      heat: 80,
+      heatUpdatedAt: T0,
+    };
+    const launched = launchHeist(hot, 'bank_vault', 'c1', T0);
+    expect(launched.ok).toBe(true);
+    if (!launched.ok) return;
+    const active = launched.state.activeHeists[0];
+    expect(active.heatAtLaunch).toBeCloseTo(80, 0); // captured at commit (before this job's cost)
+
+    // Collect long after it finished, when live heat has fully cooled to 0.
+    const wayLater = active.endsAt + 6 * 60 * 60 * 1000;
+    const collected = collectHeist(launched.state, active.id, wayLater, seq(0));
+    expect(collected.ok).toBe(true);
+    if (!collected.ok) return;
+    // The debrief reflects the launch heat (~80), not the ~0 live heat.
+    expect(collected.report!.heatAtResolve).toBeCloseTo(80, 0);
+  });
+
+  it('a cooled-down launch (heat ~0) carries no heat penalty', () => {
+    const launched = launchHeist(makeState(crew, { lifetimeCash: CONFIG.tierUnlocks[2] }), 'bank_vault', 'c1', T0);
+    expect(launched.ok).toBe(true);
+    if (!launched.ok) return;
+    expect(launched.state.activeHeists[0].heatAtLaunch).toBeCloseTo(0, 5);
+  });
+});
+
 describe('the Fixer (offline auto-collect)', () => {
   const crew = [
     { role: 'driver' as RoleId, skill: 8 },
