@@ -95,6 +95,22 @@ describe('save / load round-trip', () => {
     expect(loaded!.state.heat).toBeCloseTo(100 - CONFIG.heatCoolPerSec * 10, 5);
   });
 
+  it('clamps an out-of-range heatAtLaunch and drops a non-numeric one on load', () => {
+    const state = createInitialState(T0);
+    const raw = {
+      ...state,
+      activeHeists: [
+        { id: 'h1', heistId: 'smash_grab', crewId: 'c1', startedAt: T0, endsAt: T0 + 20000, seed: 1, heatAtLaunch: 999 },
+        { id: 'h2', heistId: 'smash_grab', crewId: 'c1', startedAt: T0, endsAt: T0 + 20000, seed: 2, heatAtLaunch: 'oops' },
+      ],
+    } as unknown;
+    g.localStorage!.setItem(CONFIG.saveKey, JSON.stringify(raw));
+    const loaded = loadGame(T0);
+    expect(loaded).not.toBeNull();
+    expect(loaded!.state.activeHeists[0].heatAtLaunch).toBe(CONFIG.maxHeat); // 999 -> clamped
+    expect(loaded!.state.activeHeists[1].heatAtLaunch).toBeUndefined(); // "oops" -> dropped
+  });
+
   it('clearSave removes the save', () => {
     saveGame(createInitialState(T0), T0);
     expect(loadGame(T0)).not.toBeNull();

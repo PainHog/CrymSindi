@@ -62,7 +62,7 @@ describe('resolution numbers', () => {
   it('requiredPasses and minMembers scale with difficulty', () => {
     expect(requiredPassesFor(HEISTS_BY_ID['smash_grab'])).toBe(2);
     expect(requiredPassesFor(HEISTS_BY_ID['cargo_port'])).toBe(3); // 2 + floor(22/18)
-    expect(requiredPassesFor(HEISTS_BY_ID['central_bank'])).toBe(4); // 2 + floor(44/18)
+    expect(requiredPassesFor(HEISTS_BY_ID['central_bank'])).toBe(4); // 2 + floor(38/18)
     // minMembers = max(floor, roles, requiredPasses + 1 slack), capped at crewMax
     expect(minMembersFor(HEISTS_BY_ID['smash_grab'])).toBe(3); // max(3, 0, 2+1)
     expect(minMembersFor(HEISTS_BY_ID['central_bank'])).toBe(5); // max(3, 3, 4+1)
