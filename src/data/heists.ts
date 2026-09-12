@@ -105,7 +105,7 @@ export const HEISTS: HeistDef[] = [
     difficulty: 14,
   },
 
-  // ---- Tier 3: long jobs to leave running (unlock ~$20k lifetime) ----------
+  // ---- Tier 3: long jobs to leave running (unlock $30k lifetime) -----------
   {
     id: 'jewelry_exchange',
     tier: 3,
@@ -131,7 +131,7 @@ export const HEISTS: HeistDef[] = [
     difficulty: 22,
   },
 
-  // ---- Tier 4: multi-hour scores (unlock ~$120k lifetime) ------------------
+  // ---- Tier 4: multi-hour scores (unlock $180k lifetime) -------------------
   {
     id: 'armored_convoy',
     tier: 4,
@@ -157,7 +157,7 @@ export const HEISTS: HeistDef[] = [
     difficulty: 33,
   },
 
-  // ---- Tier 5: the overnight big score (unlock ~$600k lifetime) ------------
+  // ---- Tier 5: the overnight big score (unlock $1.2M lifetime) -------------
   {
     id: 'central_bank',
     tier: 5,
@@ -168,7 +168,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 112,
     heatCost: 92,
     failHeatBonus: 60,
-    difficulty: 44,
+    difficulty: 38, // hardest job, but clearable by a just-unlocked tier-5 crew so it leads $/min
   },
 ];
 

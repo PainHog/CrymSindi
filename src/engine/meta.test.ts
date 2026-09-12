@@ -220,6 +220,27 @@ describe('launch-time heat', () => {
     if (!launched.ok) return;
     expect(launched.state.activeHeists[0].heatAtLaunch).toBeCloseTo(0, 5);
   });
+
+  it('a hot launch actually lowers realized passes vs an identical cool launch', () => {
+    // eff 16 (skill 15 + tight-unit synergy) vs bank_vault difficulty 12:
+    //   heat 0  -> chance clamps to 0.97, so a 0.8 roll PASSES
+    //   heat 90 -> chance ~0.665, so the same 0.8 roll FAILS
+    // Same crew, same heist, same collect rolls; only the launch heat differs.
+    const base = makeState(crew, { lifetimeCash: CONFIG.tierUnlocks[2] });
+
+    const cool = launchHeist(base, 'bank_vault', 'c1', T0);
+    if (!cool.ok) throw new Error('cool launch failed');
+    const coolRep = collectHeist(cool.state, cool.state.activeHeists[0].id, cool.state.activeHeists[0].endsAt, seq(0.8, 0.8, 0.8));
+
+    const hot = launchHeist({ ...base, heat: 90, heatUpdatedAt: T0 }, 'bank_vault', 'c1', T0);
+    if (!hot.ok) throw new Error('hot launch failed');
+    const hotRep = collectHeist(hot.state, hot.state.activeHeists[0].id, hot.state.activeHeists[0].endsAt, seq(0.8, 0.8, 0.8));
+
+    if (!coolRep.report || !hotRep.report) throw new Error('missing report');
+    expect(coolRep.report.passCount).toBe(3); // all pass when cool
+    expect(hotRep.report.passCount).toBe(0); // all fail when launched hot
+    expect(hotRep.report.passCount).toBeLessThan(coolRep.report.passCount);
+  });
 });
 
 describe('the Fixer (offline auto-collect)', () => {

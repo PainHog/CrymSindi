@@ -322,6 +322,18 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
       ...m,
       skill: Math.min(config.maxMemberSkill, Math.max(0, m.skill)),
     })),
+    // A job resolves against its stored heatAtLaunch; clamp a finite one into
+    // [0, maxHeat] and drop a non-finite one (a hand-edited NaN would otherwise
+    // poison the resolution) so it falls back to collect-time heat.
+    activeHeists: state.activeHeists.map((a) => {
+      if (a.heatAtLaunch == null) return a;
+      if (!Number.isFinite(a.heatAtLaunch)) {
+        const copy = { ...a };
+        delete copy.heatAtLaunch;
+        return copy;
+      }
+      return { ...a, heatAtLaunch: Math.min(config.maxHeat, Math.max(0, a.heatAtLaunch)) };
+    }),
   };
 }
 
