@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CONFIG } from '../../data/config';
 import { GEAR_BY_ID, gearForRole } from '../../data/gear';
 import type { GearDef } from '../../data/gear';
 import { ROLES_BY_ID } from '../../data/roles';
 import { estimateSuccess, getCrew, heistDefFor, launchBlockReason, skillUpgradeCost } from '../../engine';
 import type { BeatQuality, HeistReport, Member, MemberBeat, Recommendation } from '../../engine';
-import { useGame, useNow } from '../../store/GameContext';
+import { useGame } from '../../store/GameContext';
 import { crewLabel, formatCash, pct } from '../format';
-import { useRewardedAd } from '../hooks';
+import { useHeatSnapshot, useRewardedAd } from '../hooks';
 import { Avatar, HeistIcon, Icon } from '../icons';
 
 const QUALITY_LABEL: Record<BeatQuality, string> = {
@@ -19,9 +19,21 @@ const QUALITY_LABEL: Record<BeatQuality, string> = {
 
 const FOCUSABLE = 'button, [href], input, [tabindex]:not([tabindex="-1"])';
 
+// Gate only. Keeping the hooks (and the Heat tick they subscribe to) in the
+// inner body means a CLOSED modal mounts nothing and never re-renders — the
+// component isn't ticking 4x/sec just to hit an early return.
 export function ReportModal() {
-  const { game, report, actions } = useGame();
-  const now = useNow();
+  const { report } = useGame();
+  if (!report) return null;
+  return <ReportBody report={report} />;
+}
+
+function ReportBody({ report }: { report: HeistReport }) {
+  const { game, actions } = useGame();
+  // Bucketed Heat drives the relaunch memo below (re-eval ~every 12s as Heat
+  // cools), instead of a raw useNow() that would re-render the whole debrief —
+  // and re-run the Poisson-binomial estimate — 4x/sec.
+  const { roundedHeat } = useHeatSnapshot(game);
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<Element | null>(null);
   const { watching, watch, available } = useRewardedAd();
@@ -30,7 +42,6 @@ export function ReportModal() {
   useEffect(() => setDoubled(false), [report]);
 
   useEffect(() => {
-    if (!report) return;
     returnFocusRef.current = document.activeElement;
     dialogRef.current?.focus();
 
@@ -64,19 +75,21 @@ export function ReportModal() {
     };
   }, [report, actions]);
 
-  if (!report) return null;
-
   // "Run it again" must not fire-then-close on a launch that can't happen (the
   // usual culprit: the collect that just landed maxed Heat). Gate the button on
   // the same predicate the engine uses, and surface the reason instead of a
-  // silent no-op. `now` ticks, so the block clears live as Heat cools.
-  const relaunchBlock = launchBlockReason(game, report.heistId, report.crewId, now);
-  const relaunchHeist = heistDefFor(report.heistId, game);
-  const relaunchCrew = getCrew(game, report.crewId);
-  const relaunchChance =
-    !relaunchBlock && relaunchHeist && relaunchCrew
-      ? estimateSuccess(game, relaunchHeist, relaunchCrew, now)
-      : 0;
+  // silent no-op. Recomputed only on game change or when Heat crosses a bucket,
+  // so the block clears live as Heat cools without a per-tick DP.
+  const relaunch = useMemo(() => {
+    const now = Date.now();
+    const block = launchBlockReason(game, report.heistId, report.crewId, now);
+    const heist = heistDefFor(report.heistId, game);
+    const crew = getCrew(game, report.crewId);
+    const chance = !block && heist && crew ? estimateSuccess(game, heist, crew, now) : 0;
+    return { block, chance };
+    // roundedHeat is the time-bucketed input; game covers the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, roundedHeat, report.heistId, report.crewId]);
 
   return (
     <div className="modal-backdrop" onClick={actions.dismissReport}>
@@ -154,21 +167,21 @@ export function ReportModal() {
           )}
           <button
             className="btn"
-            disabled={!!relaunchBlock}
-            title={relaunchBlock ?? `Send this crew back in · ~${pct(relaunchChance)} success`}
+            disabled={!!relaunch.block}
+            title={relaunch.block ?? `Send this crew back in · ~${pct(relaunch.chance)} success`}
             onClick={() => {
               actions.launch(report.heistId, report.crewId);
               actions.dismissReport();
             }}
           >
             <Icon name="target" size={13} /> Run it again
-            {!relaunchBlock && <span className="run-again-odds"> · ~{pct(relaunchChance)}</span>}
+            {!relaunch.block && <span className="run-again-odds"> · ~{pct(relaunch.chance)}</span>}
           </button>
           <button className="btn primary" onClick={actions.dismissReport}>
             Close debrief
           </button>
         </div>
-        {relaunchBlock && <p className="report-relaunch-note">{relaunchBlock}</p>}
+        {relaunch.block && <p className="report-relaunch-note">{relaunch.block}</p>}
       </div>
     </div>
   );

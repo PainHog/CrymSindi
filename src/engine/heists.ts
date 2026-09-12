@@ -12,6 +12,7 @@
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { HEISTS_BY_ID } from '../data/heists';
+import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import { formatCash } from './format';
 import { addHeat, settleHeat } from './heat';
@@ -41,8 +42,10 @@ export function launchBlockReason(
   crewId: string,
   now: number,
   config: Config = CONFIG,
+  // Optional pre-resolved def so launchHeist doesn't derive it twice (the
+  // Fixer relaunches in a tight loop). Defaults to resolving it here.
+  heist: HeistDef | undefined = heistDefFor(heistId, state, config),
 ): string | null {
-  const heist = heistDefFor(heistId, state, config);
   if (!heist) return 'Unknown heist.';
   if (isContract(heistId)) {
     if (!contractUnlocked(state)) return 'That contract is still locked.';
@@ -79,20 +82,21 @@ export function launchHeist(
   seed: number = Math.floor(Math.random() * 0x100000000),
   config: Config = CONFIG,
 ): ActionResult {
-  const blocked = launchBlockReason(state, heistId, crewId, now, config);
+  const heist = heistDefFor(heistId, state, config);
+  const blocked = launchBlockReason(state, heistId, crewId, now, config, heist);
   if (blocked) return { ok: false, error: blocked };
-
-  const heist = heistDefFor(heistId, state, config)!;
+  // launchBlockReason returned null, so a def exists (the '!' is sound here).
+  const def = heist!;
 
   // Heat is applied at launch (committing to a job raises heat immediately).
-  let next = addHeat(state, heist.heatCost * heatGainMult(state), now, config);
+  let next = addHeat(state, def.heatCost * heatGainMult(state), now, config);
 
   const active = {
     id: `h${next.nextId}`,
     heistId,
     crewId,
     startedAt: now,
-    endsAt: now + heist.durationSec * 1000,
+    endsAt: now + def.durationSec * 1000,
     seed: seed >>> 0,
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
@@ -104,7 +108,7 @@ export function launchHeist(
     crews: next.crews.map((c) => (c.id === crewId ? { ...c, status: 'onHeist' as const } : c)),
   };
 
-  return { ok: true, state: next, message: `${heist.name} underway.` };
+  return { ok: true, state: next, message: `${def.name} underway.` };
 }
 
 /** Collect a finished heist: resolve per member, apply results, free the crew. */
