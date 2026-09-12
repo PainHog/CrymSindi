@@ -159,6 +159,27 @@ describe('endgame contract', () => {
     expect(collected.report!.success).toBe(true);
     expect(collected.state.contractLevel).toBe(1); // advanced
   });
+
+  it('stays unlocked after prestige resets the run (persistent career signal)', () => {
+    const fresh = createInitialState(T0);
+    // A post-prestige operation: run-local lifetimeCash is reset to 0, so the
+    // regular tiers re-lock, but career earnings and the contract level persist.
+    const postPrestige: GameState = {
+      ...fresh,
+      lifetimeCash: 0,
+      careerCash: CONFIG.tierUnlocks[5],
+      contractLevel: 3,
+    };
+    expect(maxUnlockedTier(postPrestige)).toBe(1); // regular tiers re-locked
+    expect(contractUnlocked(postPrestige)).toBe(true); // but the contract remains
+
+    // Even with careerCash below the threshold, a level already cleared keeps it
+    // available (survives a later upward threshold change).
+    expect(contractUnlocked({ ...fresh, careerCash: 0, contractLevel: 2 })).toBe(true);
+
+    // A brand-new operation that has never reached tier 5 has no contract.
+    expect(contractUnlocked(fresh)).toBe(false);
+  });
 });
 
 describe('the Fixer (offline auto-collect)', () => {

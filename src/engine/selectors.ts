@@ -173,9 +173,26 @@ export function heistDefFor(heistId: string, state: GameState, config: Config = 
   return HEISTS_BY_ID[heistId];
 }
 
-/** The contract becomes available once tier 5 is unlocked. */
-export function contractUnlocked(state: GameState): boolean {
-  return maxUnlockedTier(state) >= 5;
+/**
+ * The endgame contract unlocks once you reach tier 5 — and STAYS unlocked. The
+ * regular tier gates read run-local `lifetimeCash`, which prestige resets to 0
+ * (so tiers 2-5 re-lock and you re-climb them — the intended prestige loop). But
+ * the contract's cleared level persists across prestige, so re-locking it would
+ * strand a player who's been grinding it. Gate it on persistent signals too:
+ *   - careerCash (cumulative-ever earnings; preserved across prestige) reaching
+ *     the tier-5 threshold means you've qualified at least once, and it never
+ *     decreases — the primary persistent signal.
+ *   - contractLevel > 0 is a belt-and-suspenders that also survives a later
+ *     upward change to the tier-5 threshold (a rebalance shouldn't lock a player
+ *     out of a contract they've already cleared).
+ */
+export function contractUnlocked(state: GameState, config: Config = CONFIG): boolean {
+  const tier5Cash = config.tierUnlocks[5] ?? Infinity;
+  return (
+    maxUnlockedTier(state, config) >= 5 || // this run has reached tier 5
+    state.careerCash >= tier5Cash || // ever reached it (persists past prestige)
+    state.contractLevel > 0 // already cleared it at least once
+  );
 }
 
 // ---- Heat (timestamp-derived) ----------------------------------------------
