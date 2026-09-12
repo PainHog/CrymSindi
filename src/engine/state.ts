@@ -221,9 +221,21 @@ function isValidSave(value: unknown): value is GameState {
     isFiniteNum(s.careerCash) &&
     isFiniteNum(s.contractLevel) &&
     Array.isArray(s.milestonesEarned) &&
+    (s.milestonesEarned as unknown[]).every((m) => typeof m === 'string') &&
     !!s.stats &&
     typeof s.stats === 'object';
   if (!scalarsOk) return false;
+  // `stats` drives career totals + milestones; a non-numeric field here would
+  // propagate NaN into cash/biggestScore at the next collect. Require all four.
+  const st = s.stats as Record<string, unknown>;
+  if (
+    !isFiniteNum(st.heistsCompleted) ||
+    !isFiniteNum(st.heistsSucceeded) ||
+    !isFiniteNum(st.flawless) ||
+    !isFiniteNum(st.biggestScore)
+  ) {
+    return false;
+  }
   if (
     !Array.isArray(s.safehouses) ||
     !Array.isArray(s.crews) ||
@@ -300,6 +312,12 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     marks: isFiniteNum(state.marks) ? Math.max(0, Math.floor(state.marks)) : 0,
     perks: sanitizePerks(state.perks),
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
+    stats: {
+      heistsCompleted: Math.max(0, Math.floor(state.stats.heistsCompleted)),
+      heistsSucceeded: Math.max(0, Math.floor(state.stats.heistsSucceeded)),
+      flawless: Math.max(0, Math.floor(state.stats.flawless)),
+      biggestScore: Math.max(0, state.stats.biggestScore),
+    },
     members: state.members.map((m) => ({
       ...m,
       skill: Math.min(config.maxMemberSkill, Math.max(0, m.skill)),

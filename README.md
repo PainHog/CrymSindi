@@ -60,7 +60,11 @@ dev panel (bottom-left) for testing without waiting or grinding:
   whole progression in seconds
 - **Reset** — clear the save
 
-The panel only renders when `?dev=1` is present, so it never ships to players.
+The panel only **renders** when `?dev=1` is present. Be aware the panel code and
+the `dev` store actions it calls are still in the shipped bundle — any player can
+enable it by appending `?dev=1` to the URL — so it's a testing convenience, not a
+cheat-proof boundary. Before a public launch, gate it out at build time (e.g.
+behind `import.meta.env.DEV`) so it's stripped from production bundles entirely.
 
 ---
 

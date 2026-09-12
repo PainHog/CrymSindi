@@ -103,8 +103,15 @@ type Action =
 function applyResult(ui: UIState, result: ActionResult, okEvent?: GameEvent): UIState {
   if (result.ok) {
     const { state, earned } = awardMilestones(result.state);
-    const message = earned.length
+    // Keep the action's own message (e.g. the "+$ collected" toast) and append
+    // any milestone that fired on the same tick, rather than clobbering it.
+    const milestoneMsg = earned.length
       ? `Milestone: ${earned.map((m) => m.name).join(', ')}`
+      : null;
+    const message = milestoneMsg
+      ? result.message
+        ? `${result.message} · ${milestoneMsg}`
+        : milestoneMsg
       : (result.message ?? ui.message);
     const event = okEvent ?? null;
     return {

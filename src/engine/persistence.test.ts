@@ -126,4 +126,34 @@ describe('load rejects bad saves (falls back to a fresh game)', () => {
     write(JSON.stringify({ ...state, version: CONFIG.version + 999 }));
     expect(loadGame(T0)).toBeNull();
   });
+
+  it('returns null when a stats field is non-numeric (would seed NaN into totals)', () => {
+    const state = createInitialState(T0);
+    write(JSON.stringify({ ...state, stats: { ...state.stats, biggestScore: 'lots' } }));
+    expect(loadGame(T0)).toBeNull();
+    // an empty stats object is likewise rejected (fields missing)
+    write(JSON.stringify({ ...state, stats: {} }));
+    expect(loadGame(T0)).toBeNull();
+  });
+
+  it('returns null when milestonesEarned holds non-string entries', () => {
+    const state = createInitialState(T0);
+    write(JSON.stringify({ ...state, milestonesEarned: ['ok', 42, null] }));
+    expect(loadGame(T0)).toBeNull();
+  });
+
+  it('clamps out-of-range stats on load (negative / fractional)', () => {
+    const state = createInitialState(T0);
+    write(
+      JSON.stringify({
+        ...state,
+        stats: { heistsCompleted: -3, heistsSucceeded: 2.9, flawless: 1, biggestScore: -50 },
+      }),
+    );
+    const loaded = loadGame(T0);
+    expect(loaded).not.toBeNull();
+    expect(loaded!.state.stats.heistsCompleted).toBe(0); // negatives floored to 0
+    expect(loaded!.state.stats.heistsSucceeded).toBe(2); // fractional floored
+    expect(loaded!.state.stats.biggestScore).toBe(0);
+  });
 });

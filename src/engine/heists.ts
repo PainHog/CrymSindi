@@ -30,6 +30,47 @@ import { makeRng, minMembersFor, resolveHeist } from './resolution';
 import type { ActionResult, GameState, HeistReport } from './types';
 
 /** Launch a heist: assign a crew and start the timer. */
+/**
+ * Why a launch would be rejected right now, or null if it would succeed. Pure —
+ * the UI uses it to gate "Run it again" (so it never fires-then-closes on a
+ * launch that can't happen, e.g. heat maxed by the collect that just landed).
+ */
+export function launchBlockReason(
+  state: GameState,
+  heistId: string,
+  crewId: string,
+  now: number,
+  config: Config = CONFIG,
+): string | null {
+  const heist = heistDefFor(heistId, state, config);
+  if (!heist) return 'Unknown heist.';
+  if (isContract(heistId)) {
+    if (!contractUnlocked(state)) return 'That contract is still locked.';
+  } else if (!isHeistUnlocked(state, heist)) {
+    return 'That heist is still locked.';
+  }
+
+  const crew = getCrew(state, crewId);
+  if (!crew) return 'Unknown crew.';
+  if (crew.status !== 'idle') return 'That crew is already on a job.';
+
+  const minMembers = minMembersFor(heist, config);
+  if (crew.memberIds.length < minMembers) {
+    return `This job needs at least ${minMembers} crew members.`;
+  }
+
+  const missing = missingRoles(state, crew, heist);
+  if (missing.length > 0) {
+    const names = missing.map((r) => ROLES_BY_ID[r]?.name ?? r).join(', ');
+    return `Crew is missing required role(s): ${names}.`;
+  }
+
+  if (deriveHeat(state, now, config) >= config.maxHeat) {
+    return 'Heat is maxed out - lie low until it cools.';
+  }
+  return null;
+}
+
 export function launchHeist(
   state: GameState,
   heistId: string,
@@ -38,32 +79,10 @@ export function launchHeist(
   seed: number = Math.floor(Math.random() * 0x100000000),
   config: Config = CONFIG,
 ): ActionResult {
-  const heist = heistDefFor(heistId, state, config);
-  if (!heist) return { ok: false, error: 'Unknown heist.' };
-  if (isContract(heistId)) {
-    if (!contractUnlocked(state)) return { ok: false, error: 'That contract is still locked.' };
-  } else if (!isHeistUnlocked(state, heist)) {
-    return { ok: false, error: 'That heist is still locked.' };
-  }
+  const blocked = launchBlockReason(state, heistId, crewId, now, config);
+  if (blocked) return { ok: false, error: blocked };
 
-  const crew = getCrew(state, crewId);
-  if (!crew) return { ok: false, error: 'Unknown crew.' };
-  if (crew.status !== 'idle') return { ok: false, error: 'That crew is already on a job.' };
-
-  const minMembers = minMembersFor(heist, config);
-  if (crew.memberIds.length < minMembers) {
-    return { ok: false, error: `This job needs at least ${minMembers} crew members.` };
-  }
-
-  const missing = missingRoles(state, crew, heist);
-  if (missing.length > 0) {
-    const names = missing.map((r) => ROLES_BY_ID[r]?.name ?? r).join(', ');
-    return { ok: false, error: `Crew is missing required role(s): ${names}.` };
-  }
-
-  if (deriveHeat(state, now, config) >= config.maxHeat) {
-    return { ok: false, error: 'Heat is maxed out - lie low until it cools.' };
-  }
+  const heist = heistDefFor(heistId, state, config)!;
 
   // Heat is applied at launch (committing to a job raises heat immediately).
   let next = addHeat(state, heist.heatCost * heatGainMult(state), now, config);

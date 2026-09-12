@@ -7,14 +7,14 @@ import {
   contractHeistDef,
   contractUnlocked,
   crewHasRoles,
-  deriveHeat,
   estimateSuccess,
   isHeistUnlocked,
   minMembersFor,
   missingRoles,
 } from '../../engine';
 import type { Crew, GameState } from '../../engine';
-import { useGame, useNow } from '../../store/GameContext';
+import { useGame } from '../../store/GameContext';
+import { useHeatSnapshot } from '../hooks';
 import { crewLabel, formatCash, formatDuration, pct } from '../format';
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 
@@ -24,10 +24,9 @@ function roleNames(ids: string[]): string {
 
 export function HeistList() {
   const { game, actions } = useGame();
-  const now = useNow();
-  const heat = deriveHeat(game, now);
-  const heatMaxed = heat >= CONFIG.maxHeat;
-  const roundedHeat = Math.round(heat);
+  // Bucketed Heat: re-renders the board only when the rounded value / maxed flag
+  // changes (~every 12s as Heat cools), not on every 250ms tick.
+  const { roundedHeat, heatMaxed } = useHeatSnapshot(game);
 
   const idleCrews = game.crews
     .map((c, i) => ({ crew: c, index: i }))
@@ -41,13 +40,14 @@ export function HeistList() {
   const estimates = useMemo(() => {
     const map: Record<string, number> = {};
     const defs = contract ? [...HEISTS, contract] : HEISTS;
+    const now = Date.now(); // sampled at recompute time; heat is bucketed below
     for (const heist of defs) {
       for (const crew of game.crews) {
         map[`${heist.id}:${crew.id}`] = estimateSuccess(game, heist, crew, now);
       }
     }
     return map;
-    // now is intentionally excluded: heat is bucketed to roundedHeat above.
+    // Recompute on game change or when bucketed heat shifts, not every tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, roundedHeat]);
 

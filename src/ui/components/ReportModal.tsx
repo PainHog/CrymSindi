@@ -3,9 +3,9 @@ import { CONFIG } from '../../data/config';
 import { GEAR_BY_ID, gearForRole } from '../../data/gear';
 import type { GearDef } from '../../data/gear';
 import { ROLES_BY_ID } from '../../data/roles';
-import { skillUpgradeCost } from '../../engine';
+import { estimateSuccess, getCrew, heistDefFor, launchBlockReason, skillUpgradeCost } from '../../engine';
 import type { BeatQuality, HeistReport, Member, MemberBeat, Recommendation } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCash, pct } from '../format';
 import { useRewardedAd } from '../hooks';
 import { Avatar, HeistIcon, Icon } from '../icons';
@@ -20,7 +20,8 @@ const QUALITY_LABEL: Record<BeatQuality, string> = {
 const FOCUSABLE = 'button, [href], input, [tabindex]:not([tabindex="-1"])';
 
 export function ReportModal() {
-  const { report, actions } = useGame();
+  const { game, report, actions } = useGame();
+  const now = useNow();
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<Element | null>(null);
   const { watching, watch, available } = useRewardedAd();
@@ -64,6 +65,19 @@ export function ReportModal() {
   }, [report, actions]);
 
   if (!report) return null;
+
+  // "Run it again" must not fire-then-close on a launch that can't happen (the
+  // usual culprit: the collect that just landed maxed Heat). Gate the button on
+  // the same predicate the engine uses, and surface the reason instead of a
+  // silent no-op. `now` ticks, so the block clears live as Heat cools.
+  const relaunchBlock = launchBlockReason(game, report.heistId, report.crewId, now);
+  const relaunchHeist = heistDefFor(report.heistId, game);
+  const relaunchCrew = getCrew(game, report.crewId);
+  const relaunchChance =
+    !relaunchBlock && relaunchHeist && relaunchCrew
+      ? estimateSuccess(game, relaunchHeist, relaunchCrew, now)
+      : 0;
+
   return (
     <div className="modal-backdrop" onClick={actions.dismissReport}>
       <div
@@ -140,17 +154,21 @@ export function ReportModal() {
           )}
           <button
             className="btn"
+            disabled={!!relaunchBlock}
+            title={relaunchBlock ?? `Send this crew back in · ~${pct(relaunchChance)} success`}
             onClick={() => {
               actions.launch(report.heistId, report.crewId);
               actions.dismissReport();
             }}
           >
             <Icon name="target" size={13} /> Run it again
+            {!relaunchBlock && <span className="run-again-odds"> · ~{pct(relaunchChance)}</span>}
           </button>
           <button className="btn primary" onClick={actions.dismissReport}>
             Close debrief
           </button>
         </div>
+        {relaunchBlock && <p className="report-relaunch-note">{relaunchBlock}</p>}
       </div>
     </div>
   );
