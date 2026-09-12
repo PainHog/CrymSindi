@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { CONFIG } from '../../data/config';
-import { deriveHeat } from '../../engine';
 import type { GameState } from '../../engine';
-import { useGame, useNow } from '../../store/GameContext';
+import { useGame } from '../../store/GameContext';
+import { useHeatSnapshot } from '../hooks';
 import { Icon, type IconName } from '../icons';
 
 const KEY = 'heist-crew-idle/seenTips';
@@ -12,8 +12,8 @@ interface Tip {
   icon: IconName;
   title: string;
   body: ReactNode;
-  /** Show this tip once the player reaches the moment the concept matters. */
-  when: (game: GameState, now: number) => boolean;
+  /** True once the concept becomes relevant. `heat` is the bucketed current Heat. */
+  when: (game: GameState, heat: number) => boolean;
 }
 
 // Contextual, one-at-a-time coaching that fills the gaps the intro banner (the
@@ -33,7 +33,7 @@ const TIPS: Tip[] = [
         don't send every crew out at once.
       </>
     ),
-    when: (g, now) => deriveHeat(g, now) >= 50,
+    when: (_g, heat) => heat >= 50,
   },
   {
     id: 'prestige',
@@ -47,15 +47,19 @@ const TIPS: Tip[] = [
         long game.
       </>
     ),
-    when: (g) => g.prestigeCount > 0 || g.lifetimeCash >= CONFIG.prestigeThreshold * 0.5,
+    when: (g) => g.prestigeCount > 0 || g.lifetimeCash >= CONFIG.prestigeThreshold * 0.75,
   },
 ];
 
-/** One-at-a-time contextual hints for Heat and prestige. Dismissal is persisted
- *  in localStorage (separate from the save) so each tip is shown only once. */
+/** One-at-a-time contextual hints for Heat and prestige. A tip stays shown once
+ *  its condition has fired (sticky — it won't flicker if Heat later cools) until
+ *  dismissed; dismissal is persisted in localStorage (separate from the save) so
+ *  each tip is shown only once. */
 export function CoachTips() {
   const { game } = useGame();
-  const now = useNow();
+  // Bucketed Heat: this component re-renders when the rounded value crosses a
+  // bucket (~every 12s), not on every 250ms tick.
+  const { roundedHeat } = useHeatSnapshot(game);
   const [seen, setSeen] = useState<Set<string>>(() => {
     try {
       const raw = localStorage.getItem(KEY);
@@ -64,8 +68,16 @@ export function CoachTips() {
       return new Set();
     }
   });
+  // Ids whose condition has fired this session; grows monotonically so a tip
+  // doesn't disappear when its (instantaneous) condition later goes false.
+  const [triggered, setTriggered] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const newly = TIPS.filter((t) => !triggered.has(t.id) && t.when(game, roundedHeat)).map((t) => t.id);
+    if (newly.length > 0) setTriggered((prev) => new Set([...prev, ...newly]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, roundedHeat]);
 
-  const tip = TIPS.find((t) => !seen.has(t.id) && t.when(game, now));
+  const tip = TIPS.find((t) => triggered.has(t.id) && !seen.has(t.id));
   if (!tip) return null;
 
   const dismiss = () => {
@@ -79,7 +91,7 @@ export function CoachTips() {
   };
 
   return (
-    <div className="coach-tip" role="note">
+    <div className="coach-tip" role="status" aria-live="polite">
       <span className="coach-tip-icon">
         <Icon name={tip.icon} size={18} />
       </span>
@@ -87,7 +99,7 @@ export function CoachTips() {
         <strong className="coach-tip-title">{tip.title}</strong>
         <span className="coach-tip-text">{tip.body}</span>
       </div>
-      <button className="btn small" onClick={dismiss}>
+      <button className="btn small" onClick={dismiss} aria-label={`Dismiss tip: ${tip.title}`}>
         Got it
       </button>
     </div>
