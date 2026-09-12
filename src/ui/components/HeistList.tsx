@@ -69,6 +69,7 @@ export function HeistList() {
             estimates={estimates}
             game={game}
             onSend={actions.launch}
+            onSendAll={actions.sendAllIdle}
           />
         )}
         {sorted.map((heist) =>
@@ -81,6 +82,7 @@ export function HeistList() {
               estimates={estimates}
               game={game}
               onSend={actions.launch}
+              onSendAll={actions.sendAllIdle}
             />
           ) : (
             <LockedHeist key={heist.id} heist={heist} lifetimeCash={game.lifetimeCash} />
@@ -130,6 +132,7 @@ function UnlockedHeist({
   estimates,
   game,
   onSend,
+  onSendAll,
 }: {
   heist: HeistDef;
   idleCrews: { crew: Crew; index: number }[];
@@ -137,11 +140,17 @@ function UnlockedHeist({
   estimates: Record<string, number>;
   game: GameState;
   onSend: (heistId: string, crewId: string) => void;
+  onSendAll: (heistId: string) => void;
 }) {
   const minMembers = minMembersFor(heist);
   const base = heist.payoutPerSec * heist.durationSec;
   const payLow = formatCash(base * CONFIG.payoutFloorFrac);
   const payHigh = formatCash(base * CONFIG.perfectBonusMult);
+  // Idle crews that could actually run this job (size + roles) — gates the
+  // "send all" bulk button so it only shows when it saves real clicks.
+  const eligibleIdle = idleCrews.filter(
+    ({ crew }) => crew.memberIds.length >= minMembers && crewHasRoles(game, crew, heist),
+  ).length;
 
   return (
     <div className="heist-card" data-tier={heist.tier}>
@@ -170,6 +179,16 @@ function UnlockedHeist({
 
       <div className="send-row">
         {idleCrews.length === 0 && <span className="hint">All crews are busy or none exist.</span>}
+        {eligibleIdle >= 2 && (
+          <button
+            className="btn small send-all"
+            disabled={heatMaxed}
+            title={`Launch this job with all ${eligibleIdle} idle crews that can run it`}
+            onClick={() => onSendAll(heist.id)}
+          >
+            <Icon name="target" size={12} /> Send all idle ({eligibleIdle})
+          </button>
+        )}
         {idleCrews.map(({ crew, index }) => {
           if (crew.memberIds.length < minMembers) {
             return (

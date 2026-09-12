@@ -1,5 +1,5 @@
 import { CONFIG } from '../../data/config';
-import { GEAR, gearAllowedForRole } from '../../data/gear';
+import { GEAR, gearAllowedForRole, gearForRole } from '../../data/gear';
 import { HEISTS_BY_ID } from '../../data/heists';
 import { ROLES, ROLES_BY_ID } from '../../data/roles';
 import { TRAITS_BY_ID } from '../../data/traits';
@@ -125,6 +125,14 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
     : undefined;
   const openSeats = crew.maxMembers - crew.memberIds.length;
   const power = crewPower(game, crew);
+  // Gates for the one-click crew actions (avoid firing an action that can only
+  // return an error toast).
+  const cheapestRecruit = Math.min(...ROLES.map((r) => recruitCost(crew, r.id)));
+  const canFill = openSeats > 0 && game.cash >= cheapestRecruit;
+  const canGear = crew.memberIds.some((id) => {
+    const m = getMember(game, id);
+    return !!m && gearForRole(m.role).some((g) => !m.gearIds.includes(g.id) && g.cost <= game.cash);
+  });
 
   return (
     <div className={`crew-card ${onHeist ? 'locked' : ''}`}>
@@ -166,6 +174,27 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
           return m ? <MemberRow key={id} member={m} locked={onHeist} /> : null;
         })}
       </div>
+
+      {!onHeist && crew.memberIds.length > 0 && (
+        <div className="crew-quick">
+          <button
+            className="btn tiny"
+            disabled={!canFill}
+            title="Recruit toward a full crew, covering any missing roles first (spends cash)"
+            onClick={() => actions.fillCrew(crew.id)}
+          >
+            Fill crew
+          </button>
+          <button
+            className="btn tiny"
+            disabled={!canGear}
+            title="Buy the cheapest available gear for each member (spends cash)"
+            onClick={() => actions.gearUpCrew(crew.id)}
+          >
+            Gear up
+          </button>
+        </div>
+      )}
 
       {!onHeist && crew.memberIds.length < CONFIG.minCrewForHeist && (
         <p className="hint warn crew-min-hint">

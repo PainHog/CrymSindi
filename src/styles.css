@@ -494,6 +494,8 @@ body::after {
 .recruit-label { font-family: var(--font-display); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 7px; }
 .recruit-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .recruit-buttons .btn .role-ico { color: var(--role, var(--steel)); display: inline-grid; place-items: center; }
+.crew-quick { display: flex; gap: 6px; margin-top: 9px; }
+.crew-quick .btn { flex: 1; justify-content: center; }
 
 /* ---- Heists ---- */
 .heist-list, .active-list, .upgrade-list { display: flex; flex-direction: column; gap: 10px; }
@@ -533,6 +535,7 @@ body::after {
 .needs-roles .role-ico { color: var(--role, var(--steel)); display: inline-grid; place-items: center; }
 .needs-anyone { color: var(--ink-dim); font-family: var(--mono); font-size: 12px; }
 .send-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+.send-row .send-all { border-style: dashed; font-weight: 600; }
 
 /* ---- Active heists ---- */
 .active-card {

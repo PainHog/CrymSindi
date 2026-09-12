@@ -30,10 +30,13 @@ import {
   collectAllReady,
   collectHeist,
   createInitialState,
+  fillCrew,
   finishAllNow,
   formCrew,
+  gearUpCrew,
   grantMarks,
   launchHeist,
+  sendAllIdle,
   loadGame,
   prestige,
   recruitMember,
@@ -78,6 +81,9 @@ interface UIState {
 
 type Action =
   | { type: 'launch'; heistId: string; crewId: string; now: number; seed: number }
+  | { type: 'sendAllIdle'; heistId: string; now: number }
+  | { type: 'gearUpCrew'; crewId: string }
+  | { type: 'fillCrew'; crewId: string }
   | { type: 'collect'; id: string; now: number }
   | { type: 'collectAll'; now: number }
   | { type: 'buySafehouse' }
@@ -140,6 +146,12 @@ function reducer(ui: UIState, action: Action): UIState {
         launchHeist(ui.game, action.heistId, action.crewId, action.now, action.seed),
         { kind: 'launch' },
       );
+    case 'sendAllIdle':
+      return applyResult(ui, sendAllIdle(ui.game, action.heistId, action.now), { kind: 'launch' });
+    case 'gearUpCrew':
+      return applyResult(ui, gearUpCrew(ui.game, action.crewId), { kind: 'purchase' });
+    case 'fillCrew':
+      return applyResult(ui, fillCrew(ui.game, action.crewId), { kind: 'purchase' });
     case 'collect': {
       const res = collectHeist(ui.game, action.id, action.now);
       const event: GameEvent | undefined =
@@ -313,6 +325,9 @@ interface GameContextValue {
   away: AwaySummary | null;
   actions: {
     launch: (heistId: string, crewId: string) => void;
+    sendAllIdle: (heistId: string) => void;
+    gearUpCrew: (crewId: string) => void;
+    fillCrew: (crewId: string) => void;
     collect: (id: string) => void;
     collectAll: () => void;
     buySafehouse: () => void;
@@ -400,6 +415,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
           now: Date.now(),
           seed: Math.floor(Math.random() * 0x100000000),
         }),
+      sendAllIdle: (heistId) => dispatch({ type: 'sendAllIdle', heistId, now: Date.now() }),
+      gearUpCrew: (crewId) => dispatch({ type: 'gearUpCrew', crewId }),
+      fillCrew: (crewId) => dispatch({ type: 'fillCrew', crewId }),
       collect: (id) => dispatch({ type: 'collect', id, now: Date.now() }),
       collectAll: () => dispatch({ type: 'collectAll', now: Date.now() }),
       buySafehouse: () => dispatch({ type: 'buySafehouse' }),

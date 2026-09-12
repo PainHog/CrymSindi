@@ -7,6 +7,7 @@ export * from './heat';
 export * from './resolution';
 export * from './heists';
 export * from './economy';
+export * from './batch';
 export * from './monetization';
 export * from './milestones';
 export * from './state';
