@@ -15,6 +15,8 @@ export interface UpgradeEffect {
   heatGainMult?: number;
   heatCoolRateMult?: number;
   payoutMult?: number;
+  /** Enables the offline auto-collect/relaunch "Fixer". */
+  autoCollect?: boolean;
 }
 
 export interface UpgradeDef {
@@ -53,6 +55,20 @@ export const UPGRADES: UpgradeDef[] = [
     description: 'Planned escape corridors. Another -20% heat gained.',
     cost: 2200,
     effect: { heatGainMult: 0.8 },
+  },
+  {
+    id: 'offshore_accounts',
+    name: 'Offshore Accounts',
+    description: 'Move the money quietly. +25% cash payouts.',
+    cost: 45000,
+    effect: { payoutMult: 1.25 },
+  },
+  {
+    id: 'the_fixer',
+    name: 'The Fixer',
+    description: 'A trusted hand who works while you are away: auto-collects and re-runs each crew’s last job (up to the offline cap).',
+    cost: 60000,
+    effect: { autoCollect: true },
   },
 ];
 

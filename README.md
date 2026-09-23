@@ -42,9 +42,29 @@ npm test         # run the unit tests once (Vitest)
 npm run test:watch
 ```
 
-The tests cover the two things most worth locking down: the **heist resolution math**
-(success chance, payout, roll-at-collect success/failure) and the **timestamp-based
-offline/idle + heat-cooldown math** (including the offline cap).
+The tests cover the core systems: the **per-member resolution + payout math**, the
+**timestamp-based offline/idle + heat-cooldown math** (including the offline cap and the
+Fixer), **save/load** validation, the **economy**, and the **meta-progression**
+(prestige/notoriety/milestones/contract).
+
+## Dev / test mode
+
+Append **`?dev=1`** to the URL (e.g. `http://localhost:5173/?dev=1`) to show a hidden
+dev panel (bottom-left) for testing without waiting or grinding:
+
+- **+$10k / +$1M** — add cash (also raises lifetime/career, so tiers unlock)
+- **+5 Notor.** — add Notoriety
+- **Finish jobs** — mark all in-progress heists ready to collect now
+- **+1h / +6h / +12h** — fast-forward: simulates having been away that long (long heists
+  finish, heat cools, and the Fixer auto-runs), so you can test the 12-hour job and the
+  whole progression in seconds
+- **Reset** — clear the save
+
+The panel only **renders** when `?dev=1` is present. Be aware the panel code and
+the `dev` store actions it calls are still in the shipped bundle — any player can
+enable it by appending `?dev=1` to the URL — so it's a testing convenience, not a
+cheat-proof boundary. Before a public launch, gate it out at build time (e.g.
+behind `import.meta.env.DEV`) so it's stripped from production bundles entirely.
 
 ---
 
@@ -54,13 +74,27 @@ offline/idle + heat-cooldown math** (including the offline cap).
   never advanced by a tick loop. On load (and on tab focus) elapsed real time is computed and a
   heist that finished while you were away is simply **"ready to collect."** The on-screen countdown
   is a display-only clock and never affects earnings or completion.
-- **Roll at collect.** Success is rolled when you collect, not when you launch — from crew power
-  (member skill + gear) vs. the job's difficulty, reduced by current Heat. Success pays Cash;
-  failure pays nothing and adds extra Heat. Either way, collecting frees the crew.
+- **Per-member resolution at collect.** Success is resolved when you collect, not when you launch.
+  Each member rolls once against the job's difficulty (their chance scales off skill + gear, minus
+  current Heat). The heist succeeds if every required role has a member who passed AND enough
+  members pass overall (`requiredPasses` grows with difficulty — that's why higher tiers need
+  bigger crews). Collecting always frees the crew.
+- **After-action report (play-by-play).** Every collect produces a debrief: what each member did
+  and how it went (flawless / clean / shaky / botched), the factors that drove the outcome, and
+  concrete recommendations for where to invest (train the weak link, gear them, cover a thin role,
+  cool the Heat, push for the perfect bonus).
+- **Crews: 3 to 8 members.** A heist needs at least 3 members; crews hold up to 8. Bigger crews
+  cover more roles and give redundancy against failed rolls, which higher tiers demand.
+- **Time-based income, scaled by performance.** The base take = `payoutPerSec * duration`, then
+  scaled by how many members passed (a barely-successful run pays a floor fraction, a stronger run
+  pays more). A flawless run — everyone passed — pays a bonus on top.
 - **Crew locking.** An assigned crew is locked for the whole heist and stays locked after it
   finishes until you collect. Locked crews show as unavailable.
 - **Heat** rises when you launch a job and cools continuously over real time (capped for very long
-  absences). High Heat lowers success chance; at max Heat you can't launch until it cools.
+  absences). A job is resolved against the Heat it was **launched** under — not the cooled-down
+  Heat at collect — so committing a big score (or a burst of parallel crews) while hot genuinely
+  costs you, while a patient, cooled-down launch runs clean. At max Heat you can't launch until it
+  cools.
 - **Parallelism = more crews.** Because a heist locks a whole crew, running several at once means
   owning several crews, which needs safehouse capacity. That's the scaling fantasy.
 
@@ -73,37 +107,73 @@ not by touching systems.
 
 | You want to change...                        | Edit this file                |
 | -------------------------------------------- | ----------------------------- |
-| Base rates, costs, Heat math, offline cap, unlock thresholds, pacing | `src/data/config.ts` |
+| Costs, crew min/max, resolution + payout constants, Heat math, offline cap, unlock thresholds | `src/data/config.ts` |
 | Roles (Hacker, Muscle, Driver, Lookout, …), recruit cost, base skill | `src/data/roles.ts` |
 | Safehouse tiers + crew-slot capacity / upgrade costs | `src/data/safehouses.ts` |
-| Gear / tools and their skill bonuses         | `src/data/gear.ts`            |
-| Heists — roles required, duration, payout, Heat, difficulty, tier | `src/data/heists.ts` |
-| Global upgrades (Heat/payout multipliers) and their costs | `src/data/upgrades.ts` |
-| Recruited-member name pool                   | `src/data/names.ts`           |
+| Gear / tools (role-locked, three-tier lines) and their skill bonuses | `src/data/gear.ts`    |
+| Heists — roles required, duration, payoutPerSec, Heat, difficulty, tier | `src/data/heists.ts` |
+| Global upgrades (Heat/payout multipliers, the Fixer) and their costs | `src/data/upgrades.ts` |
+| Milestones/achievements (name, description, reward)  | `src/data/milestones.ts`  |
+| Notoriety perks (the prestige tree) — effects live in `config.ts` | `src/data/perks.ts`  |
+| Member traits (flat skill modifiers, assigned at recruit) | `src/data/traits.ts`     |
+| Crew synergies (composition bonuses)         | `src/data/synergies.ts`       |
+| Recruited-member name pool (first × last grid) | `src/data/names.ts`         |
 
 The **simulation/economy logic** is separate from the UI, in `src/engine/`:
 
 | File                        | Responsibility                                                        |
 | --------------------------- | -------------------------------------------------------------------- |
-| `engine/types.ts`           | Core data model (Safehouse → Crew → Member, ActiveHeist, GameState)  |
-| `engine/selectors.ts`       | Pure derived reads: crew power, success chance, costs, Heat, statuses |
+| `engine/types.ts`           | Core data model + the after-action report types                     |
+| `engine/selectors.ts`       | Pure derived reads: crew power, costs, Heat, roles, statuses         |
 | `engine/heat.ts`            | Heat settle/add helpers (timestamp-based)                            |
-| `engine/heists.ts`          | Launch + collect (roll-at-collect resolution)                        |
-| `engine/economy.ts`         | Cash sinks: buy/upgrade/recruit/gear/skill/upgrades                  |
-| `engine/state.ts`           | Initial state, offline resolution, save/load (localStorage)          |
+| `engine/resolution.ts`      | Per-member resolution (skill + gear + trait + notoriety + synergy), success estimate, the contract, and the play-by-play report |
+| `engine/heists.ts`          | Launch (crew/role/size checks) + collect (+ career stats)           |
+| `engine/economy.ts`         | Cash sinks + prestige ("go legit" → Notoriety) + perk purchases     |
+| `engine/monetization.ts`    | Premium currency (Marks) + rewarded-ad reward grants (no network)   |
+| `engine/daily.ts`           | Daily login reward + streak                                         |
+| `engine/milestones.ts`      | Milestone conditions + awarding                                     |
+| `engine/format.ts`          | Number/cash formatting (K/M/B/T, affordability-safe rounding)       |
+| `engine/state.ts`           | Initial state, offline resolution (incl. the Fixer), save/load       |
 
 UI lives in `src/ui/` and only reads state + dispatches actions — it never computes economy, Heat,
 or success itself, so the UI and engine can't disagree. The React ↔ engine bridge is
-`src/store/GameContext.tsx` (also handles autosave and save-on-close).
+`src/store/GameContext.tsx` (persists on every state change and on tab close).
 
 ---
 
 ## Content in this proof of concept
 
-- 1 starting safehouse (room to buy a 2nd and to expand capacity), crews of up to 3 members
-- 4 roles, 5 gear items, 4 global upgrades
-- Two tiers of heists (Tier 2 unlocks at $3,000 lifetime earnings)
-- Resources: Cash and Heat
+- 1 starting safehouse (room to buy a 2nd and to expand capacity); a starting crew of 3, crews of
+  up to 8 members (min 3 to run a heist)
+- 4 roles, 12 gear items (a three-tier line locked to each role), 4 global upgrades
+- 6 member traits (assigned at recruit) and 3 crew synergies (composition bonuses)
+- Ten heists across five tiers, gated by lifetime earnings, spanning a full
+  duration ladder for both quick check-ins and long idle sessions:
+  - Tier 1 (always on): 20s / 45s / 90s
+  - Tier 2 ($2k): 5 min / 10 min
+  - Tier 3 ($30k): 15 min / 30 min
+  - Tier 4 ($180k): 1 hour / 5 hours
+  - Tier 5 ($1.2M): 12 hours
+  - Payout per second climbs geometrically by tier, so a higher tier is always
+    the better take-per-minute once your crew can clear it.
+- Resources: Cash and Heat (heat builds as you run crews and cools over real time)
+- Meta-progression / long game:
+  - **Prestige** ("go legit") — retire a run for permanent **Notoriety**, spent in a
+    perk tree (Reputation, Connections, Clean Hands, War Chest, Old Loyalties) whose
+    levels persist across every future run.
+  - **Milestones** — a career achievements track with one-time rewards.
+  - **Syndicate Contract** — a repeatable endgame job (unlocks with tier 5) that
+    escalates in difficulty and payout every time you clear it.
+  - **The Fixer** — a late upgrade that auto-collects and re-runs each crew's last
+    job while you're away (up to the offline cap), for a real idle payoff.
+- Retention & feel:
+  - **Daily reward** with a consecutive-day streak; a **"while you were away"** summary
+    on return; a live **tab-title** ready-to-collect count.
+  - **Juice**: animated cash count-up + coin burst, a FLAWLESS stamp, ready pops, a
+    debrief shake, and synthesized Web Audio cues (all respect reduced-motion).
+  - **Monetization (stubbed, no network yet)**: a **Marks** premium currency and
+    rewarded-ad hooks (double-the-take, skip-cooldown) behind a swappable provider —
+    a real SDK/store drops in at launch (see `src/monetization/`).
 
 It's intentionally shallow but complete end to end — enough to feel the
 safehouse → crew → member → heist loop. Expand it by editing the data files above.

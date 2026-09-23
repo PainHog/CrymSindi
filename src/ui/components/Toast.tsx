@@ -16,6 +16,7 @@ export function Toast() {
   if (!message || !visible) return null;
   return (
     <div className="toast" key={messageId} role="status">
+      <span className="toast-dot" aria-hidden="true" />
       {message}
     </div>
   );

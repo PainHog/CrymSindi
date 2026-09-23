@@ -11,6 +11,8 @@ import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { GEAR_BY_ID } from '../data/gear';
 import { HEISTS_BY_ID } from '../data/heists';
+import { TRAITS_BY_ID } from '../data/traits';
+import { activeSynergies, synergyPower } from '../data/synergies';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import type { RoleId } from '../data/roles';
@@ -34,26 +36,68 @@ export function getSafehouse(state: GameState, id: string): Safehouse | undefine
   return state.safehouses.find((s) => s.id === id);
 }
 
+// ---- Injuries ---------------------------------------------------------------
+
+/** True if this member is currently injured (benched until a future time). */
+export function isMemberDown(member: Member, now: number): boolean {
+  return member.downUntil != null && now < member.downUntil;
+}
+
+/** A copy of the crew holding only the members healthy at `now` — the ones who
+ *  can actually be sent. Injured members sit out (they aren't removed from the
+ *  crew, just excluded from launch gating, previews, and power). */
+export function healthyCrew(state: GameState, crew: Crew, now: number): Crew {
+  return {
+    ...crew,
+    memberIds: crew.memberIds.filter((id) => {
+      const m = getMember(state, id);
+      return !!m && !isMemberDown(m, now);
+    }),
+  };
+}
+
+/** Cash to immediately patch up an injured member (scales with their skill). */
+export function healCost(member: Member, config: Config = CONFIG): number {
+  return Math.round(config.injuryHealBaseCost + config.injuryHealPerSkill * member.skill);
+}
+
 // ---- Skill / power ----------------------------------------------------------
 
-/** A member's effective skill including gear bonuses (flat + role affinity). */
+/** A member's effective skill including owned-gear bonuses and their trait. */
 export function memberEffectiveSkill(member: Member): number {
   let skill = member.skill;
   for (const gearId of member.gearIds) {
     const gear = GEAR_BY_ID[gearId];
     if (!gear) continue;
     skill += gear.skillBonus;
-    if (gear.roleAffinity === member.role) skill += gear.affinityBonus ?? 0;
   }
+  if (member.traitId) skill += TRAITS_BY_ID[member.traitId]?.skillBonus ?? 0;
   return skill;
 }
 
-/** Sum of effective skill across all members in a crew. */
+/** Flat effective-skill bonus every member gets from the crew's active synergies. */
+export function crewSynergyPower(members: Member[]): number {
+  return synergyPower(members.map((m) => m.role));
+}
+/** Names of the crew's active synergies (for display). */
+export function crewSynergyNames(members: Member[]): string[] {
+  return activeSynergies(members.map((m) => m.role)).map((s) => s.name);
+}
+
+/** A member's effective skill including the global Notoriety aura. */
+export function memberPower(state: GameState, member: Member, config: Config = CONFIG): number {
+  return memberEffectiveSkill(member) + notorietySkillBonus(state, config);
+}
+
+/** Sum of member power across a crew — including trait, Notoriety, and the
+ *  per-member crew-synergy bonus, so it matches the power resolution actually
+ *  uses. */
 export function crewPower(state: GameState, crew: Crew): number {
-  return crew.memberIds.reduce((sum, id) => {
-    const m = getMember(state, id);
-    return sum + (m ? memberEffectiveSkill(m) : 0);
-  }, 0);
+  const members = crew.memberIds
+    .map((id) => getMember(state, id))
+    .filter((m): m is Member => Boolean(m));
+  const synergy = crewSynergyPower(members);
+  return members.reduce((sum, m) => sum + memberPower(state, m) + synergy, 0);
 }
 
 /** Roles present in a crew (distinct set). */
@@ -92,8 +136,93 @@ function upgradeProduct(
 }
 
 export const heatGainMult = (s: GameState) => upgradeProduct(s, 'heatGainMult');
-export const heatCoolRateMult = (s: GameState) => upgradeProduct(s, 'heatCoolRateMult');
 export const payoutMult = (s: GameState) => upgradeProduct(s, 'payoutMult');
+/** Heat cools faster with the Clean Hands perk on top of any upgrades. */
+export const heatCoolRateMult = (s: GameState, config: Config = CONFIG) =>
+  upgradeProduct(s, 'heatCoolRateMult') * (1 + config.perkCleanHandsPct * perkLevel(s, 'clean_hands'));
+
+/** Does any purchased upgrade grant the offline auto-collect Fixer? */
+export function hasFixer(state: GameState): boolean {
+  return state.purchasedUpgradeIds.some((id) => UPGRADES_BY_ID[id]?.effect.autoCollect);
+}
+
+// ---- Notoriety (meta-progression) ------------------------------------------
+
+/** Purchased level of a Notoriety perk (0 if unowned). */
+export function perkLevel(state: GameState, perkId: string): number {
+  return state.perks?.[perkId] ?? 0;
+}
+
+/** Permanent global payout multiplier from the Reputation perk. */
+export function notorietyMult(state: GameState, config: Config = CONFIG): number {
+  return 1 + config.perkReputationPct * perkLevel(state, 'reputation');
+}
+/** Flat power every member gains from the Connections perk. */
+export function notorietySkillBonus(state: GameState, config: Config = CONFIG): number {
+  return config.perkConnectionsPower * perkLevel(state, 'connections');
+}
+/** Notoriety you'd earn by retiring now (from this run's lifetime cash). */
+export function notorietyGainFor(lifetimeCash: number, config: Config = CONFIG): number {
+  if (lifetimeCash <= 0) return 0;
+  return Math.floor(Math.sqrt(lifetimeCash / config.notorietyDivisor));
+}
+export function canPrestige(state: GameState, config: Config = CONFIG): boolean {
+  return state.lifetimeCash >= config.prestigeThreshold;
+}
+
+// ---- Endgame repeatable "Syndicate Contract" -------------------------------
+
+export const CONTRACT_ID = 'syndicate_contract';
+export const isContract = (heistId: string): boolean => heistId === CONTRACT_ID;
+
+/** The repeatable contract's (escalating) definition at a given cleared level. */
+export function contractHeistDef(level: number, config: Config = CONFIG): HeistDef {
+  const lvl = Math.max(0, Math.floor(level));
+  return {
+    id: CONTRACT_ID,
+    tier: 6,
+    name: `Syndicate Contract · Op ${lvl + 1}`,
+    description: 'A standing job that escalates every time you clear it. The work never ends.',
+    requiredRoles: ['hacker', 'muscle', 'driver'],
+    durationSec: config.contractDurationSec,
+    payoutPerSec: config.contractBasePayoutPerSec * Math.pow(config.contractPayoutGrowth, lvl),
+    heatCost: config.contractHeatCost,
+    failHeatBonus: config.contractFailHeatBonus,
+    difficulty: config.contractBaseDifficulty + config.contractDifficultyPerLevel * lvl,
+  };
+}
+
+/** Resolve any heist id to its definition (handles the dynamic contract). */
+export function heistDefFor(heistId: string, state: GameState, config: Config = CONFIG): HeistDef | undefined {
+  if (isContract(heistId)) return contractHeistDef(state.contractLevel, config);
+  return HEISTS_BY_ID[heistId];
+}
+
+/**
+ * The endgame contract unlocks once you reach tier 5 — and STAYS unlocked. The
+ * regular tier gates read run-local `lifetimeCash`, which prestige resets to 0
+ * (so tiers 2-5 re-lock and you re-climb them — the intended prestige loop). But
+ * the contract's cleared level persists across prestige, so re-locking it would
+ * strand a player who's been grinding it. Gate it on persistent signals:
+ *   - careerCash (cumulative-ever earnings, preserved across prestige and never
+ *     decreasing) reaching the tier-5 threshold — the primary signal, and the
+ *     one that carries a player who reached tier 5 but hadn't launched the
+ *     contract yet.
+ *   - contractLevel > 0 — already cleared it at least once; also survives a
+ *     later upward change to the tier-5 threshold.
+ * The run-local maxUnlockedTier check is kept as a defensive fallback: in normal
+ * play careerCash >= lifetimeCash, so it's subsumed by the careerCash clause —
+ * but a hand-edited/corrupt save can present lifetimeCash >= tier5 > careerCash,
+ * and there it's the only clause that keeps a legitimately tier-5 run unlocked.
+ */
+export function contractUnlocked(state: GameState, config: Config = CONFIG): boolean {
+  const tier5Cash = config.tierUnlocks[5] ?? Infinity;
+  return (
+    maxUnlockedTier(state, config) >= 5 || // run-local fallback (corrupt-save safe)
+    state.careerCash >= tier5Cash || // ever reached tier 5 (persists past prestige)
+    state.contractLevel > 0 // already cleared it at least once
+  );
+}
 
 // ---- Heat (timestamp-derived) ----------------------------------------------
 
@@ -106,7 +235,7 @@ export const payoutMult = (s: GameState) => upgradeProduct(s, 'payoutMult');
 export function deriveHeat(state: GameState, now: number, config: Config = CONFIG): number {
   const elapsedMs = Math.max(0, now - state.heatUpdatedAt);
   const cappedMs = Math.min(elapsedMs, config.offlineCapSec * 1000);
-  const coolRate = config.heatCoolPerSec * heatCoolRateMult(state);
+  const coolRate = config.heatCoolPerSec * heatCoolRateMult(state, config);
   const cooled = state.heat - coolRate * (cappedMs / 1000);
   return clamp(cooled, 0, config.maxHeat);
 }
@@ -133,26 +262,6 @@ export type HeistStatus = 'inProgress' | 'ready';
 
 export function heistStatusAt(endsAt: number, now: number): HeistStatus {
   return now >= endsAt ? 'ready' : 'inProgress';
-}
-
-// ---- Success chance ---------------------------------------------------------
-
-/**
- * Probability a heist succeeds if collected now. Scales off crew power vs the
- * job's difficulty, reduced by current heat, clamped to [successMin, successMax].
- */
-export function successChance(
-  state: GameState,
-  heist: HeistDef,
-  crew: Crew,
-  now: number,
-  config: Config = CONFIG,
-): number {
-  const power = crewPower(state, crew);
-  const heat = deriveHeat(state, now, config);
-  let chance = config.successBase + config.successSlope * (power - heist.difficulty);
-  chance -= config.heatSuccessPenalty * (heat / config.maxHeat);
-  return clamp(chance, config.successMin, config.successMax);
 }
 
 // ---- Costs ------------------------------------------------------------------
@@ -189,6 +298,11 @@ export function skillUpgradeCost(member: Member, config: Config = CONFIG): numbe
   if (member.skill >= config.maxMemberSkill) return Infinity;
   const steps = member.skill - config.startingMemberSkill;
   return Math.round(config.skillUpgradeBaseCost * Math.pow(config.skillUpgradeCostMult, steps));
+}
+
+/** Cash to "case the job" before a launch — a share of its base take. */
+export function prepCostFor(heist: HeistDef, config: Config = CONFIG): number {
+  return Math.round(heist.payoutPerSec * heist.durationSec * config.prepCostFrac);
 }
 
 /** Cost to upgrade an existing safehouse to the next tier (Infinity if maxed). */

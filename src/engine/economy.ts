@@ -9,8 +9,10 @@
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
-import { GEAR_BY_ID } from '../data/gear';
-import { pickName } from '../data/names';
+import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
+import { pickUniqueName } from '../data/names';
+import { PERKS_BY_ID, perkCost } from '../data/perks';
+import { traitForId } from '../data/traits';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
 import { UPGRADES_BY_ID } from '../data/upgrades';
@@ -18,12 +20,16 @@ import {
   getCrew,
   getMember,
   getSafehouse,
+  healCost,
+  isMemberDown,
   nextCrewCost,
   nextSafehouseCost,
+  notorietyGainFor,
   recruitCost,
   safehouseUpgradeCost,
   skillUpgradeCost,
 } from './selectors';
+import { createInitialState } from './state';
 import type { ActionResult, Crew, GameState, Member, Safehouse } from './types';
 
 function spend(state: GameState, cost: number): GameState {
@@ -149,10 +155,11 @@ export function recruitMember(
 
   const member: Member = {
     id: `m${state.nextId}`,
-    name: pickName(state.nextId),
+    name: pickUniqueName(state.nextId, state.members.map((m) => m.name)),
     role: roleId,
     skill: role.baseSkill,
     gearIds: [],
+    traitId: traitForId(state.nextId),
   };
 
   const next = spend(state, cost);
@@ -177,6 +184,9 @@ export function buyGear(state: GameState, memberId: string, gearId: string): Act
 
   const gear = GEAR_BY_ID[gearId];
   if (!gear) return { ok: false, error: 'Unknown gear.' };
+  if (!gearAllowedForRole(gear, member.role)) {
+    return { ok: false, error: `${gear.name} isn't for a ${member.role}.` };
+  }
   if (member.gearIds.includes(gearId)) {
     return { ok: false, error: 'That member already owns this gear.' };
   }
@@ -220,6 +230,88 @@ export function upgradeSkill(
       ),
     },
     message: `${member.name} leveled up.`,
+  };
+}
+
+/** Patch up an injured member immediately (skips the recovery wait) for cash. */
+export function healMember(
+  state: GameState,
+  memberId: string,
+  now: number,
+  config: Config = CONFIG,
+): ActionResult {
+  const member = getMember(state, memberId);
+  if (!member) return { ok: false, error: 'Unknown member.' };
+  if (!isMemberDown(member, now)) return { ok: false, error: 'That member is not hurt.' };
+
+  const cost = healCost(member, config);
+  if (state.cash < cost) return insufficient();
+
+  const next = spend(state, cost);
+  return {
+    ok: true,
+    state: {
+      ...next,
+      members: next.members.map((m) => (m.id === memberId ? { ...m, downUntil: undefined } : m)),
+    },
+    message: `${member.name} is patched up and back in.`,
+  };
+}
+
+/**
+ * Retire the crew ("go legit"): wipe the operation for permanent Notoriety.
+ * Career totals, contract progress, and milestones carry over.
+ */
+export function prestige(state: GameState, now: number, config: Config = CONFIG): ActionResult {
+  if (state.lifetimeCash < config.prestigeThreshold) {
+    return { ok: false, error: 'Not enough of a track record to retire yet.' };
+  }
+  const gain = notorietyGainFor(state.lifetimeCash, config);
+  const fresh = createInitialState(now, config);
+  const perks = state.perks ?? {};
+  // Perk effects that shape the fresh run:
+  const keepUpgrades = (perks['old_loyalties'] ?? 0) > 0;
+  const warChest = (perks['war_chest'] ?? 0) * config.perkWarChestCash;
+  return {
+    ok: true,
+    state: {
+      ...fresh,
+      cash: fresh.cash + warChest,
+      purchasedUpgradeIds: keepUpgrades ? state.purchasedUpgradeIds : fresh.purchasedUpgradeIds,
+      notoriety: state.notoriety + gain,
+      prestigeCount: state.prestigeCount + 1,
+      careerCash: state.careerCash,
+      contractLevel: state.contractLevel,
+      stats: state.stats,
+      milestonesEarned: state.milestonesEarned,
+      // The login streak is real-time, not run-scoped — keep it across prestige.
+      dailyClaimDay: state.dailyClaimDay,
+      dailyStreak: state.dailyStreak,
+      // Premium currency and the perk tree persist across prestige.
+      marks: state.marks,
+      perks,
+    },
+    message: `Went legit. +${gain} Notoriety (now ${state.notoriety + gain}).`,
+  };
+}
+
+/** Spend Notoriety on the next level of a perk (see data/perks.ts). */
+export function buyPerk(state: GameState, perkId: string): ActionResult {
+  const perk = PERKS_BY_ID[perkId];
+  if (!perk) return { ok: false, error: 'Unknown perk.' };
+  const perks = state.perks ?? {};
+  const level = perks[perkId] ?? 0;
+  if (level >= perk.maxLevel) return { ok: false, error: 'That perk is maxed.' };
+  const cost = perkCost(perk, level + 1);
+  if (state.notoriety < cost) return { ok: false, error: 'Not enough Notoriety.' };
+  return {
+    ok: true,
+    state: {
+      ...state,
+      notoriety: state.notoriety - cost,
+      perks: { ...perks, [perkId]: level + 1 },
+    },
+    message: `${perk.name} → level ${level + 1}.`,
   };
 }
 

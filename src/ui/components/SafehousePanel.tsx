@@ -1,10 +1,13 @@
 import { CONFIG } from '../../data/config';
-import { GEAR } from '../../data/gear';
+import { GEAR, gearAllowedForRole, gearForRole } from '../../data/gear';
 import { HEISTS_BY_ID } from '../../data/heists';
 import { ROLES, ROLES_BY_ID } from '../../data/roles';
+import { TRAITS_BY_ID } from '../../data/traits';
 import { SAFEHOUSE_TIERS_BY_ID, safehouseTierIndex, SAFEHOUSE_TIERS } from '../../data/safehouses';
 import {
   activeHeistForCrew,
+  contractHeistDef,
+  crewPower,
   getMember,
   memberEffectiveSkill,
   nextCrewCost,
@@ -14,8 +17,9 @@ import {
   skillUpgradeCost,
 } from '../../engine';
 import type { Crew, Member, Safehouse } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCash, formatCountdown } from '../format';
+import { Avatar, Icon, RoleIcon } from '../icons';
 
 export function SafehousePanel() {
   const { game, actions } = useGame();
@@ -24,13 +28,11 @@ export function SafehousePanel() {
   return (
     <section className="panel">
       <div className="panel-title row">
-        <h2>Safehouses &amp; crews</h2>
-        <button
-          className="btn small"
-          disabled={game.cash < buyCost}
-          onClick={actions.buySafehouse}
-        >
-          Buy safehouse · {formatCash(buyCost)}
+        <h2>
+          <Icon name="safehouse" size={17} /> Safehouses &amp; crews
+        </h2>
+        <button className="btn small" disabled={game.cash < buyCost} onClick={actions.buySafehouse}>
+          + Safehouse · {formatCash(buyCost, 'ceil')}
         </button>
       </div>
 
@@ -51,7 +53,6 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
   const upgradeCost = safehouseUpgradeCost(safehouse);
   const openSlots = safehouse.crewSlots - safehouse.crewIds.length;
 
-  // crews housed here, paired with their global roster index for labels
   const crews = safehouse.crewIds
     .map((id) => game.crews.find((c) => c.id === id))
     .filter((c): c is Crew => Boolean(c))
@@ -62,13 +63,18 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
   return (
     <div className="safehouse-card">
       <div className="safehouse-head">
-        <div>
-          <span className="safehouse-name">
-            #{order + 1} · {tier?.name ?? 'Safehouse'}
+        <div className="safehouse-id">
+          <span className="safehouse-ico">
+            <Icon name="safehouse" size={18} />
           </span>
-          <span className="safehouse-slots">
-            {safehouse.crewIds.length}/{safehouse.crewSlots} crew slots
-          </span>
+          <div>
+            <span className="safehouse-name">
+              #{order + 1} · {tier?.name ?? 'Safehouse'}
+            </span>
+            <span className="safehouse-slots">
+              {safehouse.crewIds.length}/{safehouse.crewSlots} crew slots
+            </span>
+          </div>
         </div>
         {hasUpgrade ? (
           <button
@@ -77,10 +83,10 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
             onClick={() => actions.upgradeSafehouse(safehouse.id)}
             title="More crew slots = more concurrent heists"
           >
-            Expand · {formatCash(upgradeCost)}
+            Expand · {formatCash(upgradeCost, 'ceil')}
           </button>
         ) : (
-          <span className="badge">Max capacity</span>
+          <span className="stamp-badge stamp-tier">Max capacity</span>
         )}
       </div>
 
@@ -91,13 +97,15 @@ function SafehouseCard({ safehouse, order }: { safehouse: Safehouse; order: numb
 
         {Array.from({ length: openSlots }).map((_, i) => (
           <div className="crew-card empty-slot" key={`slot-${i}`}>
-            <span className="empty-slot-label">Empty crew slot</span>
+            <span className="empty-slot-label">
+              <Icon name="crew" size={15} /> Empty crew slot
+            </span>
             <button
               className="btn small"
               disabled={game.cash < formCost}
               onClick={() => actions.formCrew(safehouse.id)}
             >
-              Form crew · {formatCash(formCost)}
+              Form crew · {formatCash(formCost, 'ceil')}
             </button>
           </div>
         ))}
@@ -110,21 +118,54 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
   const { game, actions } = useGame();
   const onHeist = crew.status === 'onHeist';
   const active = activeHeistForCrew(game, crew.id);
-  const heist = active ? HEISTS_BY_ID[active.heistId] : undefined;
+  const heist = active
+    ? active.contractLevel != null
+      ? contractHeistDef(active.contractLevel)
+      : HEISTS_BY_ID[active.heistId]
+    : undefined;
   const openSeats = crew.maxMembers - crew.memberIds.length;
+  const power = crewPower(game, crew);
+  // Gates for the one-click crew actions (avoid firing an action that can only
+  // return an error toast).
+  const cheapestRecruit = Math.min(...ROLES.map((r) => recruitCost(crew, r.id)));
+  const canFill = openSeats > 0 && game.cash >= cheapestRecruit;
+  const canGear = crew.memberIds.some((id) => {
+    const m = getMember(game, id);
+    return !!m && gearForRole(m.role).some((g) => !m.gearIds.includes(g.id) && g.cost <= game.cash);
+  });
 
   return (
     <div className={`crew-card ${onHeist ? 'locked' : ''}`}>
       <div className="crew-head">
-        <span className="crew-name">{crewLabel(index)}</span>
-        {onHeist ? (
-          <span className="badge locked-badge">Locked</span>
-        ) : (
-          <span className="badge idle-badge">Idle</span>
-        )}
+        <span className="crew-name">
+          <span className="crew-ico">
+            <Icon name="crew" size={15} />
+          </span>
+          {crewLabel(index)}
+        </span>
+        <span className="crew-head-right">
+          {crew.memberIds.length > 0 && (
+            <span
+              className="crew-power"
+              title="Total crew power (skill + gear + traits + notoriety + crew synergies)"
+            >
+              ⚡ {Math.round(power)}
+            </span>
+          )}
+          <span className="crew-size">
+            {crew.memberIds.length}/{crew.maxMembers}
+          </span>
+          {onHeist ? (
+            <span className="stamp-badge stamp-locked">Locked</span>
+          ) : (
+            <span className="stamp-badge stamp-idle">Idle</span>
+          )}
+        </span>
       </div>
 
-      {onHeist && heist && active && <CrewJobStatus heistName={heist.name} endsAt={active.endsAt} />}
+      {onHeist && heist && active && (
+        <CrewJobStatus heistName={heist.name} activeId={active.id} endsAt={active.endsAt} />
+      )}
 
       <div className="member-list">
         {crew.memberIds.length === 0 && <p className="hint">No members yet — recruit below.</p>}
@@ -134,9 +175,36 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
         })}
       </div>
 
+      {!onHeist && crew.memberIds.length > 0 && (
+        <div className="crew-quick">
+          <button
+            className="btn tiny"
+            disabled={!canFill}
+            title="Recruit toward a full crew, covering any missing roles first (spends cash)"
+            onClick={() => actions.fillCrew(crew.id)}
+          >
+            Fill crew
+          </button>
+          <button
+            className="btn tiny"
+            disabled={!canGear}
+            title="Buy the cheapest available gear for each member (spends cash)"
+            onClick={() => actions.gearUpCrew(crew.id)}
+          >
+            Gear up
+          </button>
+        </div>
+      )}
+
+      {!onHeist && crew.memberIds.length < CONFIG.minCrewForHeist && (
+        <p className="hint warn crew-min-hint">
+          Need {CONFIG.minCrewForHeist}+ members to run a heist.
+        </p>
+      )}
+
       {!onHeist && openSeats > 0 && (
         <div className="recruit-row">
-          <span className="recruit-label">Recruit ({openSeats} open):</span>
+          <span className="recruit-label">Recruit ({openSeats} open)</span>
           <div className="recruit-buttons">
             {ROLES.map((role) => {
               const cost = recruitCost(crew, role.id);
@@ -144,11 +212,15 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
                 <button
                   key={role.id}
                   className="btn tiny"
+                  data-role={role.id}
                   disabled={game.cash < cost}
                   title={role.description}
                   onClick={() => actions.recruit(crew.id, role.id)}
                 >
-                  {role.name} · {formatCash(cost)}
+                  <span className="role-ico">
+                    <RoleIcon role={role.id} size={13} />
+                  </span>
+                  {role.name} · {formatCash(cost, 'ceil')}
                 </button>
               );
             })}
@@ -159,14 +231,37 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
   );
 }
 
-function CrewJobStatus({ heistName, endsAt }: { heistName: string; endsAt: number }) {
-  const { now } = useGame();
+function CrewJobStatus({
+  heistName,
+  activeId,
+  endsAt,
+}: {
+  heistName: string;
+  activeId: string;
+  endsAt: number;
+}) {
+  const { actions } = useGame();
+  const now = useNow();
   const ready = now >= endsAt;
   return (
-    <p className="crew-job">
-      On job: <strong>{heistName}</strong> ·{' '}
-      {ready ? <span className="ready-text">ready to collect</span> : formatCountdown(endsAt - now)}
-    </p>
+    <>
+      <div className={`crew-tape ${ready ? 'ready' : ''}`}>
+        {ready ? 'Ready to collect' : 'On the job — do not disturb'}
+      </div>
+      <p className="active-note" style={{ marginBottom: ready ? 8 : 0 }}>
+        <Icon name="clock" size={13} /> {heistName} ·{' '}
+        {ready ? (
+          <strong style={{ color: 'var(--brass)' }}>done</strong>
+        ) : (
+          formatCountdown(endsAt - now)
+        )}
+      </p>
+      {ready && (
+        <button className="btn small primary block" onClick={() => actions.collect(activeId)}>
+          Collect the take
+        </button>
+      )}
+    </>
   );
 }
 
@@ -177,51 +272,67 @@ function MemberRow({ member, locked }: { member: Member; locked: boolean }) {
   const gearBonus = effective - member.skill;
   const skillCost = skillUpgradeCost(member);
   const maxed = member.skill >= CONFIG.maxMemberSkill;
-  const unowned = GEAR.filter((g) => !member.gearIds.includes(g.id));
+  const unowned = GEAR.filter(
+    (g) => gearAllowedForRole(g, member.role) && !member.gearIds.includes(g.id),
+  );
 
   return (
-    <div className={`member-row ${locked ? 'dim' : ''}`}>
-      <div className="member-main">
-        <span className="member-name">{member.name}</span>
-        <span className="member-role">{role?.name ?? member.role}</span>
-        <span className="member-skill">
-          skill {effective}
-          {gearBonus > 0 && <span className="skill-bonus"> ({member.skill}+{gearBonus})</span>}
-        </span>
-      </div>
+    <div className={`member-row ${locked ? 'dim' : ''}`} data-role={member.role}>
+      <Avatar role={member.role} name={member.name} size={44} />
 
-      {member.gearIds.length > 0 && (
-        <div className="gear-chips">
-          {member.gearIds.map((gid) => (
-            <span className="chip" key={gid}>
-              {GEAR.find((g) => g.id === gid)?.name ?? gid}
+      <div className="member-info">
+        <div className="member-main">
+          <span className="member-name">{member.name}</span>
+          <span className="member-role">{role?.name ?? member.role}</span>
+          {member.traitId && TRAITS_BY_ID[member.traitId] && (
+            <span className="trait-chip" title={TRAITS_BY_ID[member.traitId].description}>
+              {TRAITS_BY_ID[member.traitId].name}
             </span>
-          ))}
+          )}
+          <span className="member-skill">
+            skill {effective}
+            {gearBonus > 0 && (
+              <span className="skill-bonus">
+                {' '}
+                ({member.skill}+{gearBonus})
+              </span>
+            )}
+          </span>
         </div>
-      )}
 
-      {!locked && (
-        <div className="member-actions">
-          <button
-            className="btn tiny"
-            disabled={maxed || game.cash < skillCost}
-            onClick={() => actions.upgradeSkill(member.id)}
-          >
-            {maxed ? 'Skill maxed' : `Train · ${formatCash(skillCost)}`}
-          </button>
-          {unowned.map((g) => (
+        {member.gearIds.length > 0 && (
+          <div className="gear-chips">
+            {member.gearIds.map((gid) => (
+              <span className="chip" key={gid}>
+                {GEAR.find((g) => g.id === gid)?.name ?? gid}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {!locked && (
+          <div className="member-actions">
             <button
-              key={g.id}
-              className="btn tiny ghost"
-              disabled={game.cash < g.cost}
-              title={g.description + (g.roleAffinity ? ` (best for ${ROLES_BY_ID[g.roleAffinity]?.name})` : '')}
-              onClick={() => actions.buyGear(member.id, g.id)}
+              className="btn tiny"
+              disabled={maxed || game.cash < skillCost}
+              onClick={() => actions.upgradeSkill(member.id)}
             >
-              +{g.name} · {formatCash(g.cost)}
+              {maxed ? 'Skill maxed' : `Train · ${formatCash(skillCost, 'ceil')}`}
             </button>
-          ))}
-        </div>
-      )}
+            {unowned.map((g) => (
+              <button
+                key={g.id}
+                className="btn tiny ghost"
+                disabled={game.cash < g.cost}
+                title={`${g.description} (${ROLES_BY_ID[g.role]?.name} only)`}
+                onClick={() => actions.buyGear(member.id, g.id)}
+              >
+                +{g.name} · {formatCash(g.cost, 'ceil')}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

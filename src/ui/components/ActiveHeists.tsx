@@ -1,65 +1,106 @@
 import { HEISTS_BY_ID } from '../../data/heists';
-import { heistStatusAt } from '../../engine';
-import { useGame } from '../../store/GameContext';
+import { contractHeistDef, heistStatusAt } from '../../engine';
+import { useGame, useNow } from '../../store/GameContext';
+import { useRewardedAd } from '../hooks';
 import { crewLabel, formatCountdown, pct } from '../format';
+import { HeistIcon, Icon } from '../icons';
 
 export function ActiveHeists() {
-  const { game, now, actions } = useGame();
+  const { game, actions } = useGame();
+  const now = useNow();
+  const { watching, watch, available } = useRewardedAd();
 
-  if (game.activeHeists.length === 0) {
-    return (
-      <section className="panel">
-        <h2 className="panel-title">In progress</h2>
-        <p className="empty">No crews are out right now. Send one on a job.</p>
-      </section>
-    );
-  }
+  const skip = async (id: string, endsAt: number) => {
+    if (!(await watch('skip_cooldown'))) return;
+    // If the job finished on its own during the ad, quietly skip the dispatch
+    // (it would just be a no-op error). The take is already collectable.
+    if (Date.now() >= endsAt) return;
+    actions.skipCooldown(id);
+  };
+
+  const readyCount = game.activeHeists.filter((a) => now >= a.endsAt).length;
 
   return (
     <section className="panel">
-      <h2 className="panel-title">In progress</h2>
-      <div className="active-list">
-        {game.activeHeists.map((active) => {
-          const heist = HEISTS_BY_ID[active.heistId];
-          const crewIdx = game.crews.findIndex((c) => c.id === active.crewId);
-          const status = heistStatusAt(active.endsAt, now);
-          const total = active.endsAt - active.startedAt;
-          const elapsed = Math.min(total, Math.max(0, now - active.startedAt));
-          const progress = total > 0 ? elapsed / total : 1;
-          const remaining = active.endsAt - now;
+      <div className="panel-title row">
+        <h2>
+          <Icon name="target" size={17} /> On the job
+        </h2>
+        {readyCount >= 2 && (
+          <button className="btn small primary" onClick={actions.collectAll}>
+            Collect all ({readyCount})
+          </button>
+        )}
+      </div>
 
-          return (
-            <div className={`active-card ${status === 'ready' ? 'ready' : ''}`} key={active.id}>
-              <div className="active-head">
-                <div>
-                  <span className="active-name">{heist?.name ?? 'Unknown job'}</span>
-                  <span className="active-crew">{crewLabel(crewIdx)}</span>
+      {game.activeHeists.length === 0 ? (
+        <p className="empty">No crews are out right now. Send one on a job.</p>
+      ) : (
+        <div className="active-list">
+          {game.activeHeists.map((active) => {
+            const heist =
+              active.contractLevel != null
+                ? contractHeistDef(active.contractLevel)
+                : HEISTS_BY_ID[active.heistId];
+            const crewIdx = game.crews.findIndex((c) => c.id === active.crewId);
+            const status = heistStatusAt(active.endsAt, now);
+            const ready = status === 'ready';
+            const total = active.endsAt - active.startedAt;
+            const elapsed = Math.min(total, Math.max(0, now - active.startedAt));
+            const progress = total > 0 ? elapsed / total : 1;
+
+            return (
+              <div className={`active-card ${ready ? 'ready' : ''}`} key={active.id}>
+                <div className="active-head">
+                  <span className="active-icon">
+                    <HeistIcon id={active.heistId} size={19} />
+                  </span>
+                  <div className="active-title">
+                    <span className="active-name">{heist?.name ?? 'Unknown job'}</span>
+                    <span className="active-crew">
+                      <Icon name="crew" size={12} /> {crewLabel(crewIdx)}
+                    </span>
+                  </div>
+                  {ready ? (
+                    <span className="stamp-badge stamp-ready">Ready</span>
+                  ) : (
+                    <span className="countdown">{formatCountdown(active.endsAt - now)}</span>
+                  )}
                 </div>
-                {status === 'ready' ? (
-                  <span className="badge ready-badge">Ready to collect</span>
+
+                <div className="progress-track">
+                  <div
+                    className={`progress-fill ${ready ? 'done' : 'running'}`}
+                    style={{ width: `${pct(progress)}` }}
+                  />
+                </div>
+
+                {ready ? (
+                  <button className="btn primary block" onClick={() => actions.collect(active.id)}>
+                    Collect the take
+                  </button>
                 ) : (
-                  <span className="countdown">{formatCountdown(remaining)}</span>
+                  <div className="active-foot">
+                    <p className="active-note">
+                      <Icon name="crew" size={12} /> Crew locked until you collect.
+                    </p>
+                    {available && (
+                      <button
+                        className="btn tiny ghost skip-btn"
+                        disabled={watching}
+                        title="Watch a short ad to finish this job now"
+                        onClick={() => skip(active.id, active.endsAt)}
+                      >
+                        {watching ? 'Ad…' : 'Skip · ad'}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-
-              <div className="progress-track">
-                <div
-                  className={`progress-fill ${status === 'ready' ? 'done' : ''}`}
-                  style={{ width: `${pct(progress)}` }}
-                />
-              </div>
-
-              {status === 'ready' ? (
-                <button className="btn primary block" onClick={() => actions.collect(active.id)}>
-                  Collect
-                </button>
-              ) : (
-                <p className="active-note">Crew locked until you collect.</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

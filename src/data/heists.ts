@@ -2,12 +2,17 @@
 // HEISTS
 // -----------------------------------------------------------------------------
 // A heist is a job a whole crew is sent on. It resolves over real time
-// (durationSec) against start/end timestamps. On collect, a success roll is made
-// from crew power vs difficulty (see engine/heists.ts).
+// (durationSec) against start/end timestamps. On collect it is resolved
+// per-member (see engine/resolution.ts): each member rolls against the job's
+// difficulty, and the crew's success + take depend on how many passed.
 //
 // `tier` gates availability: tier 1 is always available; higher tiers unlock via
 // CONFIG.tierUnlocks (lifetime cash thresholds). `requiredRoles` must all be
-// present in the assigned crew or the heist cannot be launched.
+// present in the assigned crew, and the crew must meet the member-count minimum
+// for the job (grows with difficulty), or it cannot be launched.
+//
+// Income is time-based: the base take = payoutPerSec * durationSec, then scaled
+// by how well the crew performed (a flawless run pays a bonus - see config).
 //
 // Heat: heatCost is applied when the heist is LAUNCHED (committing to a job
 // raises heat immediately, then it cools over real time). On a FAILED collect,
@@ -25,13 +30,13 @@ export interface HeistDef {
   description: string;
   requiredRoles: RoleId[];
   durationSec: number;
-  payoutMin: number;
-  payoutMax: number;
+  /** Base cash earned per second of duration (before performance scaling). */
+  payoutPerSec: number;
   /** Heat added when the heist is launched. */
   heatCost: number;
   /** Extra heat added when a heist is collected as a FAILURE. */
   failHeatBonus: number;
-  /** Difficulty in the same units as crew power (sum of member effective skill). */
+  /** Difficulty each member rolls against; also drives the crew-size minimum. */
   difficulty: number;
 }
 
@@ -44,10 +49,9 @@ export const HEISTS: HeistDef[] = [
     description: 'A quick corner-store till job. Anyone can pull it off.',
     requiredRoles: [],
     durationSec: 20,
-    payoutMin: 40,
-    payoutMax: 80,
-    heatCost: 6,
-    failHeatBonus: 8,
+    payoutPerSec: 6,
+    heatCost: 5,
+    failHeatBonus: 10,
     difficulty: 4,
   },
   {
@@ -57,10 +61,9 @@ export const HEISTS: HeistDef[] = [
     description: 'Tap a cash machine off the network. Needs a hacker.',
     requiredRoles: ['hacker'],
     durationSec: 45,
-    payoutMin: 110,
-    payoutMax: 180,
-    heatCost: 10,
-    failHeatBonus: 10,
+    payoutPerSec: 7,
+    heatCost: 9,
+    failHeatBonus: 12,
     difficulty: 8,
   },
   {
@@ -70,11 +73,10 @@ export const HEISTS: HeistDef[] = [
     description: 'Back a truck up to a loading dock and clear it out.',
     requiredRoles: ['muscle', 'driver'],
     durationSec: 90,
-    payoutMin: 240,
-    payoutMax: 380,
-    heatCost: 16,
-    failHeatBonus: 12,
-    difficulty: 14,
+    payoutPerSec: 8,
+    heatCost: 14,
+    failHeatBonus: 16,
+    difficulty: 10,
   },
 
   // ---- Tier 2: bigger, longer jobs (unlock via lifetime cash) --------------
@@ -85,11 +87,10 @@ export const HEISTS: HeistDef[] = [
     description: 'A real vault. Bring a full, sharp crew.',
     requiredRoles: ['hacker', 'muscle', 'driver'],
     durationSec: 300,
-    payoutMin: 900,
-    payoutMax: 1500,
-    heatCost: 28,
-    failHeatBonus: 18,
-    difficulty: 28,
+    payoutPerSec: 12,
+    heatCost: 34,
+    failHeatBonus: 20,
+    difficulty: 12,
   },
   {
     id: 'casino_heist',
@@ -98,11 +99,76 @@ export const HEISTS: HeistDef[] = [
     description: 'The big score. Long, loud, and very well guarded.',
     requiredRoles: ['hacker', 'muscle', 'lookout'],
     durationSec: 600,
-    payoutMin: 2200,
-    payoutMax: 3800,
-    heatCost: 40,
-    failHeatBonus: 24,
-    difficulty: 40,
+    payoutPerSec: 15,
+    heatCost: 54, // > cool-over-duration (0.08*600=48) so chained runs actually build heat
+    failHeatBonus: 28,
+    difficulty: 14,
+  },
+
+  // ---- Tier 3: long jobs to leave running (unlock $30k lifetime) -----------
+  {
+    id: 'jewelry_exchange',
+    tier: 3,
+    name: 'Jewelry Exchange',
+    description: 'A patient in-and-out on a high-end vault room. ~15 minutes.',
+    requiredRoles: ['hacker', 'driver'],
+    durationSec: 15 * 60,
+    payoutPerSec: 24,
+    heatCost: 38,
+    failHeatBonus: 28,
+    difficulty: 20,
+  },
+  {
+    id: 'cargo_port',
+    tier: 3,
+    name: 'Cargo Port Raid',
+    description: 'Hijack a container off the docks before the shift change. ~30 minutes.',
+    requiredRoles: ['muscle', 'driver', 'lookout'],
+    durationSec: 30 * 60,
+    payoutPerSec: 30,
+    heatCost: 50,
+    failHeatBonus: 34,
+    difficulty: 22,
+  },
+
+  // ---- Tier 4: multi-hour scores (unlock $180k lifetime) -------------------
+  {
+    id: 'armored_convoy',
+    tier: 4,
+    name: 'Armored Convoy',
+    description: 'Take down a cash-transport route. Plan it and walk away. ~1 hour.',
+    requiredRoles: ['hacker', 'muscle', 'driver'],
+    durationSec: 60 * 60,
+    payoutPerSec: 48,
+    heatCost: 62,
+    failHeatBonus: 40,
+    difficulty: 31,
+  },
+  {
+    id: 'data_center',
+    tier: 4,
+    name: 'Data Center Breach',
+    description: 'A slow, deep intrusion for the real money. ~5 hours.',
+    requiredRoles: ['hacker', 'muscle', 'lookout'],
+    durationSec: 5 * 60 * 60,
+    payoutPerSec: 62,
+    heatCost: 78,
+    failHeatBonus: 50,
+    difficulty: 33,
+  },
+
+  // ---- Tier 5: the overnight big score (unlock $1.2M lifetime) -------------
+  {
+    id: 'central_bank',
+    tier: 5,
+    name: 'Central Bank Score',
+    description: 'The one you retire on. Launch it, sleep on it. ~12 hours.',
+    requiredRoles: ['hacker', 'muscle', 'driver'],
+    durationSec: 12 * 60 * 60,
+    payoutPerSec: 112,
+    heatCost: 92,
+    failHeatBonus: 60,
+    difficulty: 38, // hardest job, but clearable by a just-unlocked tier-5 crew so it leads $/min
   },
 ];
 
