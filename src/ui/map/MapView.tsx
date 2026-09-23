@@ -8,6 +8,7 @@
 // -----------------------------------------------------------------------------
 
 import { useState, type CSSProperties } from 'react';
+import { APPROACHES, approachFor, type ApproachId } from '../../data/approaches';
 import { CONFIG } from '../../data/config';
 import { HEISTS, type HeistDef } from '../../data/heists';
 import {
@@ -172,7 +173,12 @@ export function MapView() {
         </div>
 
         {selectedHeist && (
-          <Dossier heist={selectedHeist} onClose={() => setSelected(null)} onManage={() => setDrawer('safehouse')} />
+          <Dossier
+            key={selectedHeist.id}
+            heist={selectedHeist}
+            onClose={() => setSelected(null)}
+            onManage={() => setDrawer('safehouse')}
+          />
         )}
       </div>
 
@@ -199,9 +205,13 @@ export function MapView() {
 function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () => void; onManage: () => void }) {
   const { game, actions } = useGame();
   const now = useNow();
+  const [approachId, setApproachId] = useState<ApproachId>('quiet');
+  const ap = approachFor(approachId);
   const heat = deriveHeat(game, now);
   const risk = tierRisk(heist.tier);
-  const baseTake = Math.round(heist.payoutPerSec * heist.durationSec);
+  const baseTake = Math.round(heist.payoutPerSec * heist.durationSec * ap.rewardMult);
+  const previewDur = Math.round(heist.durationSec * ap.timeMult);
+  const previewHeat = Math.round(heist.heatCost * ap.heatMult);
 
   const active = game.activeHeists.filter((a) => a.heistId === heist.id);
   const idle = game.crews.filter((c) => c.status === 'idle');
@@ -210,7 +220,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const rows = idle.map((crew) => {
     const block = launchBlockReason(game, heist.id, crew.id, now);
     const eligible = block === null;
-    const odds = eligible ? estimateSuccess(game, heist, crew, now) : 0;
+    const odds = eligible ? estimateSuccess(game, heist, crew, now, undefined, ap.oddsDelta) : 0;
     if (odds > best) best = odds;
     return { crew, eligible, odds, why: block };
   });
@@ -232,10 +242,29 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
       <div className="nf-dos-body">
         <div className="nf-stats">
           <Stat k="Take" v={formatCash(baseTake)} c="var(--nf-lime)" />
-          <Stat k="Time" v={formatDuration(heist.durationSec)} />
+          <Stat k="Time" v={formatDuration(previewDur)} />
           <Stat k="Difficulty" v={String(heist.difficulty)} c={oddColor(1 - heist.difficulty / 60)} />
-          <Stat k="Heat cost" v={'+' + heist.heatCost} c="var(--nf-magenta)" />
+          <Stat k="Heat cost" v={'+' + previewHeat} c="var(--nf-magenta)" />
         </div>
+
+        {active.length === 0 && (
+          <>
+            <div className="nf-sect">Approach</div>
+            <div className="nf-appr-row">
+              {APPROACHES.map((a) => (
+                <button
+                  key={a.id}
+                  className={'nf-appr' + (approachId === a.id ? ' on' : '')}
+                  title={a.description}
+                  onClick={() => setApproachId(a.id)}
+                >
+                  {a.name}
+                </button>
+              ))}
+            </div>
+            <div className="nf-appr-d">{ap.description}</div>
+          </>
+        )}
 
         {active.length > 0 && (
           <>
@@ -292,7 +321,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
                 key={crew.id}
                 className="nf-crew-opt"
                 disabled={!eligible}
-                onClick={() => actions.launch(heist.id, crew.id)}
+                onClick={() => actions.launch(heist.id, crew.id, approachId)}
               >
                 <span className="nf-cw-ic">
                   <Icon name="crew" size={15} />

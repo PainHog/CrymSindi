@@ -9,6 +9,7 @@
 import type { RoleId } from '../data/roles';
 import type { GearId } from '../data/gear';
 import type { HeistId } from '../data/heists';
+import type { ApproachId } from '../data/approaches';
 import type { UpgradeId } from '../data/upgrades';
 import type { SafehouseTierId } from '../data/safehouses';
 
@@ -57,6 +58,10 @@ export interface ActiveHeist {
    *  costly even for a long job. Optional for backward compatibility with older
    *  saves (which fall back to collect-time heat). */
   heatAtLaunch?: number;
+  /** The approach chosen at launch (loud/quiet/ghost). Drives payout + odds at
+   *  resolve; heat/duration were already applied at launch. Optional — older
+   *  saves and default launches resolve as the neutral "quiet" approach. */
+  approachId?: ApproachId;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */

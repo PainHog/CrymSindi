@@ -124,6 +124,8 @@ export function estimateSuccess(
   crew: Crew,
   now: number,
   config: Config = CONFIG,
+  // Approach odds shift (loud lowers, ghost raises). 0 = the neutral default.
+  oddsDelta = 0,
 ): number {
   const members = crew.memberIds
     .map((id) => getMember(state, id))
@@ -134,7 +136,11 @@ export function estimateSuccess(
   const synergy = crewSynergyPower(members);
   const per = members.map((m) => ({
     role: m.role,
-    p: memberPassChance(memberPower(state, m, config) + synergy, heist.difficulty, heat, config),
+    p: clamp(
+      memberPassChance(memberPower(state, m, config) + synergy, heist.difficulty, heat, config) + oddsDelta,
+      config.memberChanceMin,
+      config.memberChanceMax,
+    ),
   }));
 
   const pCount = poissonBinomialAtLeast(per.map((x) => x.p), requiredPassesFor(heist, config));
@@ -237,7 +243,13 @@ export function resolveHeist(
   // so committing a job while hot stays costly even for a long job that fully
   // cools before it's collected — otherwise heat never bites past the short tiers.
   atHeat?: number,
+  // Approach modifiers applied at resolve: oddsDelta shifts each member's pass
+  // chance; rewardMult scales the base take. Both default to neutral so the
+  // existing signature and all current callers are unaffected.
+  approach: { oddsDelta?: number; rewardMult?: number } = {},
 ): HeistReport {
+  const oddsDelta = approach.oddsDelta ?? 0;
+  const rewardMult = approach.rewardMult ?? 1;
   const heat = atHeat ?? deriveHeat(state, now, config);
   const heatHigh = heat >= config.maxHeat * 0.4;
   const members = crew.memberIds
@@ -249,7 +261,11 @@ export function resolveHeist(
   // Per-member checks (one rng() per member, in crew order).
   const beats: MemberBeat[] = members.map((m) => {
     const eff = memberPower(state, m, config) + synergy;
-    const chance = memberPassChance(eff, heist.difficulty, heat, config);
+    const chance = clamp(
+      memberPassChance(eff, heist.difficulty, heat, config) + oddsDelta,
+      config.memberChanceMin,
+      config.memberChanceMax,
+    );
     const roll = rng();
     const passed = roll < chance;
     const quality = classify(passed, chance - roll);
@@ -287,7 +303,7 @@ export function resolveHeist(
   // (requiredPasses + slack) - a denominator independent of crew size, so
   // bringing MORE members never lowers the take. A flawless run pays a bonus; a
   // blown run still salvages a fraction of the base for the time invested.
-  const base = heist.payoutPerSec * heist.durationSec;
+  const base = heist.payoutPerSec * heist.durationSec * rewardMult;
   const mult = payoutMult(state) * notorietyMult(state, config);
   let payout = 0;
   let perfectBonus = 0;

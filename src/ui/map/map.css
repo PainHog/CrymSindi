@@ -126,6 +126,11 @@
 .nf-req { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 13px; }
 .nf-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--nf-mono); font-size: 9px; letter-spacing: .8px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--nf-line); background: #0c1626; color: var(--nf-ink-dim); text-transform: uppercase; }
 .nf-chip.warn { border-color: #5a2f42; color: #ff9bb8; }
+.nf-appr-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 7px; }
+.nf-appr { font-family: var(--nf-disp); font-weight: 600; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; padding: 9px 4px; border-radius: 11px; border: 1px solid var(--nf-line); background: #0b1524; color: var(--nf-ink-dim); cursor: pointer; transition: .15s; }
+.nf-appr:hover { border-color: #2f4a6e; color: var(--nf-ink); }
+.nf-appr.on { border-color: var(--nf-cyan); color: var(--nf-cyan); background: #0c1c2b; box-shadow: 0 0 10px #37e8ff1c; }
+.nf-appr-d { font-family: var(--nf-mono); font-size: 9px; color: var(--nf-ink-dim); letter-spacing: .2px; margin-bottom: 13px; padding-left: 2px; }
 
 .nf-crew-pick { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
 .nf-crew-opt { display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: #0b1524; border: 1px solid var(--nf-line); border-radius: 16px; cursor: pointer; transition: .15s; text-align: left; color: var(--nf-ink); }

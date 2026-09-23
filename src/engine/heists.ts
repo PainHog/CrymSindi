@@ -11,6 +11,7 @@
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
+import { approachFor, type ApproachId } from '../data/approaches';
 import { HEISTS_BY_ID } from '../data/heists';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
@@ -81,29 +82,33 @@ export function launchHeist(
   now: number,
   seed: number = Math.floor(Math.random() * 0x100000000),
   config: Config = CONFIG,
+  approachId?: ApproachId,
 ): ActionResult {
   const heist = heistDefFor(heistId, state, config);
   const blocked = launchBlockReason(state, heistId, crewId, now, config, heist);
   if (blocked) return { ok: false, error: blocked };
   // launchBlockReason returned null, so a def exists (the '!' is sound here).
   const def = heist!;
+  const approach = approachFor(approachId);
 
   // Ambient heat the moment we commit (BEFORE this job's own cost is added). The
   // job resolves against this at collect, so launching while hot stays costly for
   // long jobs too, while a cooled-down launch (heat ~0) is unaffected.
   const heatAtLaunch = deriveHeat(state, now, config);
 
-  // Heat is applied at launch (committing to a job raises heat immediately).
-  let next = addHeat(state, def.heatCost * heatGainMult(state), now, config);
+  // Heat is applied at launch (committing to a job raises heat immediately);
+  // the approach scales it (loud is hotter, ghost cooler).
+  let next = addHeat(state, def.heatCost * heatGainMult(state) * approach.heatMult, now, config);
 
   const active = {
     id: `h${next.nextId}`,
     heistId,
     crewId,
     startedAt: now,
-    endsAt: now + def.durationSec * 1000,
+    endsAt: now + Math.round(def.durationSec * approach.timeMult) * 1000,
     seed: seed >>> 0,
     heatAtLaunch,
+    approachId: approach.id,
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -151,8 +156,13 @@ export function collectHeist(
   // Math.random only for pre-seed saves). Tests can still inject their own rng.
   const roll = rng ?? (active.seed != null ? makeRng(active.seed) : Math.random);
   // Resolve against the heat captured at launch (older saves lack it and fall
-  // back to current heat inside resolveHeist).
-  const report = resolveHeist(state, heist, crew, now, roll, config, active.heatAtLaunch);
+  // back to current heat inside resolveHeist). The approach chosen at launch
+  // scales the take and shifts the odds (older saves default to neutral).
+  const approach = approachFor(active.approachId);
+  const report = resolveHeist(state, heist, crew, now, roll, config, active.heatAtLaunch, {
+    oddsDelta: approach.oddsDelta,
+    rewardMult: approach.rewardMult,
+  });
 
   let next = freeCrew(state);
 
