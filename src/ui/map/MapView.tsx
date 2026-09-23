@@ -35,6 +35,7 @@ import { crewLabel, formatCash, formatCountdown, formatDuration, pct } from '../
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { CityCanvas } from './CityCanvas';
 import { CrewDrawer } from './CrewDrawer';
+import { NfCoach } from './NfCoach';
 import { NoirReport } from './NoirReport';
 import { RepDrawer } from './RepDrawer';
 import { UpgradesDrawer } from './UpgradesDrawer';
@@ -199,6 +200,9 @@ export function MapView() {
             onManage={() => setDrawer('safehouse')}
           />
         )}
+
+        {/* Contextual coaching, tucked bottom-left above the dock. */}
+        <NfCoach />
       </div>
 
       <CrewDock onManage={() => setDrawer('safehouse')} />
