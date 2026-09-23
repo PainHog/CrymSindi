@@ -93,7 +93,7 @@ export function MapView() {
           <span className="k">Cash</span>
           <span className="v cash">{formatCash(game.cash)}</span>
         </div>
-        <div className="nf-stat nf-heatwrap hide-sm">
+        <div className="nf-stat nf-heatwrap">
           <span className="k">Heat</span>
           <div className="nf-heat-track">
             <div className={'nf-heat-fill' + (heatPct >= 70 ? ' hot' : '')} style={{ width: heatPct + '%' }} />
