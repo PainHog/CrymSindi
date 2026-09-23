@@ -53,6 +53,13 @@ export interface Config {
   featuredBonusMin: number; // payout multiplier range while featured
   featuredBonusMax: number;
 
+  // Living-map events: a time-boxed condition (a fence in town, a crackdown, ...)
+  // that alters specific jobs' take/odds/heat while it runs. Like featured, it's a
+  // PURE function of the window index (deterministic/testable, no stored state).
+  eventWindowSec: number; // event window length (real seconds) - off the featured clock
+  eventChance: number; // fraction of windows that actually run an event (0..1)
+  eventTargetsMax: number; // how many specific jobs one event hits
+
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
@@ -168,6 +175,11 @@ export const CONFIG: Config = {
   featuredRotationSec: 3600, // a fresh set every hour
   featuredBonusMin: 1.25, // +25%..+60% take while featured
   featuredBonusMax: 1.6,
+
+  // ---- Living-map events ---------------------------------------------------
+  eventWindowSec: 2700, // 45-min windows (deliberately off the 60-min featured clock)
+  eventChance: 0.6, // ~60% of windows run an event; the rest are quiet
+  eventTargetsMax: 2, // an event flags up to this many specific jobs
 
   // ---- Prestige / Notoriety ------------------------------------------------
   // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is
