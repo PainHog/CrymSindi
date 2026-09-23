@@ -39,7 +39,10 @@ export const APPROACHES: ApproachDef[] = [
     description: 'Smash & grab — more cash and speed, more Heat, riskier.',
     rewardMult: 1.4,
     heatMult: 1.5,
-    timeMult: 0.8,
+    // 0.85, not a steeper 0.8: the speed bonus is what lets Loud out-earn Quiet
+    // even on long endgame jobs where its Heat cost has fully cooled by collect,
+    // so it stays the aggressive pick without being a strict no-brainer at scale.
+    timeMult: 0.85,
     oddsDelta: -0.1,
   },
   {

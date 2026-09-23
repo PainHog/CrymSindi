@@ -56,8 +56,8 @@ describe('mission approaches', () => {
 
     const aLoud = loud.state.activeHeists[0];
     expect(aLoud.approachId).toBe('loud');
-    // duration: round(20 * 0.8) = 16s ; ghost: round(20 * 1.25) = 25s
-    expect(aLoud.endsAt - aLoud.startedAt).toBe(16_000);
+    // duration: round(20 * 0.85) = 17s ; ghost: round(20 * 1.25) = 25s
+    expect(aLoud.endsAt - aLoud.startedAt).toBe(17_000);
     expect(ghost.state.activeHeists[0].endsAt - ghost.state.activeHeists[0].startedAt).toBe(25_000);
 
     // heat added at launch scales by the approach (loud 1.5x, quiet 1x, ghost 0.6x).
