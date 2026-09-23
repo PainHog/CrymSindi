@@ -6,6 +6,7 @@ export * from './daily';
 export * from './heat';
 export * from './resolution';
 export * from './heists';
+export * from './featured';
 export * from './economy';
 export * from './batch';
 export * from './monetization';

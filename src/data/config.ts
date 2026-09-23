@@ -46,6 +46,13 @@ export interface Config {
   prepOddsBonus: number; // flat pass-chance added to every member this run
   prepCostFrac: number; // prep cost = this * (payoutPerSec * durationSec)
 
+  // Featured jobs: a curated set of catalog heists that rotate on a timer and pay
+  // a bonus while featured. Deterministic from the rotation index (pure/testable).
+  featuredCount: number; // how many heists are featured each rotation
+  featuredRotationSec: number; // rotation period (real seconds)
+  featuredBonusMin: number; // payout multiplier range while featured
+  featuredBonusMax: number;
+
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
@@ -155,6 +162,12 @@ export const CONFIG: Config = {
   // ---- Prep ("case the job") -----------------------------------------------
   prepOddsBonus: 0.12, // +12% pass chance per member for the cased run
   prepCostFrac: 0.15, // costs 15% of the job's base take to case it
+
+  // ---- Featured jobs (hourly rotation) -------------------------------------
+  featuredCount: 3,
+  featuredRotationSec: 3600, // a fresh set every hour
+  featuredBonusMin: 1.25, // +25%..+60% take while featured
+  featuredBonusMax: 1.6,
 
   // ---- Prestige / Notoriety ------------------------------------------------
   // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is

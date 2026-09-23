@@ -12,6 +12,7 @@
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { approachFor, type ApproachId } from '../data/approaches';
+import { featuredBonusFor } from './featured';
 import { HEISTS_BY_ID } from '../data/heists';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
@@ -126,6 +127,10 @@ export function launchHeist(
   // after launch can't change who resolves this job.
   const participants = healthyCrew(state, getCrew(state, crewId)!, now).memberIds;
 
+  // Lock in the featured payout bonus (if any) at launch — authoritative, so a
+  // rotation before collect can't change it and the client can't inflate it.
+  const featuredMult = featuredBonusFor(heistId, now, config);
+
   const active = {
     id: `h${next.nextId}`,
     heistId,
@@ -137,6 +142,7 @@ export function launchHeist(
     approachId: approach.id,
     memberIds: participants,
     ...(prepOdds != null ? { prepOdds } : {}),
+    ...(featuredMult > 1 ? { featuredMult } : {}),
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -192,7 +198,7 @@ export function collectHeist(
   const participantsCrew = active.memberIds ? { ...crew, memberIds: active.memberIds } : crew;
   const report = resolveHeist(state, heist, participantsCrew, now, roll, config, active.heatAtLaunch, {
     oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0),
-    rewardMult: approach.rewardMult,
+    rewardMult: approach.rewardMult * (active.featuredMult ?? 1),
   });
 
   // Stakes: a blown job can sideline a member (worse the hotter it was), but

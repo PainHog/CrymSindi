@@ -74,6 +74,9 @@ export interface ActiveHeist {
   /** Extra per-member pass chance bought by "casing" the job before launch
    *  (paid in cash). Added to the approach's odds delta at resolve. Optional. */
   prepOdds?: number;
+  /** Payout multiplier locked in because the job was FEATURED at launch. Resolves
+   *  with this bonus even after the featured set rotates. Optional (1 = none). */
+  featuredMult?: number;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */

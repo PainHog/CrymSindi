@@ -19,10 +19,13 @@ import {
   dailyReward,
   deriveHeat,
   estimateSuccess,
+  featuredBonusFor,
+  featuredNow,
   healthyCrew,
   heistStatusAt,
   isHeistUnlocked,
   launchBlockReason,
+  msUntilNextRotation,
   prepCostFor,
   type Crew,
   type GameState,
@@ -71,6 +74,7 @@ export function MapView() {
   const board = boardHeists(game);
   const readyCount = game.activeHeists.filter((a) => heistStatusAt(a.endsAt, now) === 'ready').length;
   const dailyReady = canClaimDaily(game, now);
+  const featuredMap = new Map(featuredNow(now).map((f) => [f.heistId, f.bonusMult]));
 
   const selectedHeist = selected ? board.find((h) => h.id === selected) ?? null : null;
 
@@ -105,6 +109,12 @@ export function MapView() {
           <span className="k">Notoriety</span>
           <span className="v" style={{ color: 'var(--nf-amber)' }}>
             {game.notoriety}
+          </span>
+        </div>
+        <div className="nf-stat hide-sm">
+          <span className="k">Next drop</span>
+          <span className="v" style={{ color: 'var(--nf-cyan)' }}>
+            {formatCountdown(msUntilNextRotation(now))}
           </span>
         </div>
         {dailyReady && (
@@ -147,16 +157,18 @@ export function MapView() {
             const slot = SLOTS[i % SLOTS.length];
             const status = pinStatus(game, h.id, now);
             const risk = tierRisk(h.tier);
+            const featured = featuredMap.get(h.id);
             return (
               <button
                 key={h.id}
                 className={
-                  'nf-pin ' + RISK_CLASS[risk] + (selected === h.id ? ' sel' : '')
+                  'nf-pin ' + RISK_CLASS[risk] + (selected === h.id ? ' sel' : '') + (featured ? ' featured' : '')
                 }
                 data-state={status}
                 style={{ left: slot[0] + '%', top: slot[1] + '%' }}
                 onClick={() => setSelected(h.id)}
               >
+                {featured && status === 'open' && <span className="nf-hot">HOT</span>}
                 <span className="nf-core">
                   <HeistIcon id={h.id} size={13} />
                 </span>
@@ -164,6 +176,10 @@ export function MapView() {
                   {status === 'ready' ? (
                     <>
                       <b>READY</b> · collect
+                    </>
+                  ) : featured ? (
+                    <>
+                      {h.name} · <b>+{Math.round((featured - 1) * 100)}%</b>
                     </>
                   ) : (
                     h.name
@@ -212,7 +228,8 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const ap = approachFor(approachId);
   const heat = deriveHeat(game, now);
   const risk = tierRisk(heist.tier);
-  const baseTake = Math.round(heist.payoutPerSec * heist.durationSec * ap.rewardMult);
+  const featBonus = featuredBonusFor(heist.id, now);
+  const baseTake = Math.round(heist.payoutPerSec * heist.durationSec * ap.rewardMult * featBonus);
   const previewDur = Math.round(heist.durationSec * ap.timeMult);
   const previewHeat = Math.round(heist.heatCost * ap.heatMult);
   const prepCost = prepCostFor(heist);
@@ -240,6 +257,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
         </button>
         <div className="nf-dos-eyebrow">
           <span className="nf-dos-dot" /> {RISK_LABEL[risk]} · tier {heist.tier}
+          {featBonus > 1 && <span className="nf-hot-tag">Featured +{Math.round((featBonus - 1) * 100)}%</span>}
         </div>
         <div className="nf-dos-title">{heist.name}</div>
         <div className="nf-dos-sub">{heist.description}</div>

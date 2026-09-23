@@ -89,6 +89,10 @@
 .nf-pin.risk-hi { --c: var(--nf-magenta); }
 .nf-pin.risk-med { --c: var(--nf-amber); }
 .nf-pin.risk-lo { --c: var(--nf-cyan); }
+.nf-pin.featured[data-state="open"] { --c: var(--nf-amber); }
+.nf-pin.featured[data-state="open"] .nf-core { box-shadow: 0 0 16px var(--nf-amber), inset 0 0 6px #0008; }
+.nf-hot { position: absolute; top: -8px; right: -8px; z-index: 3; font-family: var(--nf-disp); font-weight: 700; font-size: 8px; letter-spacing: 1px; color: #1a1204; background: linear-gradient(180deg, #ffd27a, #f0a93a); border-radius: 5px; padding: 1px 4px; box-shadow: 0 0 8px #ffb64888; pointer-events: none; }
+.nf-hot-tag { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase; color: #1a1204; background: linear-gradient(180deg, #ffd27a, #f0a93a); border-radius: 999px; padding: 2px 7px; margin-left: 8px; }
 .nf-pin[data-state="active"]::before { animation: none; opacity: .25; }
 .nf-pin[data-state="ready"] { --c: var(--nf-lime) !important; }
 .nf-pin[data-state="ready"] .nf-core { animation: nf-bob 1s ease-in-out infinite; }
