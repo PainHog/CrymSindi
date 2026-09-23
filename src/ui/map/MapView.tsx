@@ -23,11 +23,11 @@ import {
   type GameState,
 } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
-import { AscensionPanel } from '../components/AscensionPanel';
-import { SafehousePanel } from '../components/SafehousePanel';
 import { crewLabel, formatCash, formatCountdown, formatDuration, pct } from '../format';
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { CityCanvas } from './CityCanvas';
+import { CrewDrawer } from './CrewDrawer';
+import { RepDrawer } from './RepDrawer';
 import { DISTRICTS, HQ, SLOTS, tierRisk } from './mapSlots';
 import './map.css';
 
@@ -172,7 +172,7 @@ export function MapView() {
             <button className="nf-drawer-close" onClick={() => setDrawer(null)} aria-label="Close">
               ✕
             </button>
-            <div className="nf-drawer-body">{drawer === 'safehouse' ? <SafehousePanel /> : <AscensionPanel />}</div>
+            <div className="nf-drawer-body">{drawer === 'safehouse' ? <CrewDrawer /> : <RepDrawer />}</div>
           </aside>
         </div>
       )}
