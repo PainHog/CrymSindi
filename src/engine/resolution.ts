@@ -28,6 +28,7 @@ import {
   deriveHeat,
   getMember,
   heatGainMult,
+  isMemberDown,
   memberPower,
   notorietyMult,
   payoutMult,
@@ -129,7 +130,9 @@ export function estimateSuccess(
 ): number {
   const members = crew.memberIds
     .map((id) => getMember(state, id))
-    .filter((m): m is NonNullable<typeof m> => Boolean(m));
+    .filter((m): m is NonNullable<typeof m> => Boolean(m))
+    // Injured members can't be sent, so the preview reflects only who can go.
+    .filter((m) => !isMemberDown(m, now));
   if (members.length < minMembersFor(heist, config)) return 0;
 
   const heat = deriveHeat(state, now, config);

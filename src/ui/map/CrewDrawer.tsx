@@ -15,6 +15,9 @@ import { TRAITS_BY_ID } from '../../data/traits';
 import {
   crewPower,
   getMember,
+  healCost,
+  healthyCrew,
+  isMemberDown,
   memberEffectiveSkill,
   nextCrewCost,
   nextSafehouseCost,
@@ -25,8 +28,8 @@ import {
   type Member,
   type Safehouse,
 } from '../../engine';
-import { useGame } from '../../store/GameContext';
-import { crewLabel, formatCash } from '../format';
+import { useGame, useNow } from '../../store/GameContext';
+import { crewLabel, formatCash, formatCountdown } from '../format';
 import { Icon, RoleIcon } from '../icons';
 
 export function CrewDrawer() {
@@ -103,19 +106,21 @@ function SafehouseBlock({ safehouse }: { safehouse: Safehouse }) {
 
 function CrewBlock({ crew }: { crew: Crew }) {
   const { game, actions } = useGame();
+  const now = useNow();
   const idx = game.crews.findIndex((c) => c.id === crew.id);
   const members = crew.memberIds.map((id) => getMember(game, id)).filter((m): m is Member => Boolean(m));
   const full = crew.memberIds.length >= crew.maxMembers;
+  const hurt = members.filter((m) => isMemberDown(m, now)).length;
 
   return (
     <div className="nf-crewblock">
       <div className="nf-crewblock-top">
         <span className="nf-cb-name">{crewLabel(idx)}</span>
         <span className={'nf-cb-status ' + (crew.status === 'onHeist' ? 'busy' : 'idle')}>
-          {crew.status === 'onHeist' ? 'On a job' : 'Idle'}
+          {crew.status === 'onHeist' ? 'On a job' : hurt > 0 ? `${hurt} hurt` : 'Idle'}
         </span>
         <span className="nf-cb-pw">
-          {members.length}/{crew.maxMembers} · PWR {crewPower(game, crew)}
+          {members.length}/{crew.maxMembers} · PWR {crewPower(game, healthyCrew(game, crew, now))}
         </span>
       </div>
 
@@ -152,6 +157,8 @@ function CrewBlock({ crew }: { crew: Crew }) {
 
 function MemberRow({ member }: { member: Member }) {
   const { game, actions } = useGame();
+  const now = useNow();
+  const down = isMemberDown(member, now);
   const eff = memberEffectiveSkill(member);
   const trait = member.traitId ? TRAITS_BY_ID[member.traitId] : undefined;
   const line = gearForRole(member.role);
@@ -159,9 +166,10 @@ function MemberRow({ member }: { member: Member }) {
   const nextGear = line.find((g) => !member.gearIds.includes(g.id));
   const trainCost = skillUpgradeCost(member);
   const maxedSkill = member.skill >= CONFIG.maxMemberSkill;
+  const patch = healCost(member);
 
   return (
-    <div className="nf-member">
+    <div className={'nf-member' + (down ? ' down' : '')}>
       <div className="nf-member-top">
         <span className="nf-member-ic">
           <RoleIcon role={member.role} size={16} />
@@ -169,10 +177,14 @@ function MemberRow({ member }: { member: Member }) {
         <div className="nf-member-id">
           <div className="nf-member-name">
             {member.name}
-            {trait && trait.skillBonus > 0 && (
-              <span className="nf-member-trait" title={trait.description}>
-                {trait.name}
-              </span>
+            {down ? (
+              <span className="nf-member-trait hurt">Hurt</span>
+            ) : (
+              trait && trait.skillBonus > 0 && (
+                <span className="nf-member-trait" title={trait.description}>
+                  {trait.name}
+                </span>
+              )
             )}
           </div>
           <div className="nf-member-role">
@@ -180,7 +192,7 @@ function MemberRow({ member }: { member: Member }) {
           </div>
         </div>
         <div className="nf-member-eff">
-          {eff}
+          {down ? '—' : eff}
           <small>OUTPUT</small>
         </div>
       </div>
@@ -194,20 +206,29 @@ function MemberRow({ member }: { member: Member }) {
         </span>
       </div>
 
-      <div className="nf-member-acts">
-        <button className="nf-mact tr" disabled={maxedSkill || game.cash < trainCost} onClick={() => actions.upgradeSkill(member.id)}>
-          {maxedSkill ? 'Skill maxed' : `Train +1 · ${formatCash(trainCost)}`}
-        </button>
-        {nextGear ? (
-          <button className="nf-mact gr" disabled={game.cash < nextGear.cost} onClick={() => actions.buyGear(member.id, nextGear.id)}>
-            {nextGear.name} +{nextGear.skillBonus} · {formatCash(nextGear.cost)}
+      {down ? (
+        <div className="nf-member-down">
+          <span className="nf-member-downt">Recovering · {formatCountdown((member.downUntil ?? now) - now)}</span>
+          <button className="nf-mact gr" disabled={game.cash < patch} onClick={() => actions.heal(member.id)}>
+            Patch up · {formatCash(patch)}
           </button>
-        ) : (
-          <button className="nf-mact gr" disabled>
-            Fully equipped
+        </div>
+      ) : (
+        <div className="nf-member-acts">
+          <button className="nf-mact tr" disabled={maxedSkill || game.cash < trainCost} onClick={() => actions.upgradeSkill(member.id)}>
+            {maxedSkill ? 'Skill maxed' : `Train +1 · ${formatCash(trainCost)}`}
           </button>
-        )}
-      </div>
+          {nextGear ? (
+            <button className="nf-mact gr" disabled={game.cash < nextGear.cost} onClick={() => actions.buyGear(member.id, nextGear.id)}>
+              {nextGear.name} +{nextGear.skillBonus} · {formatCash(nextGear.cost)}
+            </button>
+          ) : (
+            <button className="nf-mact gr" disabled>
+              Fully equipped
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

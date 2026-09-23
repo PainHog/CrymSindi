@@ -18,18 +18,22 @@ import { ROLES_BY_ID } from '../data/roles';
 import { formatCash } from './format';
 import { addHeat, settleHeat } from './heat';
 import {
+  clamp,
   contractHeistDef,
   contractUnlocked,
   deriveHeat,
   getCrew,
+  getMember,
+  healthyCrew,
   heatGainMult,
   heistDefFor,
   isContract,
   isHeistUnlocked,
+  isMemberDown,
   missingRoles,
 } from './selectors';
 import { makeRng, minMembersFor, resolveHeist } from './resolution';
-import type { ActionResult, GameState, HeistReport } from './types';
+import type { ActionResult, GameState, HeistReport, Member } from './types';
 
 /** Launch a heist: assign a crew and start the timer. */
 /**
@@ -58,12 +62,17 @@ export function launchBlockReason(
   if (!crew) return 'Unknown crew.';
   if (crew.status !== 'idle') return 'That crew is already on a job.';
 
+  // Injured members sit out — gate on who can actually be sent right now.
+  const available = healthyCrew(state, crew, now);
   const minMembers = minMembersFor(heist, config);
-  if (crew.memberIds.length < minMembers) {
-    return `This job needs at least ${minMembers} crew members.`;
+  if (available.memberIds.length < minMembers) {
+    const hurt = crew.memberIds.length - available.memberIds.length;
+    return hurt > 0
+      ? `Too many crew are recovering — this job needs ${minMembers} on their feet.`
+      : `This job needs at least ${minMembers} crew members.`;
   }
 
-  const missing = missingRoles(state, crew, heist);
+  const missing = missingRoles(state, available, heist);
   if (missing.length > 0) {
     const names = missing.map((r) => ROLES_BY_ID[r]?.name ?? r).join(', ');
     return `Crew is missing required role(s): ${names}.`;
@@ -100,6 +109,10 @@ export function launchHeist(
   // the approach scales it (loud is hotter, ghost cooler).
   let next = addHeat(state, def.heatCost * heatGainMult(state) * approach.heatMult, now, config);
 
+  // Snapshot the healthy members who actually go, so an injury (or recovery)
+  // after launch can't change who resolves this job.
+  const participants = healthyCrew(state, getCrew(state, crewId)!, now).memberIds;
+
   const active = {
     id: `h${next.nextId}`,
     heistId,
@@ -109,6 +122,7 @@ export function launchHeist(
     seed: seed >>> 0,
     heatAtLaunch,
     approachId: approach.id,
+    memberIds: participants,
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -159,12 +173,44 @@ export function collectHeist(
   // back to current heat inside resolveHeist). The approach chosen at launch
   // scales the take and shifts the odds (older saves default to neutral).
   const approach = approachFor(active.approachId);
-  const report = resolveHeist(state, heist, crew, now, roll, config, active.heatAtLaunch, {
+  // Resolve over the members who actually went (snapshot at launch), so a
+  // mid-job injury/recovery elsewhere can't change this job's outcome.
+  const participantsCrew = active.memberIds ? { ...crew, memberIds: active.memberIds } : crew;
+  const report = resolveHeist(state, heist, participantsCrew, now, roll, config, active.heatAtLaunch, {
     oddsDelta: approach.oddsDelta,
     rewardMult: approach.rewardMult,
   });
 
+  // Stakes: a blown job can sideline a member (worse the hotter it was), but
+  // never the crew's last healthy member. Uses the same seeded rng stream, so
+  // the injury is fixed at launch and can't be reload-rerolled.
+  let injured: Member | undefined;
+  if (!report.success) {
+    const heatFrac = clamp((active.heatAtLaunch ?? report.heatAtResolve) / config.maxHeat, 0, 1);
+    const chance = config.injuryChanceBase + config.injuryChanceHeatMax * heatFrac;
+    if (roll() < chance) {
+      const healthyIds = crew.memberIds.filter((id) => {
+        const m = getMember(state, id);
+        return m && !isMemberDown(m, now);
+      });
+      if (healthyIds.length > 1) {
+        // Prefer someone who blew their part; fall back to any healthy member.
+        const failed = report.members.filter((b) => !b.passed && healthyIds.includes(b.memberId));
+        const pool = failed.length ? failed.map((b) => b.memberId) : healthyIds;
+        const pick = pool[Math.min(pool.length - 1, Math.floor(roll() * pool.length))];
+        injured = getMember(state, pick);
+      }
+    }
+  }
+
   let next = freeCrew(state);
+  if (injured) {
+    const downUntil = now + config.injuryRecoverySec * 1000;
+    next = {
+      ...next,
+      members: next.members.map((m) => (m.id === injured!.id ? { ...m, downUntil } : m)),
+    };
+  }
 
   // Career totals (persist across prestige; drive milestones).
   next = {
@@ -194,8 +240,9 @@ export function collectHeist(
     next = addHeat(next, report.heatAdded, now, config);
   }
 
-  const message =
+  let message =
     report.payout > 0 ? `${report.headline} · +${formatCash(report.payout)}` : report.headline;
+  if (injured) message += ` · ${injured.name} was hurt`;
   return { ok: true, state: next, message, report };
 }
 

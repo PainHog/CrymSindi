@@ -20,6 +20,8 @@ import {
   getCrew,
   getMember,
   getSafehouse,
+  healCost,
+  isMemberDown,
   nextCrewCost,
   nextSafehouseCost,
   notorietyGainFor,
@@ -228,6 +230,31 @@ export function upgradeSkill(
       ),
     },
     message: `${member.name} leveled up.`,
+  };
+}
+
+/** Patch up an injured member immediately (skips the recovery wait) for cash. */
+export function healMember(
+  state: GameState,
+  memberId: string,
+  now: number,
+  config: Config = CONFIG,
+): ActionResult {
+  const member = getMember(state, memberId);
+  if (!member) return { ok: false, error: 'Unknown member.' };
+  if (!isMemberDown(member, now)) return { ok: false, error: 'That member is not hurt.' };
+
+  const cost = healCost(member, config);
+  if (state.cash < cost) return insufficient();
+
+  const next = spend(state, cost);
+  return {
+    ok: true,
+    state: {
+      ...next,
+      members: next.members.map((m) => (m.id === memberId ? { ...m, downUntil: undefined } : m)),
+    },
+    message: `${member.name} is patched up and back in.`,
   };
 }
 

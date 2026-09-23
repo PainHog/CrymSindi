@@ -321,6 +321,9 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     members: state.members.map((m) => ({
       ...m,
       skill: Math.min(config.maxMemberSkill, Math.max(0, m.skill)),
+      // Drop a non-finite injury timer (hand-edited NaN/Infinity) so a member
+      // can't be benched forever; a finite one is kept and compared to `now`.
+      downUntil: Number.isFinite(m.downUntil) ? m.downUntil : undefined,
     })),
     // A job resolves against its stored heatAtLaunch; clamp a finite one into
     // [0, maxHeat] and drop a non-finite one (a hand-edited NaN would otherwise

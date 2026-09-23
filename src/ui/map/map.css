@@ -226,6 +226,12 @@
 .nf-mact.gr { color: var(--nf-cyan); border-color: #204457; background: #08151e; }
 .nf-mact.gr:hover:not(:disabled) { background: #0c2231; color: #8fe9ff; }
 .nf-mact:disabled { opacity: .4; cursor: not-allowed; }
+.nf-member.down { border-color: #3a2233; background: #0e0a10; }
+.nf-member.down .nf-member-ic { color: var(--nf-ink-faint); background: #1a1016; }
+.nf-member-trait.hurt { color: var(--nf-magenta); border-color: #5a2f42; background: #1a0810; }
+.nf-member-down { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.nf-member-downt { font-family: var(--nf-mono); font-size: 10px; letter-spacing: .3px; color: var(--nf-magenta); flex: 1; }
+.nf-member-down .nf-mact { flex: none; min-width: 128px; }
 
 .nf-recruit { margin-top: 2px; }
 .nf-recruit-label { font-family: var(--nf-mono); font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--nf-ink-faint); margin-bottom: 7px; }

@@ -36,6 +36,7 @@ import {
   formCrew,
   gearUpCrew,
   grantMarks,
+  healMember,
   launchHeist,
   sendAllIdle,
   loadGame,
@@ -93,6 +94,7 @@ type Action =
   | { type: 'recruit'; crewId: string; roleId: string }
   | { type: 'buyGear'; memberId: string; gearId: string }
   | { type: 'upgradeSkill'; memberId: string }
+  | { type: 'heal'; memberId: string; now: number }
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'prestige'; now: number }
   | { type: 'claimDaily'; now: number }
@@ -211,6 +213,8 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(ui, buyGear(ui.game, action.memberId, action.gearId), { kind: 'purchase' });
     case 'upgradeSkill':
       return applyResult(ui, upgradeSkill(ui.game, action.memberId), { kind: 'purchase' });
+    case 'heal':
+      return applyResult(ui, healMember(ui.game, action.memberId, action.now), { kind: 'purchase' });
     case 'buyUpgrade':
       return applyResult(ui, buyUpgrade(ui.game, action.upgradeId), { kind: 'purchase' });
     case 'prestige':
@@ -337,6 +341,7 @@ interface GameContextValue {
     recruit: (crewId: string, roleId: string) => void;
     buyGear: (memberId: string, gearId: string) => void;
     upgradeSkill: (memberId: string) => void;
+    heal: (memberId: string) => void;
     buyUpgrade: (upgradeId: string) => void;
     prestige: () => void;
     claimDaily: () => void;
@@ -428,6 +433,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       recruit: (crewId, roleId) => dispatch({ type: 'recruit', crewId, roleId }),
       buyGear: (memberId, gearId) => dispatch({ type: 'buyGear', memberId, gearId }),
       upgradeSkill: (memberId) => dispatch({ type: 'upgradeSkill', memberId }),
+      heal: (memberId) => dispatch({ type: 'heal', memberId, now: Date.now() }),
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
       prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
       claimDaily: () => dispatch({ type: 'claimDaily', now: Date.now() }),

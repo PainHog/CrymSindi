@@ -36,6 +36,31 @@ export function getSafehouse(state: GameState, id: string): Safehouse | undefine
   return state.safehouses.find((s) => s.id === id);
 }
 
+// ---- Injuries ---------------------------------------------------------------
+
+/** True if this member is currently injured (benched until a future time). */
+export function isMemberDown(member: Member, now: number): boolean {
+  return member.downUntil != null && now < member.downUntil;
+}
+
+/** A copy of the crew holding only the members healthy at `now` — the ones who
+ *  can actually be sent. Injured members sit out (they aren't removed from the
+ *  crew, just excluded from launch gating, previews, and power). */
+export function healthyCrew(state: GameState, crew: Crew, now: number): Crew {
+  return {
+    ...crew,
+    memberIds: crew.memberIds.filter((id) => {
+      const m = getMember(state, id);
+      return !!m && !isMemberDown(m, now);
+    }),
+  };
+}
+
+/** Cash to immediately patch up an injured member (scales with their skill). */
+export function healCost(member: Member, config: Config = CONFIG): number {
+  return Math.round(config.injuryHealBaseCost + config.injuryHealPerSkill * member.skill);
+}
+
 // ---- Skill / power ----------------------------------------------------------
 
 /** A member's effective skill including owned-gear bonuses and their trait. */

@@ -21,6 +21,10 @@ export interface Member {
   gearIds: GearId[];
   /** Optional trait modifying effective skill (see data/traits.ts). */
   traitId?: string;
+  /** If set and in the future, this member is injured and sitting out until this
+   *  ms-epoch time. Injured members don't count toward a crew and can't be sent.
+   *  Undefined/past = healthy. */
+  downUntil?: number;
 }
 
 export type CrewStatus = 'idle' | 'onHeist';
@@ -62,6 +66,11 @@ export interface ActiveHeist {
    *  resolve; heat/duration were already applied at launch. Optional — older
    *  saves and default launches resolve as the neutral "quiet" approach. */
   approachId?: ApproachId;
+  /** The members who actually went (healthy at launch), snapshotted so an
+   *  injury that benches a member after launch — or a recovery mid-job — can't
+   *  change who resolves this job. Optional — older saves resolve over the crew's
+   *  current roster. */
+  memberIds?: string[];
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */

@@ -35,6 +35,13 @@ export interface Config {
   failPayoutFrac: number;
   qualitySlack: number;
 
+  // Crew injuries: a blown job can sideline a member (never the last healthy one).
+  injuryChanceBase: number; // base chance a failed job hurts a member
+  injuryChanceHeatMax: number; // extra chance added at full heat (scaled by heat/maxHeat)
+  injuryRecoverySec: number; // real seconds a hurt member sits out before auto-recovery
+  injuryHealBaseCost: number; // cash to patch a member up immediately (flat part)
+  injuryHealPerSkill: number; // + this per point of the member's skill
+
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
@@ -130,6 +137,16 @@ export const CONFIG: Config = {
   perfectBonusMult: 1.75,
   failPayoutFrac: 0.2,
   qualitySlack: 3,
+
+  // ---- Crew injuries -------------------------------------------------------
+  // On a FAILED collect, chance = injuryChanceBase + injuryChanceHeatMax*(heat/maxHeat)
+  // to sideline one member who blew their part (never the crew's last healthy
+  // member). They sit out injuryRecoverySec of real time, or pay to patch up.
+  injuryChanceBase: 0.15,
+  injuryChanceHeatMax: 0.35, // 15% at zero heat up to 50% at max heat
+  injuryRecoverySec: 180, // ~3 minutes benched
+  injuryHealBaseCost: 200,
+  injuryHealPerSkill: 60,
 
   // ---- Prestige / Notoriety ------------------------------------------------
   // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is
