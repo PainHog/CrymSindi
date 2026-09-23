@@ -219,6 +219,8 @@ export function collectHeist(
     oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0) + (active.eventOddsDelta ?? 0),
     rewardMult: approach.rewardMult * (active.featuredMult ?? 1) * (active.eventRewardMult ?? 1),
   });
+  // Attribute the living-map event this job ran under, for the debrief.
+  if (active.eventId) report.eventId = active.eventId;
 
   // Stakes: a blown job can sideline a member (worse the hotter it was), but
   // never the crew's last healthy member. Uses the same seeded rng stream, so

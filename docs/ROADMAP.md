@@ -17,9 +17,9 @@ the work it describes. Newest status at the top.
   Notoriety perk tree, and the ported prototype mechanics (approaches, prep,
   injuries, featured jobs). Noir map-first UI is the default; classic panel
   layout kept at `?classic=1`.
-- **In flight:** Living-Map Events — **Phases 1–3 DONE** (engine core + wiring +
-  map UI); Phase 4 (balance & polish) pending.
-- **Tests:** 140 passing. Build clean.
+- **Shipped (dev branch, unmerged):** Living-Map Events — **all 4 phases DONE**.
+  Ready for a PR to `main` when you want it.
+- **Tests:** 141 passing. Build clean.
 
 ---
 
@@ -43,9 +43,12 @@ Full scope & rationale: see the "scope" discussion in session history; summary b
       RISK/BONUS badge + glow (respecting featured-wins), dossier callout + event
       folded into the take/heat/odds preview, first-event coach tip. Verified
       headless (board, dossier, mobile). _(commit on dev branch)_
-- [ ] **Phase 4 — Balance & polish.** Monte-Carlo probe vs. economy (event ×
-      approach stacking), tune effect ranges, reduced-motion for the ticker,
-      after-action debrief event line (needs eventId plumbed onto HeistReport).
+- [x] **Phase 4 — Balance & polish.** Monte-Carlo probe confirmed no degenerate
+      stack: the strongest event opportunity (`loud + Fence 1.4` ≈ 3456 $/min)
+      sits below the already-accepted `loud + Featured 1.6` (≈ 3989), and pressure
+      events are real disincentives — so **no config tuning needed**. Added the
+      after-action debrief event chip (`eventId` plumbed onto `HeistReport`) and
+      reduced-motion for the ticker/coach/report. _(commit on dev branch)_
 
 **v1 event catalog:** Fence in town, Grid blackout, Inside contact (opportunities);
 Police crackdown, Turf war (pressure). All pure time-windowed modifiers over

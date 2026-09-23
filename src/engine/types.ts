@@ -222,4 +222,6 @@ export interface HeistReport {
   synergies: string[];
   factors: HeistFactor[];
   recommendations: Recommendation[];
+  /** The living-map event this job launched under, if any (for the debrief). */
+  eventId?: string;
 }

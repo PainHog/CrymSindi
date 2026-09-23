@@ -128,6 +128,19 @@ describe('events wiring (launch/resolve)', () => {
     expect(a.eventOddsDelta).toBeUndefined();
   });
 
+  it('the collected report carries the event id for the debrief', () => {
+    const { now, heistId } = findEventJob('fence_in_town');
+    const s = bigCrewState();
+    const r = launchHeist(s, heistId, s.crews[0].id, now, 7, CONFIG, 'quiet');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const a = r.state.activeHeists[0];
+    const c = collectHeist(r.state, a.id, a.endsAt, forcedWin(), CONFIG);
+    expect(c.ok).toBe(true);
+    if (!c.ok) return;
+    expect(c.report?.eventId).toBe('fence_in_town');
+  });
+
   it('no event, no featured => clean active heist (backward compatible)', () => {
     const heistId = 'smash_grab';
     const now = findQuietFor(heistId);

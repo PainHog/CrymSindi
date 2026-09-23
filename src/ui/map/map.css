@@ -460,4 +460,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nf-pin::before, .nf-pin[data-state="ready"] .nf-core, .nf-heat-fill.hot { animation: none; }
+  .nf-eventbar, .nf-coach, .nf-report, .nf-daily-btn { animation: none; }
 }
