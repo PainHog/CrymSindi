@@ -7,8 +7,9 @@
 // -----------------------------------------------------------------------------
 
 import { CONFIG } from '../../data/config';
+import { MILESTONES } from '../../data/milestones';
 import { PERKS, perkCost } from '../../data/perks';
-import { canPrestige, notorietyGainFor, perkLevel } from '../../engine';
+import { canPrestige, isMilestoneEarned, notorietyGainFor, perkLevel } from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { formatCash } from '../format';
 import { Icon } from '../icons';
@@ -89,6 +90,30 @@ export function RepDrawer() {
                     {cost} <Icon name="crown" size={12} />
                   </button>
                 )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="nf-mp-sect">
+          Career milestones · {MILESTONES.filter((m) => isMilestoneEarned(game, m.id)).length}/{MILESTONES.length}
+        </div>
+        <div className="nf-mslist">
+          {MILESTONES.map((m) => {
+            const done = isMilestoneEarned(game, m.id);
+            const reward = m.reward?.notoriety
+              ? `+${m.reward.notoriety} Notoriety`
+              : m.reward?.cash
+                ? formatCash(m.reward.cash)
+                : '';
+            return (
+              <div key={m.id} className={'nf-ms' + (done ? ' done' : '')}>
+                <span className="nf-ms-check">{done ? '✓' : '○'}</span>
+                <div className="nf-ms-main">
+                  <div className="nf-ms-name">{m.name}</div>
+                  <div className="nf-ms-d">{m.description}</div>
+                </div>
+                <span className="nf-ms-reward">{reward}</span>
               </div>
             );
           })}

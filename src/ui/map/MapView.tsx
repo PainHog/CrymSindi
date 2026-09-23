@@ -11,9 +11,11 @@ import { useState, type CSSProperties } from 'react';
 import { CONFIG } from '../../data/config';
 import { HEISTS, type HeistDef } from '../../data/heists';
 import {
+  canClaimDaily,
   contractHeistDef,
   contractUnlocked,
   crewPower,
+  dailyReward,
   deriveHeat,
   estimateSuccess,
   heistStatusAt,
@@ -28,6 +30,7 @@ import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { CityCanvas } from './CityCanvas';
 import { CrewDrawer } from './CrewDrawer';
 import { RepDrawer } from './RepDrawer';
+import { UpgradesDrawer } from './UpgradesDrawer';
 import { DISTRICTS, HQ, SLOTS, tierRisk } from './mapSlots';
 import './map.css';
 
@@ -57,13 +60,14 @@ export function MapView() {
   const { game, actions } = useGame();
   const now = useNow();
   const [selected, setSelected] = useState<string | null>(null);
-  const [drawer, setDrawer] = useState<'safehouse' | 'reputation' | null>(null);
+  const [drawer, setDrawer] = useState<'safehouse' | 'reputation' | 'blackmarket' | null>(null);
 
   const heat = deriveHeat(game, now);
   const heatPct = (heat / CONFIG.maxHeat) * 100;
   const idleCrews = game.crews.filter((c) => c.status === 'idle').length;
   const board = boardHeists(game);
   const readyCount = game.activeHeists.filter((a) => heistStatusAt(a.endsAt, now) === 'ready').length;
+  const dailyReady = canClaimDaily(game, now);
 
   const selectedHeist = selected ? board.find((h) => h.id === selected) ?? null : null;
 
@@ -100,8 +104,16 @@ export function MapView() {
             {game.notoriety}
           </span>
         </div>
+        {dailyReady && (
+          <button className="nf-daily-btn" title={`Daily login reward`} onClick={actions.claimDaily}>
+            Daily +{formatCash(dailyReward(game, now))}
+          </button>
+        )}
         <button className="nf-icon-btn" title="Collect all ready" onClick={actions.collectAll} disabled={readyCount === 0}>
           <Icon name="cash" size={17} />
+        </button>
+        <button className="nf-icon-btn" title="Black market — upgrades" onClick={() => setDrawer('blackmarket')}>
+          <Icon name="vault" size={17} />
         </button>
         <button className="nf-icon-btn" title="Reputation & perks" onClick={() => setDrawer('reputation')}>
           <Icon name="crown" size={17} />
@@ -172,7 +184,9 @@ export function MapView() {
             <button className="nf-drawer-close" onClick={() => setDrawer(null)} aria-label="Close">
               ✕
             </button>
-            <div className="nf-drawer-body">{drawer === 'safehouse' ? <CrewDrawer /> : <RepDrawer />}</div>
+            <div className="nf-drawer-body">
+              {drawer === 'safehouse' ? <CrewDrawer /> : drawer === 'reputation' ? <RepDrawer /> : <UpgradesDrawer />}
+            </div>
           </aside>
         </div>
       )}
