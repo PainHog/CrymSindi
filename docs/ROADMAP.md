@@ -17,8 +17,9 @@ the work it describes. Newest status at the top.
   Notoriety perk tree, and the ported prototype mechanics (approaches, prep,
   injuries, featured jobs). Noir map-first UI is the default; classic panel
   layout kept at `?classic=1`.
-- **In flight:** Living-Map Events — **Phase 1 (engine core) DONE**; Phases 2–4 pending.
-- **Tests:** 135 passing. Build clean.
+- **In flight:** Living-Map Events — **Phases 1–2 DONE** (engine core + launch/resolve
+  wiring); Phases 3–4 pending.
+- **Tests:** 140 passing. Build clean.
 
 ---
 
@@ -33,10 +34,11 @@ Full scope & rationale: see the "scope" discussion in session history; summary b
 - [x] **Phase 1 — Engine core.** `data/events.ts` catalog, `engine/events.ts`
       deterministic layer (`eventForWindow`/`eventNow`/`eventForHeist`/`eventEffectFor`),
       config knobs, 9 unit tests. Pure/tested, no wiring. _(commit on dev branch)_
-- [ ] **Phase 2 — Launch/resolve wiring.** Lock event terms onto `ActiveHeist`
-      at launch (new optional fields), combine into oddsDelta/rewardMult/heat with
-      approach/prep/featured. Mutual-exclusivity with featured (see Decisions).
-      Tests: lock-in, combination, offline correctness.
+- [x] **Phase 2 — Launch/resolve wiring.** `ActiveHeist` gains `eventId` /
+      `eventRewardMult` / `eventOddsDelta`, locked in at launch; event heatMult
+      applied to launch heat; odds/reward combined with approach/prep/featured at
+      resolve. Featured-wins exclusivity. Offline is covered for free (the Fixer
+      relaunch goes through `launchHeist`). 5 wiring tests. _(commit on dev branch)_
 - [ ] **Phase 3 — Map UI.** HUD event ticker, pin treatment (gold/magenta), dossier
       callout, first-event coach tip, after-action note. Headless verify.
 - [ ] **Phase 4 — Balance & polish.** Monte-Carlo probe vs. economy, tune effect

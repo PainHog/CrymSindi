@@ -13,6 +13,7 @@ import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { approachFor, type ApproachId } from '../data/approaches';
 import { featuredBonusFor } from './featured';
+import { eventEffectFor, eventForHeist } from './events';
 import { HEISTS_BY_ID } from '../data/heists';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
@@ -103,14 +104,28 @@ export function launchHeist(
   const def = heist!;
   const approach = approachFor(approachId);
 
+  // Lock in the featured payout bonus (if any) at launch — authoritative, so a
+  // rotation before collect can't change it and the client can't inflate it.
+  const featuredMult = featuredBonusFor(heistId, now, config);
+  // Living-map event modifiers, also locked in at launch. Featured and events are
+  // mutually exclusive per job (featured wins), so a job carries at most one
+  // special condition — no payout double-dip and one thing to read on the pin.
+  const eventEff = featuredMult > 1 ? null : eventEffectFor(heistId, now, config);
+  const eventHeatMult = eventEff?.heatMult ?? 1;
+
   // Ambient heat the moment we commit (BEFORE this job's own cost is added). The
   // job resolves against this at collect, so launching while hot stays costly for
   // long jobs too, while a cooled-down launch (heat ~0) is unaffected.
   const heatAtLaunch = deriveHeat(state, now, config);
 
   // Heat is applied at launch (committing to a job raises heat immediately);
-  // the approach scales it (loud is hotter, ghost cooler).
-  let next = addHeat(state, def.heatCost * heatGainMult(state) * approach.heatMult, now, config);
+  // the approach scales it (loud is hotter, ghost cooler) and an event can too.
+  let next = addHeat(
+    state,
+    def.heatCost * heatGainMult(state) * approach.heatMult * eventHeatMult,
+    now,
+    config,
+  );
 
   // Optional "case the job" prep: pay a cash premium up front for an odds bump
   // this run. If it can't be afforded, the job simply launches without it.
@@ -127,9 +142,10 @@ export function launchHeist(
   // after launch can't change who resolves this job.
   const participants = healthyCrew(state, getCrew(state, crewId)!, now).memberIds;
 
-  // Lock in the featured payout bonus (if any) at launch — authoritative, so a
-  // rotation before collect can't change it and the client can't inflate it.
-  const featuredMult = featuredBonusFor(heistId, now, config);
+  // Event odds/reward are also locked in (heat was already applied above).
+  const eventOddsDelta = eventEff?.oddsDelta ?? 0;
+  const eventRewardMult = eventEff?.rewardMult ?? 1;
+  const eventActive = eventEff != null && (eventRewardMult !== 1 || eventOddsDelta !== 0);
 
   const active = {
     id: `h${next.nextId}`,
@@ -143,6 +159,9 @@ export function launchHeist(
     memberIds: participants,
     ...(prepOdds != null ? { prepOdds } : {}),
     ...(featuredMult > 1 ? { featuredMult } : {}),
+    ...(eventActive ? { eventId: eventForHeist(heistId, now, config)?.def.id } : {}),
+    ...(eventRewardMult !== 1 ? { eventRewardMult } : {}),
+    ...(eventOddsDelta !== 0 ? { eventOddsDelta } : {}),
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -197,8 +216,8 @@ export function collectHeist(
   // mid-job injury/recovery elsewhere can't change this job's outcome.
   const participantsCrew = active.memberIds ? { ...crew, memberIds: active.memberIds } : crew;
   const report = resolveHeist(state, heist, participantsCrew, now, roll, config, active.heatAtLaunch, {
-    oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0),
-    rewardMult: approach.rewardMult * (active.featuredMult ?? 1),
+    oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0) + (active.eventOddsDelta ?? 0),
+    rewardMult: approach.rewardMult * (active.featuredMult ?? 1) * (active.eventRewardMult ?? 1),
   });
 
   // Stakes: a blown job can sideline a member (worse the hotter it was), but
