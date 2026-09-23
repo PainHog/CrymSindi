@@ -23,6 +23,7 @@ import {
   heistStatusAt,
   isHeistUnlocked,
   launchBlockReason,
+  prepCostFor,
   type Crew,
   type GameState,
 } from '../../engine';
@@ -207,12 +208,16 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const { game, actions } = useGame();
   const now = useNow();
   const [approachId, setApproachId] = useState<ApproachId>('quiet');
+  const [prepArmed, setPrepArmed] = useState(false);
   const ap = approachFor(approachId);
   const heat = deriveHeat(game, now);
   const risk = tierRisk(heist.tier);
   const baseTake = Math.round(heist.payoutPerSec * heist.durationSec * ap.rewardMult);
   const previewDur = Math.round(heist.durationSec * ap.timeMult);
   const previewHeat = Math.round(heist.heatCost * ap.heatMult);
+  const prepCost = prepCostFor(heist);
+  const canPrep = prepArmed || game.cash >= prepCost;
+  const oddsDelta = ap.oddsDelta + (prepArmed ? CONFIG.prepOddsBonus : 0);
 
   const active = game.activeHeists.filter((a) => a.heistId === heist.id);
   const idle = game.crews.filter((c) => c.status === 'idle');
@@ -221,7 +226,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const rows = idle.map((crew) => {
     const block = launchBlockReason(game, heist.id, crew.id, now);
     const eligible = block === null;
-    const odds = eligible ? estimateSuccess(game, heist, crew, now, undefined, ap.oddsDelta) : 0;
+    const odds = eligible ? estimateSuccess(game, heist, crew, now, undefined, oddsDelta) : 0;
     if (odds > best) best = odds;
     return { crew, eligible, odds, why: block };
   });
@@ -310,7 +315,26 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
             ))
           )}
           {heat >= 60 && <span className="nf-chip warn">High heat · odds down</span>}
+          {prepArmed && (
+            <span className="nf-chip" style={{ borderColor: '#2f6f86', color: 'var(--nf-cyan)' }}>
+              Cased · +{Math.round(CONFIG.prepOddsBonus * 100)}%
+            </span>
+          )}
         </div>
+
+        {idle.length > 0 && (
+          <button
+            className={'nf-prep' + (prepArmed ? ' on' : '')}
+            disabled={!canPrep}
+            onClick={() => setPrepArmed((v) => !v)}
+          >
+            <span className="nf-prep-main">
+              <span className="nf-prep-t">{prepArmed ? 'Cased — crew goes in prepped' : 'Case the job first'}</span>
+              <span className="nf-prep-d">Study the target · +{Math.round(CONFIG.prepOddsBonus * 100)}% success</span>
+            </span>
+            <span className="nf-prep-c">{prepArmed ? 'ARMED' : '+ ' + formatCash(prepCost)}</span>
+          </button>
+        )}
 
         <div className="nf-sect">Assign a crew</div>
         <div className="nf-crew-pick">
@@ -322,7 +346,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
                 key={crew.id}
                 className="nf-crew-opt"
                 disabled={!eligible}
-                onClick={() => actions.launch(heist.id, crew.id, approachId)}
+                onClick={() => actions.launch(heist.id, crew.id, approachId, prepArmed)}
               >
                 <span className="nf-cw-ic">
                   <Icon name="crew" size={15} />

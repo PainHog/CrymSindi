@@ -71,6 +71,9 @@ export interface ActiveHeist {
    *  change who resolves this job. Optional — older saves resolve over the crew's
    *  current roster. */
   memberIds?: string[];
+  /** Extra per-member pass chance bought by "casing" the job before launch
+   *  (paid in cash). Added to the approach's odds delta at resolve. Optional. */
+  prepOdds?: number;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */

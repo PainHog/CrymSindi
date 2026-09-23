@@ -82,7 +82,7 @@ interface UIState {
 }
 
 type Action =
-  | { type: 'launch'; heistId: string; crewId: string; now: number; seed: number; approachId?: ApproachId }
+  | { type: 'launch'; heistId: string; crewId: string; now: number; seed: number; approachId?: ApproachId; prep?: boolean }
   | { type: 'sendAllIdle'; heistId: string; now: number }
   | { type: 'gearUpCrew'; crewId: string }
   | { type: 'fillCrew'; crewId: string }
@@ -146,7 +146,7 @@ function reducer(ui: UIState, action: Action): UIState {
     case 'launch':
       return applyResult(
         ui,
-        launchHeist(ui.game, action.heistId, action.crewId, action.now, action.seed, undefined, action.approachId),
+        launchHeist(ui.game, action.heistId, action.crewId, action.now, action.seed, undefined, action.approachId, action.prep),
         { kind: 'launch' },
       );
     case 'sendAllIdle':
@@ -329,7 +329,7 @@ interface GameContextValue {
   eventId: number;
   away: AwaySummary | null;
   actions: {
-    launch: (heistId: string, crewId: string, approachId?: ApproachId) => void;
+    launch: (heistId: string, crewId: string, approachId?: ApproachId, prep?: boolean) => void;
     sendAllIdle: (heistId: string) => void;
     gearUpCrew: (crewId: string) => void;
     fillCrew: (crewId: string) => void;
@@ -413,7 +413,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<GameContextValue['actions']>(
     () => ({
-      launch: (heistId, crewId, approachId) =>
+      launch: (heistId, crewId, approachId, prep) =>
         dispatch({
           type: 'launch',
           heistId,
@@ -421,6 +421,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           now: Date.now(),
           seed: Math.floor(Math.random() * 0x100000000),
           approachId,
+          prep,
         }),
       sendAllIdle: (heistId) => dispatch({ type: 'sendAllIdle', heistId, now: Date.now() }),
       gearUpCrew: (crewId) => dispatch({ type: 'gearUpCrew', crewId }),

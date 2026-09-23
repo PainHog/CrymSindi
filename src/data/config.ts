@@ -42,6 +42,10 @@ export interface Config {
   injuryHealBaseCost: number; // cash to patch a member up immediately (flat part)
   injuryHealPerSkill: number; // + this per point of the member's skill
 
+  // Prep ("case the job"): a per-launch cash spend that lifts each member's odds.
+  prepOddsBonus: number; // flat pass-chance added to every member this run
+  prepCostFrac: number; // prep cost = this * (payoutPerSec * durationSec)
+
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
@@ -147,6 +151,10 @@ export const CONFIG: Config = {
   injuryRecoverySec: 180, // ~3 minutes benched
   injuryHealBaseCost: 200,
   injuryHealPerSkill: 60,
+
+  // ---- Prep ("case the job") -----------------------------------------------
+  prepOddsBonus: 0.12, // +12% pass chance per member for the cased run
+  prepCostFrac: 0.15, // costs 15% of the job's base take to case it
 
   // ---- Prestige / Notoriety ------------------------------------------------
   // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is

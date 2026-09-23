@@ -300,6 +300,11 @@ export function skillUpgradeCost(member: Member, config: Config = CONFIG): numbe
   return Math.round(config.skillUpgradeBaseCost * Math.pow(config.skillUpgradeCostMult, steps));
 }
 
+/** Cash to "case the job" before a launch — a share of its base take. */
+export function prepCostFor(heist: HeistDef, config: Config = CONFIG): number {
+  return Math.round(heist.payoutPerSec * heist.durationSec * config.prepCostFrac);
+}
+
 /** Cost to upgrade an existing safehouse to the next tier (Infinity if maxed). */
 export function safehouseUpgradeCost(safehouse: Safehouse): number {
   const idx = safehouseTierIndex(safehouse.tierId);

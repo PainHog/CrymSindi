@@ -31,6 +31,7 @@ import {
   isHeistUnlocked,
   isMemberDown,
   missingRoles,
+  prepCostFor,
 } from './selectors';
 import { makeRng, minMembersFor, resolveHeist } from './resolution';
 import type { ActionResult, GameState, HeistReport, Member } from './types';
@@ -92,6 +93,7 @@ export function launchHeist(
   seed: number = Math.floor(Math.random() * 0x100000000),
   config: Config = CONFIG,
   approachId?: ApproachId,
+  prep = false,
 ): ActionResult {
   const heist = heistDefFor(heistId, state, config);
   const blocked = launchBlockReason(state, heistId, crewId, now, config, heist);
@@ -109,6 +111,17 @@ export function launchHeist(
   // the approach scales it (loud is hotter, ghost cooler).
   let next = addHeat(state, def.heatCost * heatGainMult(state) * approach.heatMult, now, config);
 
+  // Optional "case the job" prep: pay a cash premium up front for an odds bump
+  // this run. If it can't be afforded, the job simply launches without it.
+  let prepOdds: number | undefined;
+  if (prep) {
+    const prepCost = prepCostFor(def, config);
+    if (next.cash >= prepCost) {
+      next = { ...next, cash: next.cash - prepCost };
+      prepOdds = config.prepOddsBonus;
+    }
+  }
+
   // Snapshot the healthy members who actually go, so an injury (or recovery)
   // after launch can't change who resolves this job.
   const participants = healthyCrew(state, getCrew(state, crewId)!, now).memberIds;
@@ -123,6 +136,7 @@ export function launchHeist(
     heatAtLaunch,
     approachId: approach.id,
     memberIds: participants,
+    ...(prepOdds != null ? { prepOdds } : {}),
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -177,7 +191,7 @@ export function collectHeist(
   // mid-job injury/recovery elsewhere can't change this job's outcome.
   const participantsCrew = active.memberIds ? { ...crew, memberIds: active.memberIds } : crew;
   const report = resolveHeist(state, heist, participantsCrew, now, roll, config, active.heatAtLaunch, {
-    oddsDelta: approach.oddsDelta,
+    oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0),
     rewardMult: approach.rewardMult,
   });
 
