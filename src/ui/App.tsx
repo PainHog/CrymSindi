@@ -67,9 +67,11 @@ export default function App() {
     <GameProvider>
       {classic ? <ClassicLayout /> : <MapView />}
 
-      {/* Shared overlays — work with either layout. */}
+      {/* Shared overlays — work with either layout. The after-action debrief is
+          skinned per layout: the classic modal here, the noir NoirReport inside
+          MapView, so only one renders. */}
       <Toast />
-      <ReportModal />
+      {classic && <ReportModal />}
       <WelcomeBackModal />
       <DevPanel />
       <SoundFx />

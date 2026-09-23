@@ -35,6 +35,7 @@ import { crewLabel, formatCash, formatCountdown, formatDuration, pct } from '../
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { CityCanvas } from './CityCanvas';
 import { CrewDrawer } from './CrewDrawer';
+import { NoirReport } from './NoirReport';
 import { RepDrawer } from './RepDrawer';
 import { UpgradesDrawer } from './UpgradesDrawer';
 import { DISTRICTS, HQ, SLOTS, tierRisk } from './mapSlots';
@@ -214,6 +215,9 @@ export function MapView() {
           </aside>
         </div>
       )}
+
+      {/* After-action debrief — rendered inside .nfmap so the noir theme reaches it. */}
+      <NoirReport />
     </div>
   );
 }
