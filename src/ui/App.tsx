@@ -18,40 +18,56 @@ import { Toast } from './components/Toast';
 import { TopBar } from './components/TopBar';
 import { UpgradePanel } from './components/UpgradePanel';
 import { WelcomeBackModal } from './components/WelcomeBackModal';
+import { MapView } from './map/MapView';
+
+/** The original panel-based layout, kept reachable at ?classic=1 during the
+ *  map-first port so nothing is lost while the new UI is built out. */
+function ClassicLayout() {
+  return (
+    <div className="app">
+      <TopBar />
+      <ResourceBar />
+      <OnboardingBanner />
+      <DailyRewardBanner />
+      <CoachTips />
+
+      <main className="layout">
+        <div className="col col-main">
+          <SafehousePanel />
+          <UpgradePanel />
+          <PrestigePanel />
+          <AscensionPanel />
+          <MilestonesPanel />
+          <PremiumPanel />
+        </div>
+        <div className="col col-side">
+          <ActiveHeists />
+          <HeistList />
+        </div>
+      </main>
+
+      <footer className="footer">
+        <p>
+          Active idle heist management · progress is resolved from real timestamps · a proof of
+          concept build.
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+function useClassicMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).has('classic');
+}
 
 export default function App() {
+  const classic = useClassicMode();
   return (
     <GameProvider>
-      <div className="app">
-        <TopBar />
-        <ResourceBar />
-        <OnboardingBanner />
-        <DailyRewardBanner />
-        <CoachTips />
+      {classic ? <ClassicLayout /> : <MapView />}
 
-        <main className="layout">
-          <div className="col col-main">
-            <SafehousePanel />
-            <UpgradePanel />
-            <PrestigePanel />
-            <AscensionPanel />
-            <MilestonesPanel />
-            <PremiumPanel />
-          </div>
-          <div className="col col-side">
-            <ActiveHeists />
-            <HeistList />
-          </div>
-        </main>
-
-        <footer className="footer">
-          <p>
-            Active idle heist management · progress is resolved from real timestamps · a proof of
-            concept build.
-          </p>
-        </footer>
-      </div>
-
+      {/* Shared overlays — work with either layout. */}
       <Toast />
       <ReportModal />
       <WelcomeBackModal />
