@@ -11,7 +11,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { CONFIG } from '../data/config';
-import { featuredNow, isMemberDown, type GameState } from '../engine';
+import { eventNow, featuredNow, isMemberDown, type GameState } from '../engine';
 import { useGame } from '../store/GameContext';
 import { useHeatSnapshot } from './hooks';
 import type { IconName } from './icons';
@@ -72,6 +72,21 @@ export const FEATURED_TIP: Tip = {
   when: (g, _heat, now) => g.lifetimeCash >= 2000 && featuredNow(now).length > 0,
 };
 
+export const EVENTS_TIP: Tip = {
+  id: 'events',
+  icon: 'vault',
+  title: 'The city is reacting',
+  body: (
+    <>
+      Conditions flare up across the map — a <strong>fence paying premium</strong>, a{' '}
+      <strong>blackout</strong>, a <strong>crackdown</strong>. A gold marker is worth chasing; a
+      magenta one is a reason to lie low or go Ghost. The effect is locked in when you launch, and it
+      only lasts a while — watch the ticker up top.
+    </>
+  ),
+  when: (_g, _heat, now) => eventNow(now) !== null,
+};
+
 export const PRESTIGE_TIP: Tip = {
   id: 'prestige',
   icon: 'vault',
@@ -90,8 +105,8 @@ export const PRESTIGE_TIP: Tip = {
 export const BASE_TIPS: Tip[] = [HEAT_TIP, PRESTIGE_TIP];
 
 /** Map layout: also teaches the systems the map surfaces (injuries, featured
- *  jobs). Order is priority — the most urgent/relevant fires first. */
-export const MAP_TIPS: Tip[] = [HEAT_TIP, INJURY_TIP, FEATURED_TIP, PRESTIGE_TIP];
+ *  jobs, living-map events). Order is priority — most urgent/relevant first. */
+export const MAP_TIPS: Tip[] = [HEAT_TIP, INJURY_TIP, FEATURED_TIP, EVENTS_TIP, PRESTIGE_TIP];
 
 /** Drives one-at-a-time coaching over a tip set: returns the active tip (sticky
  *  once fired, so it won't flicker if the condition later goes false) and a

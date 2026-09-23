@@ -376,6 +376,39 @@
 .nf-btn.ghost:disabled { opacity: .45; cursor: not-allowed; }
 .nf-rep-block { font-family: var(--nf-mono); font-size: 10px; color: #ff9bb8; text-align: center; margin: 9px 0 0; letter-spacing: .3px; }
 
+/* LIVING-MAP EVENTS -----------------------------------------------------------
+   Top-of-stage ticker + per-pin markers + dossier callout. Gold = opportunity,
+   magenta = pressure. */
+.nf-eventbar { position: absolute; z-index: 20; top: 12px; left: 50%; transform: translateX(-50%);
+  max-width: min(560px, calc(100% - 24px)); display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px; border-radius: 999px; background: #080f1cf2; backdrop-filter: blur(8px);
+  border: 1px solid var(--nf-line); box-shadow: 0 8px 26px #000a; font-family: var(--nf-body);
+  animation: nf-eb-in .3s cubic-bezier(.2, .8, .2, 1); }
+@keyframes nf-eb-in { from { transform: translate(-50%, -10px); opacity: 0; } }
+.nf-eventbar.opp { border-color: #6a5320; box-shadow: 0 8px 26px #000a, 0 0 18px #ffb64822; }
+.nf-eventbar.pressure { border-color: #5a2f42; box-shadow: 0 8px 26px #000a, 0 0 18px #ff3d8122; }
+.nf-eb-ic { flex: none; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; }
+.nf-eventbar.opp .nf-eb-ic { color: var(--nf-amber); background: #1a1305; border: 1px solid #4a3a1e; }
+.nf-eventbar.pressure .nf-eb-ic { color: var(--nf-magenta); background: #1a0810; border: 1px solid #5a2f42; }
+.nf-eb-txt { flex: 1; min-width: 0; font-size: 12px; color: var(--nf-ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-eb-txt b { font-family: var(--nf-disp); font-weight: 600; letter-spacing: .4px; text-transform: uppercase; }
+.nf-eventbar.opp .nf-eb-txt b { color: var(--nf-amber); }
+.nf-eventbar.pressure .nf-eb-txt b { color: #ff9bb8; }
+.nf-eb-clock { flex: none; font-family: var(--nf-mono); font-size: 11px; color: var(--nf-ink-dim); font-variant-numeric: tabular-nums; }
+
+.nf-ev { position: absolute; top: -8px; right: -8px; z-index: 3; font-family: var(--nf-disp); font-weight: 700; font-size: 8px; letter-spacing: 1px; border-radius: 5px; padding: 1px 4px; pointer-events: none; }
+.nf-ev.opp { color: #1a1204; background: linear-gradient(180deg, #ffd27a, #f0a93a); box-shadow: 0 0 8px #ffb64888; }
+.nf-ev.pressure { color: #fff; background: linear-gradient(180deg, #ff5f97, #d81f63); box-shadow: 0 0 8px #ff3d8188; }
+.nf-pin.ev-opp .nf-core { box-shadow: 0 0 15px var(--nf-amber), inset 0 0 6px #0008; }
+.nf-pin.ev-pressure .nf-core { box-shadow: 0 0 15px var(--nf-magenta), inset 0 0 6px #0008; }
+
+.nf-ev-tag { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase; border-radius: 999px; padding: 2px 7px; margin-left: 8px; }
+.nf-ev-tag.opp { color: #1a1204; background: linear-gradient(180deg, #ffd27a, #f0a93a); }
+.nf-ev-tag.pressure { color: #fff; background: linear-gradient(180deg, #ff5f97, #d81f63); }
+.nf-dos-ev { font-family: var(--nf-body); font-size: 12px; line-height: 1.45; margin-top: 9px; padding: 8px 11px; border-radius: 11px; }
+.nf-dos-ev.opp { color: #ffdda3; background: #171203; border: 1px solid #4a3a1e; }
+.nf-dos-ev.pressure { color: #ffc3d5; background: #180a10; border: 1px solid #4a2434; }
+
 /* COACH TIPS ------------------------------------------------------------------
    One-at-a-time contextual hint, tucked bottom-left above the dock. */
 .nf-coach { position: absolute; left: 14px; bottom: 14px; z-index: 24; width: 330px; max-width: calc(100% - 28px);
@@ -415,6 +448,10 @@
   .nf-rep-summary { grid-template-columns: 1fr; }
 
   .nf-coach { left: 10px; right: 10px; bottom: 10px; width: auto; max-width: none; }
+
+  /* Ticker stays a compact name + countdown on phones. */
+  .nf-eventbar { top: 8px; padding: 6px 12px; max-width: calc(100% - 16px); }
+  .nf-eb-blurb { display: none; }
 
   /* Full-screen drawer clears the notch. */
   .nf-drawer { width: 100%; }

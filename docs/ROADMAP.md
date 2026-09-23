@@ -17,8 +17,8 @@ the work it describes. Newest status at the top.
   Notoriety perk tree, and the ported prototype mechanics (approaches, prep,
   injuries, featured jobs). Noir map-first UI is the default; classic panel
   layout kept at `?classic=1`.
-- **In flight:** Living-Map Events — **Phases 1–2 DONE** (engine core + launch/resolve
-  wiring); Phases 3–4 pending.
+- **In flight:** Living-Map Events — **Phases 1–3 DONE** (engine core + wiring +
+  map UI); Phase 4 (balance & polish) pending.
 - **Tests:** 140 passing. Build clean.
 
 ---
@@ -39,10 +39,13 @@ Full scope & rationale: see the "scope" discussion in session history; summary b
       applied to launch heat; odds/reward combined with approach/prep/featured at
       resolve. Featured-wins exclusivity. Offline is covered for free (the Fixer
       relaunch goes through `launchHeist`). 5 wiring tests. _(commit on dev branch)_
-- [ ] **Phase 3 — Map UI.** HUD event ticker, pin treatment (gold/magenta), dossier
-      callout, first-event coach tip, after-action note. Headless verify.
-- [ ] **Phase 4 — Balance & polish.** Monte-Carlo probe vs. economy, tune effect
-      ranges, reduced-motion/mobile.
+- [x] **Phase 3 — Map UI.** Top-of-stage event ticker with countdown, per-pin
+      RISK/BONUS badge + glow (respecting featured-wins), dossier callout + event
+      folded into the take/heat/odds preview, first-event coach tip. Verified
+      headless (board, dossier, mobile). _(commit on dev branch)_
+- [ ] **Phase 4 — Balance & polish.** Monte-Carlo probe vs. economy (event ×
+      approach stacking), tune effect ranges, reduced-motion for the ticker,
+      after-action debrief event line (needs eventId plumbed onto HeistReport).
 
 **v1 event catalog:** Fence in town, Grid blackout, Inside contact (opportunities);
 Police crackdown, Turf war (pressure). All pure time-windowed modifiers over
