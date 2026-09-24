@@ -26,11 +26,11 @@ the work it describes. Newest status at the top.
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
   veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
-  contesting the board. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Rivalry deepening (persistent nemeses)** — Phase 1
-  DONE (per-rival win standing, escalating spoils, a domination payoff, wired into
-  collect with back-compat + 5 tests). Turns the one-shot contests into an ongoing
-  feud. Next: the UI (standing in the dossier + a rivalries list), then ship.
+  contesting the board — now a persistent, escalating feud (PR #10). Noir
+  map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** **Balance & playtest pass** DONE — full reward-stack
+  probe + pacing analysis; conclusion is the game is healthy, no config tuning
+  needed. Added a `balance.test.ts` invariants guard. Ready for a PR.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
@@ -38,7 +38,39 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Feature: Rivalry deepening (persistent nemeses)
+## Balance & playtest pass (all systems)
+
+A whole-game balance review now that many reward systems interact (approaches,
+prep, featured, events, rivals + rivalry escalation, prestige, ascension,
+veterancy). Method: a Monte-Carlo `$/min` probe over the real resolver across
+the reward stack + a pacing analysis. **Conclusion: healthy, no config tuning
+needed.** Locked the findings behind `engine/balance.test.ts` (4 invariants).
+
+**Findings (crew skill 14 unless noted):**
+- **Reward stack** (casino_heist, vs quiet base): loud = 1.18×, loud+featured1.6
+  = 1.89×, +a fresh rival contest (spoils 0.5) = 2.84×, +max rivalry (×2 spoils)
+  = 3.79×. The realistic *sustained* rate is ~1.9–2.4×; the 3.79× ceiling needs a
+  featured job that is *also* contested by a max-level (15-win) nemesis and won —
+  a rare, earned corner, not a sustained rate. Featured & events stay mutually
+  exclusive per job, and rival spoils are separate cash (never compound the
+  payout-mult chain). Not degenerate.
+- **Crew-strength gating works:** at skill 14 low/mid tiers are competitive
+  (cargo_port ~1407/min) and the capstone is underwater; at skill 20 data_center
+  pulls ahead (3406); at skill 26 **sovereign_reserve dominates at ~8889/min**
+  (~82% of its raw rate) — the capstone is a genuine earned payoff. (It also
+  needs a full 5-member crew: `minMembersFor` = requiredPasses+1.)
+- **Pacing:** tier gates $2k → $30k → $180k → $1.2M sit under the $1.5M prestige
+  threshold; prestige at $1.5M = +24 Notoriety (more if you push: +34 at $3M);
+  first ascension ≈ 4 prestige cycles (75 Notoriety). Single-crew, no-offline
+  time to first prestige ≈ 15 h — a conservative bound; multiple crews + the
+  Fixer's offline auto-play make it much faster in practice (idle-appropriate).
+- **No bug:** `estimateSuccess` returning 0% for the capstone in the probe was an
+  under-sized (4-member) probe crew tripping the `minMembers` gate, not a defect —
+  real play blocks launching understaffed and shows true odds.
+
+---
+
+## Feature: Rivalry deepening (persistent nemeses) _(shipped — merged in PR #10)_
 
 Makes the rival crews *persistent*, not random. Each named rival now remembers
 how many times you've beaten them; the more you win, the harder they come back
