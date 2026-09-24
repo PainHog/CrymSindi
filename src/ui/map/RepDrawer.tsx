@@ -9,7 +9,16 @@
 import { CONFIG } from '../../data/config';
 import { MILESTONES } from '../../data/milestones';
 import { PERKS, perkCost } from '../../data/perks';
-import { canPrestige, isMilestoneEarned, notorietyGainFor, perkLevel } from '../../engine';
+import { LEGEND_PERKS, legendPerkCost } from '../../data/legendPerks';
+import {
+  canAscend,
+  canPrestige,
+  isMilestoneEarned,
+  legendGainFor,
+  legendPerkLevel,
+  notorietyGainFor,
+  perkLevel,
+} from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { formatCash } from '../format';
 import { Icon } from '../icons';
@@ -19,6 +28,13 @@ export function RepDrawer() {
   const gain = notorietyGainFor(game.lifetimeCash);
   const eligible = canPrestige(game);
   const progress = Math.min(100, (game.lifetimeCash / CONFIG.prestigeThreshold) * 100);
+
+  // Ascension (second layer) surfaces once the player has any stake in it.
+  const showAscension = game.notoriety > 0 || game.legend > 0 || game.ascendCount > 0;
+  const legendGain = legendGainFor(game.notoriety);
+  const canAsc = canAscend(game);
+  const ascProgress = Math.min(100, (game.notoriety / CONFIG.ascendThreshold) * 100);
+  const showLegendTree = game.legend > 0 || game.ascendCount > 0;
 
   return (
     <div className="nf-mp">
@@ -94,6 +110,77 @@ export function RepDrawer() {
             );
           })}
         </div>
+
+        {showAscension && (
+          <>
+            <div className="nf-mp-sect" style={{ color: 'var(--nf-magenta)' }}>
+              Ascension · <b style={{ color: 'var(--nf-ink)' }}>{game.legend}</b> Legend
+            </div>
+            <div className="nf-legit nf-legend">
+              {canAsc ? (
+                <>
+                  <div className="nf-legit-k">
+                    Notoriety: <b>{game.notoriety}</b>
+                  </div>
+                  <button className="nf-wide-btn ascend" onClick={() => actions.ascend()}>
+                    Become a Legend → +{legendGain} Legend
+                  </button>
+                  <div className="nf-legit-note">
+                    Burn your Notoriety &amp; perk tree for permanent <b>Legend</b>. Your run,
+                    Notoriety and perks reset — Legend and its perks are forever.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="nf-legit-k">
+                    Ascend at <b>{CONFIG.ascendThreshold}</b> Notoriety
+                  </div>
+                  <div className="nf-legit-track">
+                    <div className="nf-legit-bar legend" style={{ width: ascProgress + '%' }} />
+                  </div>
+                  <div className="nf-legit-note">
+                    {game.notoriety} / {CONFIG.ascendThreshold} Notoriety — worth +{legendGain} now
+                  </div>
+                </>
+              )}
+            </div>
+
+            {showLegendTree && (
+              <div className="nf-perklist">
+                {LEGEND_PERKS.map((p) => {
+                  const lvl = legendPerkLevel(game, p.id);
+                  const maxed = lvl >= p.maxLevel;
+                  const cost = legendPerkCost(p, lvl + 1);
+                  const afford = game.legend >= cost;
+                  return (
+                    <div key={p.id} className="nf-perk legend">
+                      <div className="nf-perk-main">
+                        <div className="nf-perk-name">
+                          {p.name}
+                          <span className="nf-perk-lvl">
+                            {lvl}/{p.maxLevel}
+                          </span>
+                        </div>
+                        <div className="nf-perk-d">{p.description}</div>
+                      </div>
+                      {maxed ? (
+                        <span className="nf-perk-buy maxed">MAX</span>
+                      ) : (
+                        <button
+                          className={'nf-perk-buy legend' + (afford ? '' : ' off')}
+                          disabled={!afford}
+                          onClick={() => actions.buyLegendPerk(p.id)}
+                        >
+                          {cost} ◆
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
 
         <div className="nf-mp-sect">
           Career milestones · {MILESTONES.filter((m) => isMilestoneEarned(game, m.id)).length}/{MILESTONES.length}

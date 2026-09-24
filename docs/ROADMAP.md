@@ -18,7 +18,8 @@ the work it describes. Newest status at the top.
   prototype mechanics (approaches, prep, injuries, featured jobs), and living-map
   events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
 - **In flight (dev branch):** Ascension / Legend — second prestige layer.
-  **Phases 1–2 DONE** (engine core + effect wiring); Phases 3–4 pending.
+  **Phases 1–3 DONE** (engine core + effect wiring + UI); Phase 4 (balance &
+  polish) pending.
 - **Tests:** 156 passing. Build clean.
 
 ---
@@ -43,9 +44,11 @@ permanent floor.
       `legendStartCash` funds the fresh run in both `prestige` and `ascend`. 5
       wiring tests (payout ratio, notoriety scaling, start cash on both resets,
       neutral with no perks). _(commit on dev branch)_
-- [ ] **Phase 3 — UI.** Ascension panel in the Reputation drawer (ascend button +
-      gain preview + legend tree), Legend surfaced in HUD/reputation, coach tip.
-      Headless verify.
+- [x] **Phase 3 — UI.** `ascend`/`buyLegendPerk` wired through GameContext. The
+      Reputation drawer gained an Ascension section (magenta, vs. amber Notoriety):
+      Legend balance, the ascend gate/button with gain preview, and the legend
+      tree. First-ascend coach tip added. Verified headless (desktop + mobile).
+      _(commit on dev branch)_
 - [ ] **Phase 4 — Balance & polish.** Probe the multi-layer economy; tune
       `ascendThreshold`/`legendDivisor`/magnitudes; reduced-motion where needed.
 

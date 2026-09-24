@@ -21,8 +21,10 @@ import {
 import { CONFIG } from '../data/config';
 import type { ApproachId } from '../data/approaches';
 import {
+  ascend,
   awardMilestones,
   buyGear,
+  buyLegendPerk,
   buyPerk,
   buySafehouse,
   buyUpgrade,
@@ -97,8 +99,10 @@ type Action =
   | { type: 'heal'; memberId: string; now: number }
   | { type: 'buyUpgrade'; upgradeId: string }
   | { type: 'prestige'; now: number }
+  | { type: 'ascend'; now: number }
   | { type: 'claimDaily'; now: number }
   | { type: 'buyPerk'; perkId: string }
+  | { type: 'buyLegendPerk'; perkId: string }
   | { type: 'grantMarks'; amount: number }
   | { type: 'rewardBonusCash'; amount: number }
   | { type: 'skipCooldown'; id: string; now: number }
@@ -219,8 +223,12 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(ui, buyUpgrade(ui.game, action.upgradeId), { kind: 'purchase' });
     case 'prestige':
       return applyResult(ui, prestige(ui.game, action.now), { kind: 'prestige' });
+    case 'ascend':
+      return applyResult(ui, ascend(ui.game, action.now), { kind: 'prestige' });
     case 'buyPerk':
       return applyResult(ui, buyPerk(ui.game, action.perkId), { kind: 'purchase' });
+    case 'buyLegendPerk':
+      return applyResult(ui, buyLegendPerk(ui.game, action.perkId), { kind: 'purchase' });
     case 'claimDaily': {
       const res = claimDaily(ui.game, action.now);
       if (!res.ok) {
@@ -344,8 +352,10 @@ interface GameContextValue {
     heal: (memberId: string) => void;
     buyUpgrade: (upgradeId: string) => void;
     prestige: () => void;
+    ascend: () => void;
     claimDaily: () => void;
     buyPerk: (perkId: string) => void;
+    buyLegendPerk: (perkId: string) => void;
     grantMarks: (amount: number) => void;
     rewardBonusCash: (amount: number) => void;
     skipCooldown: (id: string) => void;
@@ -437,8 +447,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       heal: (memberId) => dispatch({ type: 'heal', memberId, now: Date.now() }),
       buyUpgrade: (upgradeId) => dispatch({ type: 'buyUpgrade', upgradeId }),
       prestige: () => dispatch({ type: 'prestige', now: Date.now() }),
+      ascend: () => dispatch({ type: 'ascend', now: Date.now() }),
       claimDaily: () => dispatch({ type: 'claimDaily', now: Date.now() }),
       buyPerk: (perkId) => dispatch({ type: 'buyPerk', perkId }),
+      buyLegendPerk: (perkId) => dispatch({ type: 'buyLegendPerk', perkId }),
       grantMarks: (amount) => dispatch({ type: 'grantMarks', amount }),
       rewardBonusCash: (amount) => dispatch({ type: 'rewardBonusCash', amount }),
       skipCooldown: (id) => dispatch({ type: 'skipCooldown', id, now: Date.now() }),
