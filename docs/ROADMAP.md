@@ -18,8 +18,8 @@ the work it describes. Newest status at the top.
   prototype mechanics (approaches, prep, injuries, featured jobs), and living-map
   events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
 - **In flight (dev branch):** Ascension / Legend — second prestige layer.
-  **Phase 1 (engine core) DONE**; Phases 2–4 pending.
-- **Tests:** 151 passing. Build clean.
+  **Phases 1–2 DONE** (engine core + effect wiring); Phases 3–4 pending.
+- **Tests:** 156 passing. Build clean.
 
 ---
 
@@ -38,9 +38,11 @@ permanent floor.
       and effect selectors `legendPayoutMult`/`legendNotorietyMult`/`legendStartCash`);
       `ascend` + `buyLegendPerk` actions. 10 tests. Effects not yet applied to the
       economy. _(commit on dev branch)_
-- [ ] **Phase 2 — Effect wiring.** Apply `legendPayoutMult` in resolution,
-      `legendNotorietyMult` to prestige's Notoriety gain, `legendStartCash` to the
-      fresh run in `prestige`/`ascend`. Tests.
+- [x] **Phase 2 — Effect wiring.** `legendPayoutMult` folded into the resolution
+      payout mult; `legendNotorietyMult` scales prestige's Notoriety gain;
+      `legendStartCash` funds the fresh run in both `prestige` and `ascend`. 5
+      wiring tests (payout ratio, notoriety scaling, start cash on both resets,
+      neutral with no perks). _(commit on dev branch)_
 - [ ] **Phase 3 — UI.** Ascension panel in the Reputation drawer (ascend button +
       gain preview + legend tree), Legend surfaced in HUD/reputation, coach tip.
       Headless verify.
