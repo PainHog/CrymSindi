@@ -28,9 +28,10 @@ the work it describes. Newest status at the top.
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board — now a persistent, escalating feud (PR #10). Noir
   map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Balance & playtest pass** DONE — full reward-stack
-  probe + pacing analysis; conclusion is the game is healthy, no config tuning
-  needed. Added a `balance.test.ts` invariants guard. Ready for a PR.
+- **In flight (dev branch):** **Save management (export/import + settings)** —
+  Phase 1 DONE (portable `exportSave`/`importSave` engine + GameContext actions +
+  6 tests). Protects long-term progress (localStorage is fragile). Next: a settings
+  panel on the map. The whole-game **balance & playtest pass** merged (PR #11).
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
@@ -38,7 +39,30 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Balance & playtest pass (all systems)
+## Feature: Save management (export / import + settings)
+
+The game now rewards long-term investment (rivalries, ascension, career totals),
+but saves live only in `localStorage` — fragile, and there's no way to back one
+up or move devices. The default map UI also has no settings surface beyond the
+mute button. This adds a portable backup and a settings panel.
+
+- [x] **Phase 1 — Export/import engine.** `exportSave(state, now)` → a
+      copy-pasteable `NFS1:`-prefixed base64 blob; `importSave(text, now)` →
+      validates via the existing `isValidSave`/version/`clampState` pipeline and
+      resolves offline time exactly like `loadGame`, returning null (touching
+      nothing) for garbage or a wrong-version save. Tolerates a raw-JSON paste and
+      a bare base64 blob. GameContext actions `exportSave()`/`importSave()`. UTF-8-
+      safe base64 (works in browser + tests). 6 tests. _(commit on dev)_
+- [x] **Phase 2 — Settings panel UI.** A gear button in the HUD opens a
+      `SettingsDrawer`: a Sound toggle + a live motion-preference note, Save now,
+      **Export backup** (copies the blob to the clipboard and shows it to select),
+      **Import & replace** (paste + confirm), and a Reset in a Danger section. New
+      `gear` icon. Verified headless (panel renders; export produces a valid
+      `NFS1:` blob + clipboard copy). _(commit on dev)_
+
+---
+
+## Balance & playtest pass (all systems) _(shipped — merged in PR #11)_
 
 A whole-game balance review now that many reward systems interact (approaches,
 prep, featured, events, rivals + rivalry escalation, prestige, ascension,

@@ -394,3 +394,68 @@ export function clearSave(config: Config = CONFIG): void {
     // ignore
   }
 }
+
+// ---- Portable export / import ----------------------------------------------
+// A copy-pasteable backup, so a save survives cleared browser storage or a move
+// to another device (localStorage never leaves the browser it was written in).
+// The blob is base64 of the same JSON we persist, behind a short version tag so
+// import can recognize the format; import tolerates a raw JSON paste too.
+
+const EXPORT_PREFIX = 'NFS1:'; // Nightfall Syndicate save, format 1
+
+/** UTF-8-safe base64 (works in the browser and in Node/test). */
+function b64encode(s: string): string {
+  const bytes = new TextEncoder().encode(s);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+function b64decode(s: string): string {
+  const bin = atob(s);
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+/** Serialize the current save (heat settled to `now`) into a portable blob. */
+export function exportSave(state: GameState, now: number, config: Config = CONFIG): string {
+  const settled: GameState = {
+    ...state,
+    heat: deriveHeat(state, now, config),
+    heatUpdatedAt: now,
+    lastSaved: now,
+  };
+  return EXPORT_PREFIX + b64encode(JSON.stringify(settled));
+}
+
+/**
+ * Parse a pasted backup and resolve offline time, exactly like loadGame. Returns
+ * null for anything that isn't a valid, version-matching save (so a bad paste
+ * never corrupts the running game). Accepts the prefixed blob, bare base64, or
+ * raw JSON.
+ */
+export function importSave(text: string, now: number, config: Config = CONFIG): OfflineSummary | null {
+  const trimmed = (text ?? '').trim();
+  if (!trimmed) return null;
+  const body = trimmed.startsWith(EXPORT_PREFIX) ? trimmed.slice(EXPORT_PREFIX.length).trim() : trimmed;
+
+  // Try base64 first, then fall back to treating the text as raw JSON.
+  const candidates: string[] = [];
+  try {
+    candidates.push(b64decode(body));
+  } catch {
+    /* not base64 — fall through to raw */
+  }
+  candidates.push(body);
+
+  for (const json of candidates) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(json);
+    } catch {
+      continue;
+    }
+    if (!isValidSave(parsed) || parsed.version !== config.version) continue;
+    return resolveOffline(clampState(parsed, config), now, config);
+  }
+  return null;
+}
