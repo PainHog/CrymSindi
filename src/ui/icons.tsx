@@ -34,7 +34,8 @@ export type IconName =
   | 'crown'
   | 'trophy'
   | 'sound'
-  | 'mute';
+  | 'mute'
+  | 'gear';
 
 function Svg({
   size,
@@ -267,6 +268,13 @@ function paths(name: IconName): ReactNode {
         <>
           <path d="M4 9.5h3.4L12 5.5v13L7.4 14.5H4z" />
           <path d="M16 10l4 4M20 10l-4 4" />
+        </>
+      );
+    case 'gear': // settings cog
+      return (
+        <>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9 19 19M19 5l-2.1 2.1M7.1 16.9 5 19" />
         </>
       );
     default:

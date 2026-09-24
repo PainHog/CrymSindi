@@ -53,8 +53,12 @@ mute button. This adds a portable backup and a settings panel.
       nothing) for garbage or a wrong-version save. Tolerates a raw-JSON paste and
       a bare base64 blob. GameContext actions `exportSave()`/`importSave()`. UTF-8-
       safe base64 (works in browser + tests). 6 tests. _(commit on dev)_
-- [ ] **Phase 2 — Settings panel UI.** A settings panel on the noir map (gear
-      icon): manual Save, Export (copy blob), Import (paste), Reset, sound toggle.
+- [x] **Phase 2 — Settings panel UI.** A gear button in the HUD opens a
+      `SettingsDrawer`: a Sound toggle + a live motion-preference note, Save now,
+      **Export backup** (copies the blob to the clipboard and shows it to select),
+      **Import & replace** (paste + confirm), and a Reset in a Danger section. New
+      `gear` icon. Verified headless (panel renders; export produces a valid
+      `NFS1:` blob + clipboard copy). _(commit on dev)_
 
 ---
 

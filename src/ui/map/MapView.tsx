@@ -54,6 +54,7 @@ import { NfJuice } from './NfJuice';
 import { NfOnboard } from './NfOnboard';
 import { NoirReport } from './NoirReport';
 import { RepDrawer } from './RepDrawer';
+import { SettingsDrawer } from './SettingsDrawer';
 import { UpgradesDrawer } from './UpgradesDrawer';
 import { DISTRICTS, HQ, SLOTS, tierRisk } from './mapSlots';
 import './map.css';
@@ -84,7 +85,7 @@ export function MapView() {
   const { game, actions } = useGame();
   const now = useNow();
   const [selected, setSelected] = useState<string | null>(null);
-  const [drawer, setDrawer] = useState<'safehouse' | 'reputation' | 'blackmarket' | null>(null);
+  const [drawer, setDrawer] = useState<'safehouse' | 'reputation' | 'blackmarket' | 'settings' | null>(null);
   const [muted, setMuted] = useState(isMuted());
 
   const heat = deriveHeat(game, now);
@@ -177,6 +178,9 @@ export function MapView() {
         </button>
         <button className="nf-icon-btn" title="Safehouse & crews" onClick={() => setDrawer('safehouse')}>
           <Icon name="safehouse" size={17} />
+        </button>
+        <button className="nf-icon-btn" title="Settings — save, backup, reset" onClick={() => setDrawer('settings')}>
+          <Icon name="gear" size={17} />
         </button>
       </header>
 
@@ -284,7 +288,15 @@ export function MapView() {
               ✕
             </button>
             <div className="nf-drawer-body">
-              {drawer === 'safehouse' ? <CrewDrawer /> : drawer === 'reputation' ? <RepDrawer /> : <UpgradesDrawer />}
+              {drawer === 'safehouse' ? (
+                <CrewDrawer />
+              ) : drawer === 'reputation' ? (
+                <RepDrawer />
+              ) : drawer === 'blackmarket' ? (
+                <UpgradesDrawer />
+              ) : (
+                <SettingsDrawer />
+              )}
             </div>
           </aside>
         </div>

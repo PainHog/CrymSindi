@@ -532,6 +532,28 @@
 .nf-riv-wins { font-family: var(--nf-disp); font-weight: 700; font-size: 18px; color: var(--nf-crimson); font-variant-numeric: tabular-nums; }
 .nf-riv-lvl { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase; color: #ff9b8f; border: 1px solid #5a2f2a; border-radius: 999px; padding: 1px 6px; }
 
+/* SETTINGS DRAWER ------------------------------------------------------------ */
+.nf-set-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
+  background: #0e1524; border: 1px solid var(--nf-line); }
+.nf-set-rowtext { flex: 1; min-width: 0; }
+.nf-set-rowtext b { display: block; font-family: var(--nf-disp); font-weight: 600; font-size: 13px; color: var(--nf-ink); }
+.nf-set-rowtext span { font-family: var(--nf-body); font-size: 11px; color: var(--nf-ink-dim); }
+.nf-set-toggle { flex: none; min-width: 54px; font-family: var(--nf-disp); font-weight: 600; font-size: 13px;
+  letter-spacing: 1px; text-transform: uppercase; padding: 8px 14px; border-radius: 10px; cursor: pointer;
+  border: 1px solid #2f6f86; background: #0c1c2b; color: var(--nf-cyan); transition: .15s; }
+.nf-set-toggle[aria-pressed="false"] { border-color: var(--nf-line); color: var(--nf-ink-faint); background: #0f1826; }
+.nf-set-note { font-family: var(--nf-body); font-size: 11px; color: var(--nf-ink-dim); margin-top: 8px; line-height: 1.45; }
+.nf-set-note b { color: var(--nf-ink); }
+.nf-set-blob { width: 100%; margin-top: 8px; box-sizing: border-box; resize: vertical; font-family: var(--nf-mono);
+  font-size: 10px; line-height: 1.4; color: var(--nf-ink-dim); background: #080d16; border: 1px solid var(--nf-line);
+  border-radius: 10px; padding: 9px 11px; }
+.nf-set-blob:focus { outline: none; border-color: #2f6f86; box-shadow: 0 0 10px #37e8ff1c; }
+.nf-set-msg { margin-top: 10px; font-family: var(--nf-body); font-size: 12px; color: var(--nf-lime); }
+.nf-wide-btn.danger { border-color: #5a2f42; color: var(--nf-magenta); background: #180a10; }
+.nf-wide-btn.danger:hover { border-color: var(--nf-magenta); box-shadow: 0 0 12px #ff3d8122; }
+.nf-wide-btn:disabled { opacity: .45; cursor: not-allowed; }
+.nf-wide-btn + .nf-wide-btn { margin-top: 8px; }
+
 /* COACH TIPS ------------------------------------------------------------------
    One-at-a-time contextual hint, tucked bottom-left above the dock. */
 .nf-coach { position: absolute; left: 14px; bottom: 14px; z-index: 24; width: 330px; max-width: calc(100% - 28px);
