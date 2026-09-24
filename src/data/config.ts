@@ -60,6 +60,14 @@ export interface Config {
   eventChance: number; // fraction of windows that actually run an event (0..1)
   eventTargetsMax: number; // how many specific jobs one event hits
 
+  // Rival Syndicate: a rival crew stakes a claim on one specific job each contest
+  // window. Beat them to it (complete it successfully before the window closes) to
+  // seize the turf for cash spoils + a turf-win tally. Deterministic from the
+  // window index (pure/testable), on its own clock.
+  rivalWindowSec: number; // contest window length (real seconds)
+  rivalChance: number; // fraction of windows that run a contest (0..1)
+  rivalSpoilsFrac: number; // seize bonus = this * the job's take (extra cash)
+
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
@@ -200,6 +208,11 @@ export const CONFIG: Config = {
   eventWindowSec: 2700, // 45-min windows (deliberately off the 60-min featured clock)
   eventChance: 0.6, // ~60% of windows run an event; the rest are quiet
   eventTargetsMax: 2, // an event flags up to this many specific jobs
+
+  // ---- Rival Syndicate (turf contests) -------------------------------------
+  rivalWindowSec: 1800, // 30-min contest windows (off the featured/event clocks)
+  rivalChance: 0.5, // ~half the windows run a contest; the rest are quiet
+  rivalSpoilsFrac: 0.5, // seize a contested job -> +50% of the take as spoils
 
   // ---- Prestige / Notoriety ------------------------------------------------
   // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is

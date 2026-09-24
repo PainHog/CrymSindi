@@ -26,12 +26,45 @@ the work it describes. Newest status at the top.
   veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
   first-run onboarding guide, and a full game-feel juice layer. Noir map-first
   UI default; classic at `?classic=1`.
-- **In flight (dev branch):** nothing substantive — the dev branch carries only
-  this log update on top of `main`, ready for the next feature.
+- **In flight (dev branch):** **Rival Syndicate (turf contests)** — Phase 1 DONE
+  (deterministic contest engine + config + rival flavor data + 8 tests). A rival
+  crew stakes a claim on one job per window; beat them to it to seize the turf.
+  Next: launch/collect wiring, then the map UI.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
 - **Tests:** 186 passing. Build clean.
+
+---
+
+## Feature: Rival Syndicate (turf contests)
+
+A competitive opponent on the map — a new gameplay axis, not just more content.
+A rival crew periodically stakes a claim on one specific job (a deterministic
+time window, same architecture as featured jobs and living-map events). Complete
+that job successfully before the window closes to **seize the turf**: cash spoils
+(a fraction of the take) + a turf-win tally on your record. Miss it and the rival
+takes it — no penalty; it's an opt-in challenge (right for an idle game).
+
+Reward is cash (in-economy, no meta-economy perturbation), framed as spoils, and
+kept OUT of the payout-multiplier chain (added separately at collect), so there's
+no double-dip with featured/event bonuses if a contest lands on a flagged job.
+
+- [x] **Phase 1 — Engine core.** `data/rivals.ts` (rival crew flavor) +
+      `engine/rivals.ts` deterministic layer (`rivalForWindow`/`rivalNow`/
+      `rivalContestFor`/`rivalContestsHeist`/`msUntilNextRival`/`rivalSpoilsFor`)
+      on its own window/seed (distinct from featured & events). Config knobs
+      (`rivalWindowSec` 1800, `rivalChance` 0.5, `rivalSpoilsFrac` 0.5). 8 tests.
+      Pure/tested, no wiring. _(commit on dev)_
+- [ ] **Phase 2 — Launch/collect wiring.** Snapshot `rivalContest` on the
+      `ActiveHeist` at launch; at collect, on success, add the cash spoils +
+      increment a `turfWins` career total + note it in the report. Back-compat
+      (optional fields, defaults, preserved across prestige/ascend). Offline
+      covered (the Fixer relaunch goes through `launchHeist`).
+- [ ] **Phase 3 — Map UI.** Hostile rival marker on the contested pin, a turf-war
+      banner with the rival's name + a race countdown, a dossier callout, the
+      turf-win record, a coach tip, and a debrief chip.
+- [ ] **Phase 4 — Balance, verify, build.**
 
 ---
 
