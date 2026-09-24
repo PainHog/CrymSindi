@@ -90,6 +90,10 @@ export interface ActiveHeist {
    *  approach + prep odds at resolve. Optional (0 = none). The event's heat
    *  multiplier is applied to launch heat immediately, so it isn't stored. */
   eventOddsDelta?: number;
+  /** The rival crew id contesting this job at launch, snapshotted so a window
+   *  flipping mid-job can't grant/revoke the turf reward. Present = contested;
+   *  completing it successfully seizes the turf (cash spoils + a turf-win). */
+  rivalId?: string;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */
@@ -131,6 +135,9 @@ export interface GameState {
   contractLevel: number;
   /** Career totals for milestones (persist across prestige). */
   stats: CareerStats;
+  /** Turf contests won by beating a rival crew to a contested job. A career
+   *  total (persists across prestige/ascension). */
+  turfWins: number;
   /** Milestone ids already awarded. */
   milestonesEarned: string[];
   /** Day index (see daily.ts) of the last claimed daily reward; -1 if never. */
@@ -236,4 +243,9 @@ export interface HeistReport {
   recommendations: Recommendation[];
   /** The living-map event this job launched under, if any (for the debrief). */
   eventId?: string;
+  /** Set when this job was a rival contest and the run succeeded — the turf was
+   *  seized. `rivalSpoils` is the bonus cash granted; `rivalId` names the crew. */
+  turfSeized?: boolean;
+  rivalSpoils?: number;
+  rivalId?: string;
 }

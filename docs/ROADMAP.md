@@ -16,25 +16,74 @@ the work it describes. Newest status at the top.
   **Ascension / Legend + Content longevity** (PR #3), **Crew identity** —
   veterancy + specialist recruit tiers (PR #4), **map-slot expansion** to 24
   (PR #5), and **automation batch-dispatch** — "Send all idle crews" on the map
-  (PR #6), and **first-run onboarding** — the send/wait/collect guide strip
-  (PR #7). So `main` now has: core loop, heat, traits & synergies, gear, skill
+  (PR #6), **first-run onboarding** — the send/wait/collect guide strip
+  (PR #7), and **audio & juice (game feel)** — collect-moment floater, cash
+  count-up, prestige bloom, tactile buttons, mute toggle (PR #8). So `main` now
+  has: core loop, heat, traits & synergies, gear, skill
   training, offline/welcome-back, daily reward, prestige → Notoriety,
   approaches/prep/injuries/featured, living-map events, the second prestige
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
-  veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, and a
-  first-run onboarding guide. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Audio & juice (game feel)** — Phase 1 DONE (the
-  collect moment: floating "+$X" payout, HUD cash count-up + gain flash, and a
-  mute toggle so the noir map's audio finally has an off switch). The WebAudio
-  cue engine already shipped and is global. Next: level-up flash + prestige moment.
+  veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
+  first-run onboarding guide, and a full game-feel juice layer. Noir map-first
+  UI default; classic at `?classic=1`.
+- **In flight (dev branch):** **Rival Syndicate (turf contests)** — Phase 1 DONE
+  (deterministic contest engine + config + rival flavor data + 8 tests). A rival
+  crew stakes a claim on one job per window; beat them to it to seize the turf.
+  Next: launch/collect wiring, then the map UI.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
-  `dist-single/index.html`) with onboarding was delivered to the user, so the
-  whole game runs from one file with no server.
+  `dist-single/index.html`) with onboarding + juice was delivered to the user, so
+  the whole game runs from one file with no server.
 - **Tests:** 186 passing. Build clean.
 
 ---
 
-## Feature: Audio & juice (game feel)
+## Feature: Rival Syndicate (turf contests)
+
+A competitive opponent on the map — a new gameplay axis, not just more content.
+A rival crew periodically stakes a claim on one specific job (a deterministic
+time window, same architecture as featured jobs and living-map events). Complete
+that job successfully before the window closes to **seize the turf**: cash spoils
+(a fraction of the take) + a turf-win tally on your record. Miss it and the rival
+takes it — no penalty; it's an opt-in challenge (right for an idle game).
+
+Reward is cash (in-economy, no meta-economy perturbation), framed as spoils, and
+kept OUT of the payout-multiplier chain (added separately at collect), so there's
+no double-dip with featured/event bonuses if a contest lands on a flagged job.
+
+- [x] **Phase 1 — Engine core.** `data/rivals.ts` (rival crew flavor) +
+      `engine/rivals.ts` deterministic layer (`rivalForWindow`/`rivalNow`/
+      `rivalContestFor`/`rivalContestsHeist`/`msUntilNextRival`/`rivalSpoilsFor`)
+      on its own window/seed (distinct from featured & events). Config knobs
+      (`rivalWindowSec` 1800, `rivalChance` 0.5, `rivalSpoilsFrac` 0.5). 8 tests.
+      Pure/tested, no wiring. _(commit on dev)_
+- [x] **Phase 2 — Launch/collect wiring.** `rivalId` snapshotted onto the
+      `ActiveHeist` at launch; at collect, a successful contested job sets
+      `report.turfSeized`/`rivalSpoils`, adds the spoils cash (outside the payout
+      multiplier chain), and increments `GameState.turfWins`. Back-compat: optional
+      fields, `turfWins` defaulted in `createInitialState`/`clampState` and carried
+      across prestige + ascension. Offline & batch dispatch route through
+      `launchHeist`/`collectHeist`, so they're covered for free. 5 wiring tests.
+      _(commit on dev)_
+- [x] **Phase 3 — Map UI.** Crimson `--nf-crimson` accent throughout. The
+      contested pin gets a crimson core + a `TURF` badge (opposite corner from the
+      featured/event badge, so a job can show both). A turf-war banner (`RivalBar`)
+      with the rival's name + a race countdown, stacked under the event ticker
+      (compact on mobile). Dossier: a `Turf war` eyebrow tag + a callout with the
+      spoils preview. A conditional `Turf` HUD stat (turf-win record). A `RIVAL_TIP`
+      coach tip (fires after 2 jobs). A `Turf seized` debrief chip. Verified headless
+      (desktop + mobile). _(commit on dev)_
+- [x] **Phase 4 — Balance, verify, build.** Balance reasoned (no probe needed):
+      spoils are +50% of the take, gated behind *winning* a contested job during
+      its window — the same magnitude band as featured (+25–60%) and events
+      (fence +40%), but with a success + timeliness requirement. Cash reward, kept
+      out of the multiplier chain, so no runaway stacking even if a contest lands
+      on a featured/event job. **No config tuning needed.** Verified headless
+      (board banner-stacking, contested pin, dossier callout) on desktop + mobile;
+      single-file build rebuilt + re-delivered. _(dev)_
+
+---
+
+## Feature: Audio & juice (game feel) _(shipped — merged in PR #8)_
 
 Deep systems, thin moment-to-moment feedback. Idle games retain on the dopamine
 hit of collecting — numbers popping, a satisfying cue, the "one more job" pull.
@@ -67,7 +116,10 @@ juice and no mute control.
       already pulsing (`nf-bob`). All reduced-motion guarded (bloom + presses
       dropped). Verified headless. **Deferred:** veterancy level-up flash (levels
       change slowly; needs level-diff tracking — low payoff for now). _(commit on dev)_
-- [ ] **Phase 4 — Polish, perf check, re-deliver the single-file build.**
+- [x] **Phase 4 — Polish & delivery.** Perf reviewed: the count-up uses rAF only
+      during its ~550ms animation, the floater layer renders nothing when idle,
+      and nothing new runs on the 250ms tick — no regression. Single-file build
+      rebuilt and re-delivered to the user. _(dev)_
 
 ---
 

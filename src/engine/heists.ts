@@ -14,6 +14,7 @@ import type { Config } from '../data/config';
 import { approachFor, type ApproachId } from '../data/approaches';
 import { featuredBonusFor } from './featured';
 import { eventEffectFor, eventForHeist } from './events';
+import { rivalContestFor, rivalSpoilsFor } from './rivals';
 import { HEISTS_BY_ID } from '../data/heists';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
@@ -148,6 +149,11 @@ export function launchHeist(
   const eventRewardMult = eventEff?.rewardMult ?? 1;
   const eventActive = eventEff != null && (eventRewardMult !== 1 || eventOddsDelta !== 0);
 
+  // Rival turf contest: snapshot which rival was contesting this job at launch,
+  // so seizing the turf is decided by whether the run succeeds (not whether the
+  // window is still open at collect). Reward is applied at collect, not here.
+  const rival = rivalContestFor(heistId, now, config);
+
   const active = {
     id: `h${next.nextId}`,
     heistId,
@@ -163,6 +169,7 @@ export function launchHeist(
     ...(eventActive ? { eventId: eventForHeist(heistId, now, config)?.def.id } : {}),
     ...(eventRewardMult !== 1 ? { eventRewardMult } : {}),
     ...(eventOddsDelta !== 0 ? { eventOddsDelta } : {}),
+    ...(rival ? { rivalId: rival.rival.id } : {}),
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -287,6 +294,27 @@ export function collectHeist(
       careerCash: next.careerCash + report.payout,
     };
   }
+
+  // Rival turf contest: a successful run of a contested job seizes the turf —
+  // cash spoils (a fraction of the take) plus a career turf-win. Kept out of the
+  // payout-multiplier chain so it never double-dips a featured/event bonus.
+  if (active.rivalId && report.success) {
+    const spoils = rivalSpoilsFor(report.payout, config);
+    report.turfSeized = true;
+    report.rivalSpoils = spoils;
+    report.rivalId = active.rivalId;
+    next = {
+      ...next,
+      turfWins: (next.turfWins ?? 0) + 1,
+      ...(spoils > 0
+        ? {
+            cash: next.cash + spoils,
+            lifetimeCash: next.lifetimeCash + spoils,
+            careerCash: next.careerCash + spoils,
+          }
+        : {}),
+    };
+  }
   // Clearing a contract escalates the next one.
   if (report.success && isContract(active.heistId)) {
     next = { ...next, contractLevel: next.contractLevel + 1 };
@@ -297,6 +325,9 @@ export function collectHeist(
 
   let message =
     report.payout > 0 ? `${report.headline} · +${formatCash(report.payout)}` : report.headline;
+  if (report.turfSeized) {
+    message += report.rivalSpoils ? ` · Turf seized +${formatCash(report.rivalSpoils)}` : ' · Turf seized';
+  }
   if (injured) message += ` · ${injured.name} was hurt`;
   return { ok: true, state: next, message, report };
 }

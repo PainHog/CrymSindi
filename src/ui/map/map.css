@@ -15,6 +15,7 @@
   --nf-magenta: #ff3d81;
   --nf-lime: #a6ff5c;
   --nf-amber: #ffb648;
+  --nf-crimson: #ff5347;
   --nf-disp: 'Oswald', 'Arial Narrow', system-ui, sans-serif;
   --nf-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   --nf-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -480,6 +481,35 @@
 .nf-dos-ev.opp { color: #ffdda3; background: #171203; border: 1px solid #4a3a1e; }
 .nf-dos-ev.pressure { color: #ffc3d5; background: #180a10; border: 1px solid #4a2434; }
 
+/* RIVAL SYNDICATE (turf contests) -------------------------------------------- */
+/* A contested pin gets a crimson core + a TURF badge on the opposite corner from
+   the featured/event badge, so a job can show both a bonus and a contest. */
+.nf-pin.rival .nf-core { border-color: var(--nf-crimson); box-shadow: 0 0 14px var(--nf-crimson), inset 0 0 6px #0008; }
+.nf-rival-badge { position: absolute; top: -8px; left: -8px; z-index: 3; font-family: var(--nf-disp);
+  font-weight: 700; font-size: 8px; letter-spacing: 1px; color: #fff; background: linear-gradient(180deg, #ff6a5a, #d8382b);
+  border-radius: 5px; padding: 1px 4px; box-shadow: 0 0 8px #ff534788; pointer-events: none; }
+.nf-tag b.turf { color: var(--nf-crimson); }
+
+/* Turf-war banner — mirrors the event ticker, crimson, stacks below it. */
+.nf-rivalbar { position: absolute; z-index: 20; top: 12px; left: 50%; transform: translateX(-50%);
+  max-width: min(560px, calc(100% - 24px)); display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px; border-radius: 999px; background: #100a0cf2; backdrop-filter: blur(8px);
+  border: 1px solid #5a2f2a; box-shadow: 0 8px 26px #000a, 0 0 18px #ff534722; font-family: var(--nf-body);
+  animation: nf-eb-in .3s cubic-bezier(.2, .8, .2, 1); }
+.nf-rivalbar.below { top: 58px; }
+.nf-rb-ic { flex: none; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+  color: var(--nf-crimson); background: #1a0a08; border: 1px solid #5a2f2a; }
+.nf-rb-txt { flex: 1; min-width: 0; font-size: 12px; color: var(--nf-ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-rb-txt b { font-family: var(--nf-disp); font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #ff9b8f; }
+.nf-rb-clock { flex: none; font-family: var(--nf-mono); font-size: 11px; color: var(--nf-crimson); font-variant-numeric: tabular-nums; }
+
+/* Crimson chips: dossier eyebrow + debrief. */
+.nf-rival-tag, .nf-turf-tag { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
+  color: #fff; background: linear-gradient(180deg, #ff6a5a, #d8382b); border-radius: 999px; padding: 2px 7px; margin-left: 8px; }
+.nf-dos-rival { font-family: var(--nf-body); font-size: 12px; line-height: 1.45; margin-top: 9px; padding: 8px 11px;
+  border-radius: 11px; color: #ffcabf; background: #180b09; border: 1px solid #4a2621; }
+.nf-dos-rival b { color: var(--nf-crimson); }
+
 /* COACH TIPS ------------------------------------------------------------------
    One-at-a-time contextual hint, tucked bottom-left above the dock. */
 .nf-coach { position: absolute; left: 14px; bottom: 14px; z-index: 24; width: 330px; max-width: calc(100% - 28px);
@@ -524,6 +554,11 @@
   .nf-eventbar { top: 8px; padding: 6px 12px; max-width: calc(100% - 16px); }
   .nf-eb-blurb { display: none; }
 
+  /* Turf-war banner: compact (rival name + clock), stacked under the ticker. */
+  .nf-rivalbar { top: 8px; padding: 6px 12px; max-width: calc(100% - 16px); }
+  .nf-rivalbar.below { top: 46px; }
+  .nf-rb-blurb { display: none; }
+
   .nf-onboard { padding: 8px 12px; gap: 9px; }
   .nf-onboard-ic { display: none; }
   .nf-onboard-txt { font-size: 11.5px; }
@@ -535,7 +570,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nf-pin::before, .nf-pin[data-state="ready"] .nf-core, .nf-heat-fill.hot { animation: none; }
-  .nf-eventbar, .nf-coach, .nf-report, .nf-daily-btn { animation: none; }
+  .nf-eventbar, .nf-rivalbar, .nf-coach, .nf-report, .nf-daily-btn { animation: none; }
   /* Floaters still appear (JS removes them after ~1.3s), just without travel. */
   .nf-floater { animation: none; opacity: 1; }
   .nf-stat .v.cash.gain { transform: none; }
