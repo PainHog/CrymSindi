@@ -72,7 +72,14 @@ no double-dip with featured/event bonuses if a contest lands on a flagged job.
       spoils preview. A conditional `Turf` HUD stat (turf-win record). A `RIVAL_TIP`
       coach tip (fires after 2 jobs). A `Turf seized` debrief chip. Verified headless
       (desktop + mobile). _(commit on dev)_
-- [ ] **Phase 4 — Balance, verify, build.**
+- [x] **Phase 4 — Balance, verify, build.** Balance reasoned (no probe needed):
+      spoils are +50% of the take, gated behind *winning* a contested job during
+      its window — the same magnitude band as featured (+25–60%) and events
+      (fence +40%), but with a success + timeliness requirement. Cash reward, kept
+      out of the multiplier chain, so no runaway stacking even if a contest lands
+      on a featured/event job. **No config tuning needed.** Verified headless
+      (board banner-stacking, contested pin, dossier callout) on desktop + mobile;
+      single-file build rebuilt + re-delivered. _(dev)_
 
 ---
 
