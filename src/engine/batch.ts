@@ -11,6 +11,7 @@
 
 import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
+import type { ApproachId } from '../data/approaches';
 import { gearForRole } from '../data/gear';
 import { ROLES } from '../data/roles';
 import type { RoleId } from '../data/roles';
@@ -28,12 +29,14 @@ export function sendAllIdle(
   heistId: string,
   now: number,
   config: Config = CONFIG,
+  approachId?: ApproachId,
+  prep = false,
 ): ActionResult {
   let s = state;
   let launched = 0;
   for (const crew of state.crews) {
     if (crew.status !== 'idle') continue;
-    const res = launchHeist(s, heistId, crew.id, now, undefined, config);
+    const res = launchHeist(s, heistId, crew.id, now, undefined, config, approachId, prep);
     if (res.ok) {
       s = res.state;
       launched += 1;

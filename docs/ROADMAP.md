@@ -156,9 +156,11 @@ Captured for later; not committed to unless promoted into a feature above.
 3. **Content longevity** — shipped (merged, PR #3).
 4. **Crew identity & attachment** — done (veterancy + specialist recruit tiers,
    above). Remaining idea if revisited: backstory/loyalty flavor.
-5. **Automation depth** — make sure crews progress toward running themselves so
-   mid-game isn't clicky. Believed handled (Fixer perk + automation ladder);
-   re-verify against code before ruling out.
+5. **Automation depth** — re-verified. Offline is solid (the Fixer auto-collects +
+   relaunches while away) and the HUD has one-tap Collect-all. Found + closed a
+   map gap: `sendAllIdle` (batch dispatch) existed in the engine but wasn't on the
+   map, so re-dispatching mid-game was per-crew. Added a "Send all idle crews"
+   button to the Dossier (respects the chosen approach/prep). Done.
 6. **Expand map slots** — done. SLOTS now holds **24** (8 added in the empty gaps),
    so the board has headroom for future heists.
 
