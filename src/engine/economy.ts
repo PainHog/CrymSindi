@@ -293,6 +293,7 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
       careerCash: state.careerCash,
       contractLevel: state.contractLevel,
       stats: state.stats,
+      turfWins: state.turfWins ?? 0,
       milestonesEarned: state.milestonesEarned,
       // The login streak is real-time, not run-scoped — keep it across prestige.
       dailyClaimDay: state.dailyClaimDay,
@@ -352,6 +353,7 @@ export function ascend(state: GameState, now: number, config: Config = CONFIG): 
       ascendCount: (state.ascendCount ?? 0) + 1,
       careerCash: state.careerCash,
       stats: state.stats,
+      turfWins: state.turfWins ?? 0,
       milestonesEarned: state.milestonesEarned,
       dailyClaimDay: state.dailyClaimDay,
       dailyStreak: state.dailyStreak,

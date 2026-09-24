@@ -56,11 +56,14 @@ no double-dip with featured/event bonuses if a contest lands on a flagged job.
       on its own window/seed (distinct from featured & events). Config knobs
       (`rivalWindowSec` 1800, `rivalChance` 0.5, `rivalSpoilsFrac` 0.5). 8 tests.
       Pure/tested, no wiring. _(commit on dev)_
-- [ ] **Phase 2 — Launch/collect wiring.** Snapshot `rivalContest` on the
-      `ActiveHeist` at launch; at collect, on success, add the cash spoils +
-      increment a `turfWins` career total + note it in the report. Back-compat
-      (optional fields, defaults, preserved across prestige/ascend). Offline
-      covered (the Fixer relaunch goes through `launchHeist`).
+- [x] **Phase 2 — Launch/collect wiring.** `rivalId` snapshotted onto the
+      `ActiveHeist` at launch; at collect, a successful contested job sets
+      `report.turfSeized`/`rivalSpoils`, adds the spoils cash (outside the payout
+      multiplier chain), and increments `GameState.turfWins`. Back-compat: optional
+      fields, `turfWins` defaulted in `createInitialState`/`clampState` and carried
+      across prestige + ascension. Offline & batch dispatch route through
+      `launchHeist`/`collectHeist`, so they're covered for free. 5 wiring tests.
+      _(commit on dev)_
 - [ ] **Phase 3 — Map UI.** Hostile rival marker on the contested pin, a turf-war
       banner with the rival's name + a race countdown, a dossier callout, the
       turf-win record, a coach tip, and a debrief chip.

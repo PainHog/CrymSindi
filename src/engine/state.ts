@@ -54,6 +54,7 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     careerCash: 0,
     contractLevel: 0,
     stats: { heistsCompleted: 0, heistsSucceeded: 0, flawless: 0, biggestScore: 0 },
+    turfWins: 0,
     milestonesEarned: [],
     dailyClaimDay: -1,
     dailyStreak: 0,
@@ -330,6 +331,8 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     legend: isFiniteNum(state.legend) ? Math.max(0, Math.floor(state.legend)) : 0,
     ascendCount: isFiniteNum(state.ascendCount) ? Math.max(0, Math.floor(state.ascendCount)) : 0,
     legendPerks: sanitizeLegendPerks(state.legendPerks),
+    // Turf wins — default for legacy/edited saves written before rivals existed.
+    turfWins: isFiniteNum(state.turfWins) ? Math.max(0, Math.floor(state.turfWins)) : 0,
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
     stats: {
       heistsCompleted: Math.max(0, Math.floor(state.stats.heistsCompleted)),
