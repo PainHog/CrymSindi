@@ -30,8 +30,9 @@ the work it describes. Newest status at the top.
   map-first UI default; classic at `?classic=1`.
 - **In flight (dev branch):** working through the **outstanding-issues list** (see
   the section below). Done so far: dev-panel gated out of production + a save
-  migration framework. **Release readiness** merged earlier (PR #13); to put it
-  on a URL, enable repo Settings → Pages → Source = GitHub Actions (one-time).
+  migration framework (PR #15); a PR CI test gate. **Release readiness** merged
+  earlier (PR #13); to put it on a URL, enable repo Settings → Pages → Source =
+  GitHub Actions (one-time).
 
 ---
 
@@ -49,7 +50,12 @@ Resolving the "remaining improvements & outstanding issues" review, in order.
       longer wipes saves — `loadGame`/`importSave` migrate instead of rejecting
       (and still refuse a newer-than-known or corrupt save). Convention documented
       in the file. 8 tests.
-- [ ] **CI test gate on PRs** + bump workflow Node versions.
+- [x] **CI test gate on PRs.** `.github/workflows/test.yml` runs `npm run build`
+      (tsc + vite) + `npm test` on every PR and push to `main`, so a red change
+      can't merge. Bumped both workflows to Node 22. (The "Node 20 deprecated"
+      run warning is GitHub auto-upgrading the *actions'* runtime — checkout /
+      setup-node are already at their latest major `v4`, so there's nothing to
+      change on our side; it's informational, not our config.)
 - [ ] **Accessibility pass** (map + drawers).
 - [ ] **Events v2** (jackpot target + heat-reactive) — deferred backlog.
 - [ ] **Meta-layer onboarding depth + crew backstory flavor.**
