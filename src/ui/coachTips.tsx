@@ -11,7 +11,8 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { CONFIG } from '../data/config';
-import { canAscend, eventNow, featuredNow, isMemberDown, type GameState } from '../engine';
+import { HEISTS_BY_ID } from '../data/heists';
+import { canAscend, eventNow, featuredNow, isHeistUnlocked, isMemberDown, type GameState } from '../engine';
 import { useGame } from '../store/GameContext';
 import { useHeatSnapshot } from './hooks';
 import type { IconName } from './icons';
@@ -115,6 +116,23 @@ export const ASCEND_TIP: Tip = {
   when: (g) => canAscend(g),
 };
 
+export const CAPSTONE_TIP: Tip = {
+  id: 'capstone',
+  icon: 'centralbank',
+  title: 'The legendary score is open',
+  body: (
+    <>
+      Ascending unlocked <strong>The Sovereign Reserve</strong> — the biggest job on the board, and
+      only a legend can pull it. It wants a full four-role crew and pays like nothing else. Build up
+      and take the door.
+    </>
+  ),
+  when: (g) => {
+    const cap = HEISTS_BY_ID['sovereign_reserve'];
+    return cap ? isHeistUnlocked(g, cap) : false;
+  },
+};
+
 /** Classic layout: Heat + prestige (the two the intro banner skips). */
 export const BASE_TIPS: Tip[] = [HEAT_TIP, PRESTIGE_TIP];
 
@@ -127,6 +145,7 @@ export const MAP_TIPS: Tip[] = [
   EVENTS_TIP,
   PRESTIGE_TIP,
   ASCEND_TIP,
+  CAPSTONE_TIP,
 ];
 
 /** Drives one-at-a-time coaching over a tip set: returns the active tip (sticky

@@ -281,7 +281,7 @@ export function maxUnlockedTier(state: GameState, config: Config = CONFIG): numb
 }
 
 export function isHeistUnlocked(state: GameState, heist: HeistDef): boolean {
-  return heist.tier <= maxUnlockedTier(state);
+  return heist.tier <= maxUnlockedTier(state) && (heist.minAscend ?? 0) <= (state.ascendCount ?? 0);
 }
 
 // ---- Heist instance status --------------------------------------------------

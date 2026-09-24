@@ -19,9 +19,10 @@ the work it describes. Newest status at the top.
   events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
 - **Merged to `main`:** the full game (PR #1) and Living-Map Events (PR #2).
 - **In PR review:** Ascension / Legend (PR #3, all 4 phases) — open against `main`.
-- **In flight (dev branch):** Content longevity — **Phase 1 (new heists) DONE**;
-  Phases 2–3 pending.
-- **Tests:** 160 passing. Build clean.
+- **In flight (dev branch):** Content longevity — **all 3 phases DONE** (new
+  heists + ascension-gated capstone + polish). Part of PR #3 (combined with
+  ascension).
+- **Tests:** 164 passing. Build clean.
 
 ---
 
@@ -75,12 +76,14 @@ More rungs on the climb, and content that rewards ascension. Fills out the board
       integrity test (well-formed, unique ids, non-overlapping tier bands, board ≤
       SLOTS). Catalog now 14 heists + contract = 15 pins (SLOTS holds 16).
       _(commit on dev branch)_
-- [ ] **Phase 2 — Ascension-gated capstone.** A high-end job unlocked by ascending
-      (via a `minAscend` gate on `HeistDef` + `isHeistUnlocked`), so ascension pays
-      out in content, not just multipliers. Tests.
-- [ ] **Phase 3 — Balance & board polish.** Probe the extended curve; headless
-      board check at full unlock (16 pins); capstone coach tip; note SLOTS is at
-      capacity (future content needs more slots).
+- [x] **Phase 2 — Ascension-gated capstone.** The Sovereign Reserve (tier 5,
+      4 roles, 180 pps / diff 46) unlocks only after ascending, via a `minAscend`
+      gate on `HeistDef` + `isHeistUnlocked` (still respects the tier gate). Icons
+      mapped for all new jobs (reuse existing glyphs). 4 gate tests. _(commit on dev)_
+- [x] **Phase 3 — Board polish.** Capstone coach tip added; headless board check at
+      full unlock confirmed all **16 pins** (15 heists + contract) lay out without
+      overlap, and Legend shows in the HUD. **NOTE: SLOTS is now at capacity (16);
+      any further heist needs new map slots in `mapSlots.ts`.** _(commit on dev)_
 
 ---
 

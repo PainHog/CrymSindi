@@ -38,6 +38,9 @@ export interface HeistDef {
   failHeatBonus: number;
   /** Difficulty each member rolls against; also drives the crew-size minimum. */
   difficulty: number;
+  /** Minimum ascensions before this job unlocks (0/undefined = no ascension gate).
+   *  Used for ascension-reward content like the capstone. */
+  minAscend?: number;
 }
 
 export const HEISTS: HeistDef[] = [
@@ -217,6 +220,22 @@ export const HEISTS: HeistDef[] = [
     heatCost: 92,
     failHeatBonus: 60,
     difficulty: 38, // hardest job, but clearable by a just-unlocked tier-5 crew so it leads $/min
+  },
+
+  // ---- Capstone: unlocked only after ascending (see minAscend) -------------
+  {
+    id: 'sovereign_reserve',
+    tier: 5,
+    name: 'The Sovereign Reserve',
+    description:
+      "The score they only tell as a legend. The door opens for an ascended name and no one else. ~12 hours.",
+    requiredRoles: ['hacker', 'muscle', 'driver', 'lookout'],
+    durationSec: 12 * 60 * 60,
+    payoutPerSec: 180,
+    heatCost: 115,
+    failHeatBonus: 75,
+    difficulty: 46,
+    minAscend: 1,
   },
 ];
 
