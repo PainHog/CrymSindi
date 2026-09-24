@@ -14,7 +14,8 @@ import type { Config } from '../data/config';
 import { approachFor, type ApproachId } from '../data/approaches';
 import { featuredBonusFor } from './featured';
 import { eventEffectFor, eventForHeist } from './events';
-import { rivalContestFor, rivalSpoilsFor } from './rivals';
+import { rivalContestFor, isRivalDominated, rivalWinCount, rivalryLevel, rivalSpoilsWithStanding } from './rivals';
+import { RIVALS_BY_ID } from '../data/rivals';
 import { HEISTS_BY_ID } from '../data/heists';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
@@ -299,21 +300,40 @@ export function collectHeist(
   // cash spoils (a fraction of the take) plus a career turf-win. Kept out of the
   // payout-multiplier chain so it never double-dips a featured/event bonus.
   if (active.rivalId && report.success) {
-    const spoils = rivalSpoilsFor(report.payout, config);
-    report.turfSeized = true;
-    report.rivalSpoils = spoils;
-    report.rivalId = active.rivalId;
+    const rid = active.rivalId;
+    // Spoils escalate with the rivalry standing BEFORE this win (they came back
+    // harder at your current level); domination fires the win that first crosses
+    // the threshold, paying a one-time bonus scaled by the clinching take.
+    const spoils = rivalSpoilsWithStanding(next, rid, report.payout, config);
+    const newWins = rivalWinCount(next, rid) + 1;
+    const dominatingNow = !isRivalDominated(next, rid) && newWins >= config.rivalDominateAt;
+    const dominationBonus = dominatingNow
+      ? Math.max(0, Math.round(report.payout * config.rivalDominateTakeMult))
+      : 0;
+    const bonusCash = spoils + dominationBonus;
+
     next = {
       ...next,
       turfWins: (next.turfWins ?? 0) + 1,
-      ...(spoils > 0
+      rivalWins: { ...(next.rivalWins ?? {}), [rid]: newWins },
+      ...(dominatingNow ? { rivalsDominated: [...(next.rivalsDominated ?? []), rid] } : {}),
+      ...(bonusCash > 0
         ? {
-            cash: next.cash + spoils,
-            lifetimeCash: next.lifetimeCash + spoils,
-            careerCash: next.careerCash + spoils,
+            cash: next.cash + bonusCash,
+            lifetimeCash: next.lifetimeCash + bonusCash,
+            careerCash: next.careerCash + bonusCash,
           }
         : {}),
     };
+
+    report.turfSeized = true;
+    report.rivalSpoils = spoils;
+    report.rivalId = rid;
+    report.rivalryLevel = rivalryLevel(next, rid, config); // standing after this win
+    if (dominatingNow) {
+      report.rivalDominated = true;
+      report.dominationBonus = dominationBonus;
+    }
   }
   // Clearing a contract escalates the next one.
   if (report.success && isContract(active.heistId)) {
@@ -327,6 +347,10 @@ export function collectHeist(
     report.payout > 0 ? `${report.headline} · +${formatCash(report.payout)}` : report.headline;
   if (report.turfSeized) {
     message += report.rivalSpoils ? ` · Turf seized +${formatCash(report.rivalSpoils)}` : ' · Turf seized';
+  }
+  if (report.rivalDominated && report.dominationBonus) {
+    const rivalName = report.rivalId ? RIVALS_BY_ID[report.rivalId]?.name ?? 'them' : 'them';
+    message += ` · Ran ${rivalName} out of town +${formatCash(report.dominationBonus)}`;
   }
   if (injured) message += ` · ${injured.name} was hurt`;
   return { ok: true, state: next, message, report };

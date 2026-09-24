@@ -17,19 +17,20 @@ the work it describes. Newest status at the top.
   veterancy + specialist recruit tiers (PR #4), **map-slot expansion** to 24
   (PR #5), and **automation batch-dispatch** — "Send all idle crews" on the map
   (PR #6), **first-run onboarding** — the send/wait/collect guide strip
-  (PR #7), and **audio & juice (game feel)** — collect-moment floater, cash
-  count-up, prestige bloom, tactile buttons, mute toggle (PR #8). So `main` now
-  has: core loop, heat, traits & synergies, gear, skill
+  (PR #7), **audio & juice (game feel)** — collect-moment floater, cash
+  count-up, prestige bloom, tactile buttons, mute toggle (PR #8), and **Rival
+  Syndicate (turf contests)** — a competitive opponent racing you for jobs
+  (PR #9). So `main` now has: core loop, heat, traits & synergies, gear, skill
   training, offline/welcome-back, daily reward, prestige → Notoriety,
   approaches/prep/injuries/featured, living-map events, the second prestige
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
   veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
-  first-run onboarding guide, and a full game-feel juice layer. Noir map-first
-  UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Rival Syndicate (turf contests)** — Phase 1 DONE
-  (deterministic contest engine + config + rival flavor data + 8 tests). A rival
-  crew stakes a claim on one job per window; beat them to it to seize the turf.
-  Next: launch/collect wiring, then the map UI.
+  first-run onboarding guide, a full game-feel juice layer, and a rival crew
+  contesting the board. Noir map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** **Rivalry deepening (persistent nemeses)** — Phase 1
+  DONE (per-rival win standing, escalating spoils, a domination payoff, wired into
+  collect with back-compat + 5 tests). Turns the one-shot contests into an ongoing
+  feud. Next: the UI (standing in the dossier + a rivalries list), then ship.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
@@ -37,7 +38,45 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Feature: Rival Syndicate (turf contests)
+## Feature: Rivalry deepening (persistent nemeses)
+
+Makes the rival crews *persistent*, not random. Each named rival now remembers
+how many times you've beaten them; the more you win, the harder they come back
+and the bigger the spoils — and beating one enough times runs them out of town
+for a one-time payoff. Turns the one-shot contests into an ongoing feud.
+
+Architecture note: contest *selection* stays deterministic/stateless (which
+rival + job each window). Only the *reward magnitude* reads the stored standing,
+so the clean pure-function design is preserved.
+
+- [x] **Phase 1 — Standing + escalation engine.** `GameState.rivalWins`
+      (per-rival win counts) + `rivalsDominated` (career totals, back-compat
+      defaults + carried across prestige/ascension). Selectors in `engine/rivals.ts`:
+      `rivalWinCount`, `rivalryLevel` (one level per `rivalWinsPerLevel` wins),
+      `rivalStakeMult` (+`rivalEscalationStep` per level, capped at
+      `rivalEscalationMax`), `rivalSpoilsWithStanding`, `isRivalDominated`.
+      `collectHeist` now pays escalated spoils (by pre-win standing), increments
+      the per-rival win, and fires a one-time domination bonus
+      (`rivalDominateTakeMult` × the clinching take) the win that reaches
+      `rivalDominateAt`. Report gains `rivalryLevel`/`rivalDominated`/
+      `dominationBonus`. 5 tests. _(commit on dev)_
+- [x] **Phase 2 — UI.** The dossier callout now reads the standing ("<Rival> is
+      back for more — you've taken N from them (Lv L)") with the escalated spoils
+      preview; the turf-war banner shows a `Lv L` chip; the Reputation drawer gained
+      a **Rivalries rap sheet** (each rival: tag, turf-taken count, rivalry level,
+      a gold `RUN OUT` badge when dominated); the debrief gained a gold domination
+      chip. Verified headless. _(commit on dev)_
+- [x] **Phase 3 — Balance, verify, ship.** Balance reasoned: escalation caps at
+      ×2 spoils but needs 15 wins vs one rival (a long, aspirational grind);
+      domination pays 5× the clinching take but only once per rival (5 one-time
+      bonuses across the whole game). All cash — no meta-economy perturbation.
+      **No tuning needed.** Verified headless (dossier standing callout, banner
+      level chip, rap sheet with a dominated crew); single-file build rebuilt +
+      re-delivered. _(dev)_
+
+---
+
+## Feature: Rival Syndicate (turf contests) _(shipped — merged in PR #9)_
 
 A competitive opponent on the map — a new gameplay axis, not just more content.
 A rival crew periodically stakes a claim on one specific job (a deterministic

@@ -21,6 +21,7 @@ import type { HeistId } from '../data/heists';
 import { RIVALS } from '../data/rivals';
 import type { RivalDef } from '../data/rivals';
 import { makeRng } from './resolution';
+import type { GameState } from './types';
 
 /** A rival crew contesting a specific job in a given window. */
 export interface RivalContest {
@@ -75,7 +76,45 @@ export function rivalContestsHeist(heistId: string, now: number, config: Config 
   return rivalContestFor(heistId, now, config) != null;
 }
 
-/** Cash spoils for seizing a contested job whose take was `payout`. */
+/** Base cash spoils for seizing a contested job whose take was `payout` (before
+ *  the per-rival escalation multiplier). */
 export function rivalSpoilsFor(payout: number, config: Config = CONFIG): number {
   return Math.max(0, Math.round(payout * config.rivalSpoilsFrac));
+}
+
+// ---- Persistent rivalries --------------------------------------------------
+// Each rival remembers how many times you've beaten them. Wins raise a "rivalry
+// level", and a higher level means bigger spoils when that rival comes back —
+// so a specific nemesis is worth hunting. Contest *selection* stays stateless;
+// only the reward magnitude reads this stored standing.
+
+/** How many times you've seized a contested job from this rival. */
+export function rivalWinCount(state: GameState, rivalId: string): number {
+  return state.rivalWins?.[rivalId] ?? 0;
+}
+
+/** The rivalry level with a rival — one level per `rivalWinsPerLevel` wins. */
+export function rivalryLevel(state: GameState, rivalId: string, config: Config = CONFIG): number {
+  return Math.floor(rivalWinCount(state, rivalId) / config.rivalWinsPerLevel);
+}
+
+/** The spoils multiplier from the rivalry (1 at level 0, capped as it escalates). */
+export function rivalStakeMult(state: GameState, rivalId: string, config: Config = CONFIG): number {
+  const bonus = Math.min(rivalryLevel(state, rivalId, config) * config.rivalEscalationStep, config.rivalEscalationMax);
+  return 1 + bonus;
+}
+
+/** Spoils for a contested job of this take, escalated by the rivalry standing. */
+export function rivalSpoilsWithStanding(
+  state: GameState,
+  rivalId: string,
+  payout: number,
+  config: Config = CONFIG,
+): number {
+  return Math.max(0, Math.round(rivalSpoilsFor(payout, config) * rivalStakeMult(state, rivalId, config)));
+}
+
+/** Whether you've run this rival out of town (dominated them). */
+export function isRivalDominated(state: GameState, rivalId: string): boolean {
+  return (state.rivalsDominated ?? []).includes(rivalId);
 }

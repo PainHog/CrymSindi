@@ -10,14 +10,18 @@ import { CONFIG } from '../../data/config';
 import { MILESTONES } from '../../data/milestones';
 import { PERKS, perkCost } from '../../data/perks';
 import { LEGEND_PERKS, legendPerkCost } from '../../data/legendPerks';
+import { RIVALS } from '../../data/rivals';
 import {
   canAscend,
   canPrestige,
   isMilestoneEarned,
+  isRivalDominated,
   legendGainFor,
   legendPerkLevel,
   notorietyGainFor,
   perkLevel,
+  rivalryLevel,
+  rivalWinCount,
 } from '../../engine';
 import { useGame } from '../../store/GameContext';
 import { formatCash } from '../format';
@@ -179,6 +183,41 @@ export function RepDrawer() {
                 })}
               </div>
             )}
+          </>
+        )}
+
+        {game.turfWins > 0 && (
+          <>
+            <div className="nf-mp-sect" style={{ color: 'var(--nf-crimson)' }}>
+              Rivalries · <b style={{ color: 'var(--nf-ink)' }}>{game.turfWins}</b> turf won
+            </div>
+            <div className="nf-rivlist">
+              {RIVALS.map((rv) => {
+                const wins = rivalWinCount(game, rv.id);
+                const lvl = rivalryLevel(game, rv.id);
+                const dominated = isRivalDominated(game, rv.id);
+                return (
+                  <div key={rv.id} className={'nf-riv' + (dominated ? ' dominated' : '')}>
+                    <span className="nf-riv-ic">
+                      <Icon name="crew" size={14} />
+                    </span>
+                    <div className="nf-riv-main">
+                      <div className="nf-riv-name">
+                        {rv.name}
+                        {dominated && <span className="nf-riv-badge">RUN OUT</span>}
+                      </div>
+                      <div className="nf-riv-d">{rv.tag}</div>
+                    </div>
+                    <div className="nf-riv-rec">
+                      <span className="nf-riv-wins" title="Turf taken from this crew">
+                        {wins}
+                      </span>
+                      {lvl > 0 && <span className="nf-riv-lvl">Lv {lvl}</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
 

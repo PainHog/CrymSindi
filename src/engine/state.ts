@@ -11,6 +11,7 @@ import { CONFIG } from '../data/config';
 import type { Config } from '../data/config';
 import { PERKS_BY_ID } from '../data/perks';
 import { LEGEND_PERKS_BY_ID } from '../data/legendPerks';
+import { RIVALS_BY_ID } from '../data/rivals';
 import { SAFEHOUSE_TIERS } from '../data/safehouses';
 import { deriveHeat, hasFixer } from './selectors';
 import { collectHeist, launchHeist } from './heists';
@@ -55,6 +56,8 @@ export function createInitialState(now: number, config: Config = CONFIG): GameSt
     contractLevel: 0,
     stats: { heistsCompleted: 0, heistsSucceeded: 0, flawless: 0, biggestScore: 0 },
     turfWins: 0,
+    rivalWins: {},
+    rivalsDominated: [],
     milestonesEarned: [],
     dailyClaimDay: -1,
     dailyStreak: 0,
@@ -299,6 +302,23 @@ function sanitizePerks(raw: unknown): Record<string, number> {
   return out;
 }
 
+/** Keep only known rivals with a non-negative integer win count. */
+function sanitizeRivalWins(raw: unknown): Record<string, number> {
+  const src = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const out: Record<string, number> = {};
+  for (const id of Object.keys(RIVALS_BY_ID)) {
+    const v = src[id];
+    if (isFiniteNum(v) && v > 0) out[id] = Math.floor(v);
+  }
+  return out;
+}
+
+/** Keep only known rival ids from a dominated list. */
+function sanitizeDominated(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((x): x is string => typeof x === 'string' && x in RIVALS_BY_ID);
+}
+
 /** Keep only known legend perks, each clamped to [0, its maxLevel]. */
 function sanitizeLegendPerks(raw: unknown): Record<string, number> {
   const src = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
@@ -331,8 +351,10 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     legend: isFiniteNum(state.legend) ? Math.max(0, Math.floor(state.legend)) : 0,
     ascendCount: isFiniteNum(state.ascendCount) ? Math.max(0, Math.floor(state.ascendCount)) : 0,
     legendPerks: sanitizeLegendPerks(state.legendPerks),
-    // Turf wins — default for legacy/edited saves written before rivals existed.
+    // Turf wins + per-rival standing — default for legacy/edited saves.
     turfWins: isFiniteNum(state.turfWins) ? Math.max(0, Math.floor(state.turfWins)) : 0,
+    rivalWins: sanitizeRivalWins(state.rivalWins),
+    rivalsDominated: sanitizeDominated(state.rivalsDominated),
     heat: Math.min(config.maxHeat, Math.max(0, state.heat)),
     stats: {
       heistsCompleted: Math.max(0, Math.floor(state.stats.heistsCompleted)),

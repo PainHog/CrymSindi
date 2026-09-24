@@ -67,6 +67,13 @@ export interface Config {
   rivalWindowSec: number; // contest window length (real seconds)
   rivalChance: number; // fraction of windows that run a contest (0..1)
   rivalSpoilsFrac: number; // seize bonus = this * the job's take (extra cash)
+  // Persistent rivalries: each rival remembers how many times you've beaten them.
+  // The more you win, the harder they come back — and the bigger the spoils.
+  rivalWinsPerLevel: number; // wins against a rival per rivalry level
+  rivalEscalationStep: number; // +this spoils fraction per rivalry level
+  rivalEscalationMax: number; // cap on the escalation bonus (fraction)
+  rivalDominateAt: number; // wins vs one rival that "runs them out of town"
+  rivalDominateTakeMult: number; // one-time domination bonus = this * the take
 
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
@@ -213,6 +220,11 @@ export const CONFIG: Config = {
   rivalWindowSec: 1800, // 30-min contest windows (off the featured/event clocks)
   rivalChance: 0.5, // ~half the windows run a contest; the rest are quiet
   rivalSpoilsFrac: 0.5, // seize a contested job -> +50% of the take as spoils
+  rivalWinsPerLevel: 3, // every 3 wins vs a rival raises the rivalry a level
+  rivalEscalationStep: 0.2, // +20% spoils per rivalry level (they come back harder)
+  rivalEscalationMax: 1.0, // capped at +100% (so max spoils = base * 2)
+  rivalDominateAt: 6, // beat one rival 6 times to run them out of town
+  rivalDominateTakeMult: 5, // domination pays a one-time 5x the clinching take
 
   // ---- Prestige / Notoriety ------------------------------------------------
   // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is

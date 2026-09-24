@@ -11,6 +11,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { CONFIG } from '../../data/config';
 import { EVENTS_BY_ID } from '../../data/events';
+import { RIVALS_BY_ID } from '../../data/rivals';
 import { GEAR_BY_ID, gearForRole } from '../../data/gear';
 import type { GearDef } from '../../data/gear';
 import { ROLES_BY_ID } from '../../data/roles';
@@ -153,6 +154,12 @@ function NoirReportBody({ report }: { report: HeistReport }) {
               {report.turfSeized && (
                 <span className="nf-turf-tag">
                   Turf seized{report.rivalSpoils ? ` +${formatCash(report.rivalSpoils)}` : ''}
+                </span>
+              )}
+              {report.rivalDominated && (
+                <span className="nf-turf-tag dominate">
+                  Ran {report.rivalId ? RIVALS_BY_ID[report.rivalId]?.name ?? 'them' : 'them'} out
+                  {report.dominationBonus ? ` +${formatCash(report.dominationBonus)}` : ''}
                 </span>
               )}
             </div>
