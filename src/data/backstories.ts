@@ -24,6 +24,14 @@ export const BACKSTORIES: string[] = [
   'Came up through the docks; fears nothing on water.',
   "Swears they're retiring after this one. Said it last year too.",
   'A ghost on the street: no record, no photo, no past.',
+  'Reads a room faster than anyone should be able to.',
+  'Keeps a go-bag packed by the door, always has.',
+  'Burned every bridge home to be here.',
+  "Only works nights; won't say why.",
+  'Splits every take three ways and keeps one.',
+  'Was the getaway before they could legally drive.',
+  "Counts cards, exits, and everyone's tells.",
+  'Left a straight job the day it stopped paying rent.',
 ];
 
 /** Stable index into the backstory pool from an arbitrary id string. */

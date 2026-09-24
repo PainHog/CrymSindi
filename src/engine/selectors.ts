@@ -301,6 +301,20 @@ export function deriveHeat(state: GameState, now: number, config: Config = CONFI
   return clamp(cooled, 0, config.maxHeat);
 }
 
+/**
+ * Whether a given Heat level puts the city on a manhunt (high-alert). Pure over
+ * the number so callers can pass either a live `deriveHeat` reading (UI) or a
+ * launch-time snapshot (resolution) and get a consistent answer.
+ */
+export function isManhuntAt(heat: number, config: Config = CONFIG): boolean {
+  return heat >= config.manhuntThreshold;
+}
+
+/** Whether the crew is under a manhunt right now, from live derived Heat. */
+export function manhuntActive(state: GameState, now: number, config: Config = CONFIG): boolean {
+  return isManhuntAt(deriveHeat(state, now, config), config);
+}
+
 // ---- Progression ------------------------------------------------------------
 
 /** Highest heist tier currently unlocked (tier 1 always unlocked). */

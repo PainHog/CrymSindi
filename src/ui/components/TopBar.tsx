@@ -13,7 +13,7 @@ export function TopBar() {
           <Icon name="mask" size={26} />
         </span>
         <div className="brand-text">
-          <h1>Heist Crew Idle</h1>
+          <h1>Nightfall Syndicate</h1>
           <span className="brand-tag">Syndicate Operations</span>
         </div>
       </div>

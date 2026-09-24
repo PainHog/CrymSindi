@@ -44,6 +44,21 @@ export const HEAT_TIP: Tip = {
   when: (_g, heat) => heat >= 50,
 };
 
+export const MANHUNT_TIP: Tip = {
+  id: 'manhunt',
+  icon: 'heat',
+  title: 'The city is hunting you',
+  body: (
+    <>
+      Heat is high enough that you're in a <strong>manhunt</strong> — the law is actively looking for
+      your crew. Any job you launch now eats an <strong>extra odds penalty</strong> on top of the
+      usual heat hit, and it's locked in for that run. Best move is to <strong>lie low</strong>: stop
+      launching and let Heat cool until the alert lifts.
+    </>
+  ),
+  when: (_g, heat) => heat >= CONFIG.manhuntThreshold,
+};
+
 export const INJURY_TIP: Tip = {
   id: 'injury',
   icon: 'heat',
@@ -169,6 +184,7 @@ export const BASE_TIPS: Tip[] = [HEAT_TIP, PRESTIGE_TIP];
  *  jobs, living-map events). Order is priority — most urgent/relevant first. */
 export const MAP_TIPS: Tip[] = [
   HEAT_TIP,
+  MANHUNT_TIP,
   INJURY_TIP,
   FEATURED_TIP,
   EVENTS_TIP,

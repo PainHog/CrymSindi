@@ -21,7 +21,10 @@ export function SoundFx() {
         playSfx('launch');
         break;
       case 'collect':
-        playSfx(event.success ? 'success' : 'fail');
+        // Escalate the payoff cue: turf seized > flawless > plain success > fail.
+        playSfx(
+          !event.success ? 'fail' : event.turfSeized ? 'turf' : event.flawless ? 'flawless' : 'success',
+        );
         break;
       case 'purchase':
         playSfx('purchase');

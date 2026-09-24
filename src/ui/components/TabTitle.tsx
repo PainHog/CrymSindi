@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useGame, useNow } from '../../store/GameContext';
 
-const BASE_TITLE = 'Heist Crew Idle';
+const BASE_TITLE = 'Nightfall Syndicate';
 
 /**
  * Reflects ready-to-collect heists in the browser tab title — "(2) Ready ·
- * Heist Crew Idle" — so a heist finishing pulls the player back to an open tab.
+ * Nightfall Syndicate" — so a heist finishing pulls the player back to an open tab.
  * Renders nothing.
  */
 export function TabTitle() {

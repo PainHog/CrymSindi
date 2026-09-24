@@ -524,6 +524,28 @@
 /* The domination debrief chip reads as a trophy (gold), distinct from the crimson turf chip. */
 .nf-turf-tag.dominate { background: linear-gradient(180deg, #ffd27a, #f0a93a); color: #1a1204; }
 
+/* Manhunt banner — high-alert "the law is hunting you" state, derived from live
+   Heat. Hazard red, pulses to read as urgent; stacks below the event/rival bars. */
+.nf-manhuntbar { position: absolute; z-index: 20; top: 12px; left: 50%; transform: translateX(-50%);
+  max-width: min(560px, calc(100% - 24px)); display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px; border-radius: 999px; background: #140708f2; backdrop-filter: blur(8px);
+  border: 1px solid #7a2a24; box-shadow: 0 8px 26px #000a, 0 0 22px #ff2e1e33; font-family: var(--nf-body);
+  animation: nf-eb-in .3s cubic-bezier(.2, .8, .2, 1), nf-manhunt-pulse 1.8s ease-in-out infinite; }
+.nf-manhuntbar.below { top: 58px; }
+.nf-mh-ic { flex: none; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+  color: #ff5a48; background: #240a08; border: 1px solid #7a2a24; }
+.nf-mh-txt { flex: 1; min-width: 0; font-size: 12px; color: var(--nf-ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-mh-txt b { font-family: var(--nf-disp); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #ff6a58; }
+@keyframes nf-manhunt-pulse {
+  0%, 100% { box-shadow: 0 8px 26px #000a, 0 0 18px #ff2e1e22; }
+  50% { box-shadow: 0 8px 26px #000a, 0 0 30px #ff2e1e55; }
+}
+/* Manhunt chips/warning in the dossier. */
+.nf-manhunt-tag { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
+  color: #fff; background: linear-gradient(180deg, #ff6a58, #d02a1c); border-radius: 999px; padding: 2px 7px; margin-left: 8px; }
+.nf-dos-manhunt { font-family: var(--nf-body); font-size: 12px; line-height: 1.45; margin-top: 9px; padding: 8px 11px;
+  border-radius: 11px; color: #ffc4bb; background: #1a0806; border: 1px solid #5a2620; }
+
 /* Rivalries rap sheet (Reputation drawer). */
 .nf-rivlist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 6px; }
 .nf-riv { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 12px; background: #0f0b0c; border: 1px solid #2a1d1d; }
@@ -625,6 +647,7 @@
 @media (prefers-reduced-motion: reduce) {
   .nf-pin::before, .nf-pin[data-state="ready"] .nf-core, .nf-heat-fill.hot, .nf-ev.jackpot { animation: none; }
   .nf-eventbar, .nf-rivalbar, .nf-coach, .nf-report, .nf-daily-btn { animation: none; }
+  .nf-manhuntbar { animation: none; }
   /* Floaters still appear (JS removes them after ~1.3s), just without travel. */
   .nf-floater { animation: none; opacity: 1; }
   .nf-stat .v.cash.gain { transform: none; }
