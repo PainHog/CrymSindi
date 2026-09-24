@@ -28,10 +28,12 @@ the work it describes. Newest status at the top.
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board — now a persistent, escalating feud (PR #10). Noir
   map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** working through the **outstanding-issues list** (see
-  the section below). Done so far: dev-panel gated out of production + a save
-  migration framework (PR #15); a PR CI test gate (PR #16); an accessibility pass.
-  **Release readiness** merged
+- **In flight (dev branch):** the **outstanding-issues list is cleared** (see the
+  section below) — dev-panel gating + save migration (PR #15), a PR CI gate
+  (PR #16), an accessibility pass (PR #17), events v2 / jackpot (PR #18), and a
+  content + crew-flavor + mobile pass. Only the external items remain (Pages
+  toggle, real monetization SDK, human playtest, cloud save). **Release readiness**
+  merged
   earlier (PR #13); to put it on a URL, enable repo Settings → Pages → Source =
   GitHub Actions (one-time).
 
@@ -75,8 +77,19 @@ Resolving the "remaining improvements & outstanding issues" review, in order.
       Verified headless. **Heat-reactive events deferred by design** — they'd need
       per-player event state, which breaks the stateless deterministic-timestamp
       model the whole event/featured/rival system relies on; noted as a v3 idea.
-- [ ] **Meta-layer onboarding depth + crew backstory flavor.**
-- [ ] **More content** (heists/rivals/events) + a **mobile UX pass.**
+- [x] **Meta-layer onboarding + crew backstory flavor.** Crew members now carry a
+      one-line **backstory** (`data/backstories.ts`, derived from the member id — a
+      stable FNV-1a hash into a pool, so it's cosmetic and needs no save state),
+      shown in the crew drawer. Added a **backup coach tip** (fires after the first
+      prestige) pointing players to Settings → Export so hard-won progress gets
+      backed up. The existing coach tips already cover prestige / ascension / rivals
+      / capstone, so the meta layers are onboarded; this fills the save-backup gap.
+      3 backstory tests.
+- [x] **More content + mobile UX pass.** 3 more rival crews (8 total: Saltwater
+      Kings, Hollow Men, Violet Hour) + the two variety events shipped in v2.
+      Mobile: bumped HUD icon buttons to 40px and overlay close buttons to 38px for
+      touch; the compact HUD / bottom-sheet dossier & debrief / full-screen drawer
+      were already handled.
 - **Can't resolve from here (need you / external):** live Pages deploy (repo
   setting), real monetization SDK (a provider/store), a human playtest, cloud save
   (needs a backend, breaks the 100%-client-side property).

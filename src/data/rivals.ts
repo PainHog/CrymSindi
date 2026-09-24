@@ -20,6 +20,9 @@ export const RIVALS: RivalDef[] = [
   { id: 'ashfall', name: 'Ashfall Crew', tag: 'arson-for-hire' },
   { id: 'the_gild', name: 'The Gild', tag: 'fences' },
   { id: 'nine_ravens', name: 'Nine Ravens', tag: 'ghosts' },
+  { id: 'saltwater', name: 'The Saltwater Kings', tag: 'dockside' },
+  { id: 'hollow_men', name: 'The Hollow Men', tag: 'enforcers' },
+  { id: 'violet_hour', name: 'Violet Hour', tag: 'grifters' },
 ];
 
 export const RIVALS_BY_ID: Record<string, RivalDef> = Object.fromEntries(

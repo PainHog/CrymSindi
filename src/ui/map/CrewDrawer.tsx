@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { CONFIG } from '../../data/config';
+import { backstoryFor } from '../../data/backstories';
 import { gearForRole, GEAR_BY_ID } from '../../data/gear';
 import { ROLES } from '../../data/roles';
 import { RECRUIT_TIERS, type RecruitTierId } from '../../data/recruits';
@@ -221,6 +222,7 @@ function MemberRow({ member }: { member: Member }) {
           <div className="nf-member-role">
             {member.role} · skill {member.skill}
           </div>
+          <div className="nf-member-bio">{backstoryFor(member.id)}</div>
         </div>
         <div className="nf-member-eff">
           {down ? '—' : Math.round(eff)}

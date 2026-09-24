@@ -103,6 +103,20 @@ export const RIVAL_TIP: Tip = {
   when: (g, _heat, now) => g.stats.heistsCompleted >= 2 && rivalNow(now) !== null,
 };
 
+export const BACKUP_TIP: Tip = {
+  id: 'backup',
+  icon: 'vault',
+  title: 'Back up your progress',
+  body: (
+    <>
+      You've got real progress now, and it lives only in this browser. Open{' '}
+      <strong>Settings</strong> (the gear, top right) and <strong>Export backup</strong> to copy a
+      code you can save or paste on another device. A cleared browser wipes an un-exported save.
+    </>
+  ),
+  when: (g) => g.prestigeCount >= 1,
+};
+
 export const PRESTIGE_TIP: Tip = {
   id: 'prestige',
   icon: 'vault',
@@ -160,6 +174,7 @@ export const MAP_TIPS: Tip[] = [
   EVENTS_TIP,
   RIVAL_TIP,
   PRESTIGE_TIP,
+  BACKUP_TIP,
   ASCEND_TIP,
   CAPSTONE_TIP,
 ];
