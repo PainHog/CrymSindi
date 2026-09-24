@@ -19,6 +19,8 @@ import {
   healthyCrew,
   isMemberDown,
   memberEffectiveSkill,
+  memberLevel,
+  veteranXpForLevel,
   nextCrewCost,
   nextSafehouseCost,
   recruitCost,
@@ -120,7 +122,7 @@ function CrewBlock({ crew }: { crew: Crew }) {
           {crew.status === 'onHeist' ? 'On a job' : hurt > 0 ? `${hurt} hurt` : 'Idle'}
         </span>
         <span className="nf-cb-pw">
-          {members.length}/{crew.maxMembers} · PWR {crewPower(game, healthyCrew(game, crew, now))}
+          {members.length}/{crew.maxMembers} · PWR {Math.round(crewPower(game, healthyCrew(game, crew, now)))}
         </span>
       </div>
 
@@ -167,6 +169,13 @@ function MemberRow({ member }: { member: Member }) {
   const trainCost = skillUpgradeCost(member);
   const maxedSkill = member.skill >= CONFIG.maxMemberSkill;
   const patch = healCost(member);
+  // Veterancy: level chip + XP-to-next-level progress.
+  const level = memberLevel(member);
+  const vetMaxed = level >= CONFIG.veteranMaxLevel;
+  const xp = member.xp ?? 0;
+  const xpFloor = veteranXpForLevel(level);
+  const xpNext = veteranXpForLevel(level + 1);
+  const xpPct = vetMaxed ? 100 : Math.round(((xp - xpFloor) / Math.max(1, xpNext - xpFloor)) * 100);
 
   return (
     <div className={'nf-member' + (down ? ' down' : '')}>
@@ -177,6 +186,11 @@ function MemberRow({ member }: { member: Member }) {
         <div className="nf-member-id">
           <div className="nf-member-name">
             {member.name}
+            {level > 0 && (
+              <span className="nf-member-lv" title={`Veteran · level ${level}`}>
+                Lv{level}
+              </span>
+            )}
             {down ? (
               <span className="nf-member-trait hurt">Hurt</span>
             ) : (
@@ -192,9 +206,16 @@ function MemberRow({ member }: { member: Member }) {
           </div>
         </div>
         <div className="nf-member-eff">
-          {down ? '—' : eff}
+          {down ? '—' : Math.round(eff)}
           <small>OUTPUT</small>
         </div>
+      </div>
+
+      <div
+        className="nf-xp"
+        title={vetMaxed ? 'Veteran — max level' : `${xp - xpFloor}/${xpNext - xpFloor} XP to Lv${level + 1}`}
+      >
+        <div className={'nf-xp-bar' + (vetMaxed ? ' max' : '')} style={{ width: xpPct + '%' }} />
       </div>
 
       <div className="nf-gearline">

@@ -416,7 +416,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
                 <span className="nf-cw-main">
                   <span className="nf-cw-name">{crewLabel(idx)}</span>
                   <span className="nf-cw-meta">
-                    {crew.memberIds.length} crew · PWR {crewPower(game, healthyCrew(game, crew, now))}
+                    {crew.memberIds.length} crew · PWR {Math.round(crewPower(game, healthyCrew(game, crew, now)))}
                     {why ? ' · ' + why : ''}
                   </span>
                 </span>
@@ -497,7 +497,7 @@ function CrewCard({ crew, idx, now, onManage }: { crew: Crew; idx: number; now: 
         <div>
           <div className="nf-cc-name">{crewLabel(idx)}</div>
           <div className="nf-cc-pw">
-            {crew.memberIds.length} crew · PWR {crewPower(game, healthyCrew(game, crew, now))}
+            {crew.memberIds.length} crew · PWR {Math.round(crewPower(game, healthyCrew(game, crew, now)))}
           </div>
         </div>
       </div>

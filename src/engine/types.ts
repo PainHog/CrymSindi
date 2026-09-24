@@ -21,6 +21,9 @@ export interface Member {
   gearIds: GearId[];
   /** Optional trait modifying effective skill (see data/traits.ts). */
   traitId?: string;
+  /** Career experience earned by going on jobs. Drives veteran level (a small
+   *  permanent effective-skill bonus). Optional — old saves default to 0. */
+  xp?: number;
   /** If set and in the future, this member is injured and sitting out until this
    *  ms-epoch time. Injured members don't count toward a crew and can't be sent.
    *  Undefined/past = healthy. */

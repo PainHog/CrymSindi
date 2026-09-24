@@ -72,6 +72,17 @@ export interface Config {
   legendKingpinPct: number; // Kingpin: +this payout multiplier per level
   legendRepEnginePct: number; // Reputation Engine: +this Notoriety-gain multiplier per level
   legendDeepPocketsCash: number; // Deep Pockets: +this starting cash per level
+
+  // Crew veterancy: members earn XP per job and level up for a small permanent
+  // effective-skill bonus (attachment — your long-serving crew get better).
+  veteranXpBase: number; // level = min(max, floor(sqrt(xp / this)))
+  veteranMaxLevel: number; // level cap
+  veteranSkillPerLevel: number; // +effective skill per veteran level
+  xpPerHeistBase: number; // base XP a participant earns per collected job
+  xpPerDifficulty: number; // + this * heist.difficulty
+  xpSuccessMult: number; // XP multiplier on a successful run
+  xpFlawlessMult: number; // ...on a flawless run
+  xpFailMult: number; // ...on a blown run (still some XP for showing up)
   // Notoriety is spent in a perk tree (see data/perks.ts). Per-level effects:
   perkReputationPct: number; // Reputation: +this payout multiplier per level
   perkConnectionsPower: number; // Connections: +this effective skill per level (all members)
@@ -212,6 +223,18 @@ export const CONFIG: Config = {
   legendKingpinPct: 0.1,
   legendRepEnginePct: 0.1,
   legendDeepPocketsCash: 5000,
+
+  // ---- Crew veterancy ------------------------------------------------------
+  // level 1 after ~2 early jobs; ~100+ jobs to max a member at +3 skill (a long
+  // attachment arc, a separate axis from the trainable skill cap of 15).
+  veteranXpBase: 20,
+  veteranMaxLevel: 10,
+  veteranSkillPerLevel: 0.3,
+  xpPerHeistBase: 8,
+  xpPerDifficulty: 0.5,
+  xpSuccessMult: 1.0,
+  xpFlawlessMult: 1.6,
+  xpFailMult: 0.35,
 
   // ---- Endgame "Syndicate Contract" (repeatable, escalates) ----------------
   contractBaseDifficulty: 54,

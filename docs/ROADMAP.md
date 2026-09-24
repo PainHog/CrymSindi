@@ -12,21 +12,40 @@ the work it describes. Newest status at the top.
 
 ## Current status (2026-09-24)
 
-- **Merged to `main`:** the full game (PR #1) and **Living-Map Events** (PR #2,
-  all 4 phases). Core loop, heat, traits & synergies, gear, skill training,
-  offline/welcome-back, daily reward, prestige → Notoriety perk tree, ported
-  prototype mechanics (approaches, prep, injuries, featured jobs), and living-map
-  events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
-- **Merged to `main`:** the full game (PR #1) and Living-Map Events (PR #2).
-- **In PR review:** Ascension / Legend (PR #3, all 4 phases) — open against `main`.
-- **In flight (dev branch):** Content longevity — **all 3 phases DONE** (new
-  heists + ascension-gated capstone + polish). Part of PR #3 (combined with
-  ascension).
-- **Tests:** 164 passing. Build clean.
+- **Merged to `main`:** the full game (PR #1), **Living-Map Events** (PR #2), and
+  **Ascension / Legend + Content longevity** (PR #3). So `main` now has: core loop,
+  heat, traits & synergies, gear, skill training, offline/welcome-back, daily
+  reward, prestige → Notoriety, approaches/prep/injuries/featured, living-map
+  events, the second prestige layer (Legend), and the extended heist catalog +
+  ascension-gated capstone. Noir map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** Crew identity — **Phases 1–2 DONE** (veterancy engine
+  + UI); Phase 3 pending.
+- **Tests:** 171 passing. Build clean.
 
 ---
 
-## Feature: Ascension / Legend (second prestige layer)
+## Feature: Crew identity (veterancy)
+
+Members earn XP from every job and level up (0–10) for a small permanent
+effective-skill bonus, so your long-serving crew grow into distinct, valuable
+veterans — attachment, and a sharper sting when an injury benches one.
+
+- [x] **Phase 1 — Veterancy engine.** `Member.xp` (+ clamp/legacy default);
+      `memberLevel` = `min(max, floor(sqrt(xp/base)))`, `veteranBonus`,
+      `veteranXpForLevel`, `xpForHeist`; XP awarded to every participant at collect
+      (win or lose, scaled by difficulty + outcome); veteran bonus folded into
+      `memberEffectiveSkill` (flows to odds/power everywhere). Config-driven
+      (level 1 ≈ 2 early jobs, ~100+ to max at +3 skill). 7 tests. _(commit on dev)_
+- [x] **Phase 2 — UI.** Crew-drawer member rows show a gold **Lv N** chip + an XP
+      progress bar (green at max). Fixed a display bug the fractional veteran bonus
+      exposed: PWR/OUTPUT and the debrief's per-member skill are now rounded for
+      display (raw value still drives the odds). Verified headless. _(commit on dev)_
+- [ ] **Phase 3 — Polish.** Maybe specialist recruit tiers; balance the XP curve;
+      headless verify.
+
+---
+
+## Feature: Ascension / Legend (second prestige layer) _(shipped — merged in PR #3)_
 
 A meta layer above Notoriety, for long-game retention past the first prestige.
 **Ascend** ("become a legend") burns your Notoriety and the whole Notoriety perk
@@ -65,7 +84,7 @@ permanent floor.
 
 ---
 
-## Feature: Content longevity
+## Feature: Content longevity _(shipped — merged in PR #3)_
 
 More rungs on the climb, and content that rewards ascension. Fills out the board
 (more targets for events/featured) and gives the deep meta a reason to re-play.
@@ -130,13 +149,15 @@ Captured for later; not committed to unless promoted into a feature above.
 
 ### "Most impactful next" candidates (from the strategy pass)
 1. **Living-map events** — shipped (merged, PR #2).
-2. **Second prestige / ascension layer** — in flight (Ascension / Legend, above).
-3. **Automation depth** — make sure crews progress toward running themselves so
+2. **Second prestige / ascension layer** — shipped (merged, PR #3).
+3. **Content longevity** — shipped (merged, PR #3).
+4. **Crew identity & attachment** — in flight (veterancy, above). Remaining ideas:
+   specialist recruit tiers, backstory/loyalty flavor.
+5. **Automation depth** — make sure crews progress toward running themselves so
    mid-game isn't clicky. Believed handled (Fixer perk + automation ladder);
    re-verify against code before ruling out.
-4. **Content longevity** — more heists / tiers / a capstone "boss" job for late game.
-5. **Crew identity & attachment** — names/faces/backstory progression, rarer
-   specialist recruits, to deepen attachment and retention.
+6. **Expand map slots** — done. SLOTS now holds **24** (8 added in the empty gaps),
+   so the board has headroom for future heists.
 
 ### Audit findings already actioned (shipped)
 The earlier "what is the audience craving" audit drove the port of the prototype

@@ -34,6 +34,7 @@ import {
   isMemberDown,
   missingRoles,
   prepCostFor,
+  xpForHeist,
 } from './selectors';
 import { makeRng, minMembersFor, resolveHeist } from './resolution';
 import type { ActionResult, GameState, HeistReport, Member } from './types';
@@ -250,6 +251,19 @@ export function collectHeist(
     next = {
       ...next,
       members: next.members.map((m) => (m.id === injured!.id ? { ...m, downUntil } : m)),
+    };
+  }
+
+  // Veterancy: everyone who went earns XP (win or lose), which drives their
+  // level and a small permanent effective-skill bonus.
+  const participantIds = new Set(active.memberIds ?? crew.memberIds);
+  const xpGain = xpForHeist(heist.difficulty, { success: report.success, flawless: report.perfect }, config);
+  if (xpGain > 0 && participantIds.size > 0) {
+    next = {
+      ...next,
+      members: next.members.map((m) =>
+        participantIds.has(m.id) ? { ...m, xp: (m.xp ?? 0) + xpGain } : m,
+      ),
     };
   }
 

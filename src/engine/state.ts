@@ -340,6 +340,8 @@ function clampState(state: GameState, config: Config = CONFIG): GameState {
     members: state.members.map((m) => ({
       ...m,
       skill: Math.min(config.maxMemberSkill, Math.max(0, m.skill)),
+      // Career XP: default a legacy/edited value to 0 and floor negatives.
+      xp: isFiniteNum(m.xp) ? Math.max(0, Math.floor(m.xp)) : 0,
       // Drop a non-finite injury timer (hand-edited NaN/Infinity) so a member
       // can't be benched forever; a finite one is kept and compared to `now`.
       downUntil: Number.isFinite(m.downUntil) ? m.downUntil : undefined,
