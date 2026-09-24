@@ -96,7 +96,9 @@ describe('prestige', () => {
     );
     const report = resolveWithNotoriety(s);
     // Base 5 + Connections lvl 3 (+1.5) + Tight Unit synergy (3 distinct roles, +1) = 7.5.
-    expect(report.members[0].effectiveSkill).toBeCloseTo(5 + 1.5 + 1, 5);
+    // The beat's effectiveSkill is a rounded display value (fractional bonuses like
+    // Connections/veterancy make the raw value non-integer), so 7.5 shows as 8.
+    expect(report.members[0].effectiveSkill).toBe(Math.round(5 + 1.5 + 1));
     // Reputation lvl 10 = notorietyMult 1.5x on the take.
     expect(report.payout).toBeGreaterThan(0);
   });

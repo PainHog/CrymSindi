@@ -18,8 +18,8 @@ the work it describes. Newest status at the top.
   reward, prestige → Notoriety, approaches/prep/injuries/featured, living-map
   events, the second prestige layer (Legend), and the extended heist catalog +
   ascension-gated capstone. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** Crew identity — **Phase 1 (veterancy engine) DONE**;
-  Phases 2–3 pending.
+- **In flight (dev branch):** Crew identity — **Phases 1–2 DONE** (veterancy engine
+  + UI); Phase 3 pending.
 - **Tests:** 171 passing. Build clean.
 
 ---
@@ -36,8 +36,10 @@ veterans — attachment, and a sharper sting when an injury benches one.
       (win or lose, scaled by difficulty + outcome); veteran bonus folded into
       `memberEffectiveSkill` (flows to odds/power everywhere). Config-driven
       (level 1 ≈ 2 early jobs, ~100+ to max at +3 skill). 7 tests. _(commit on dev)_
-- [ ] **Phase 2 — UI.** Show level + an XP bar on member rows in the crew drawer;
-      a "veteran" chip; the after-action beats/coach can nod to a level-up.
+- [x] **Phase 2 — UI.** Crew-drawer member rows show a gold **Lv N** chip + an XP
+      progress bar (green at max). Fixed a display bug the fractional veteran bonus
+      exposed: PWR/OUTPUT and the debrief's per-member skill are now rounded for
+      display (raw value still drives the odds). Verified headless. _(commit on dev)_
 - [ ] **Phase 3 — Polish.** Maybe specialist recruit tiers; balance the XP curve;
       headless verify.
 

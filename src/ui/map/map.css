@@ -230,6 +230,10 @@
 .nf-member-role { font-family: var(--nf-mono); font-size: 9px; color: var(--nf-ink-dim); text-transform: capitalize; margin-top: 1px; }
 .nf-member-eff { flex: none; text-align: right; font-family: var(--nf-disp); font-weight: 600; font-size: 18px; color: var(--nf-lime); font-variant-numeric: tabular-nums; line-height: 1; }
 .nf-member-eff small { display: block; font-family: var(--nf-mono); font-weight: 400; font-size: 7px; letter-spacing: 1.5px; color: var(--nf-ink-faint); }
+.nf-member-lv { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase; color: #1a1204; background: linear-gradient(180deg, #ffd27a, #f0a93a); border-radius: 999px; padding: 1px 6px; font-weight: 700; }
+.nf-xp { height: 4px; border-radius: 3px; background: #101a29; border: 1px solid var(--nf-line-soft); overflow: hidden; margin: 8px 0 2px; }
+.nf-xp-bar { height: 100%; background: linear-gradient(90deg, #f0a93a, #ffd27a); transition: width .3s; }
+.nf-xp-bar.max { background: linear-gradient(90deg, #84e433, var(--nf-lime)); }
 .nf-gearline { display: flex; gap: 4px; align-items: center; margin: 9px 0 8px; }
 .nf-pip { width: 18px; height: 6px; border-radius: 3px; background: #101a29; border: 1px solid var(--nf-line); }
 .nf-pip.on { background: linear-gradient(90deg, var(--nf-cyan), #2183a0); border-color: #2f6f86; box-shadow: 0 0 7px #37e8ff44; }

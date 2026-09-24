@@ -273,18 +273,21 @@ export function resolveHeist(
     const roll = rng();
     const passed = roll < chance;
     const quality = classify(passed, chance - roll);
+    // Raw `eff` drives the pass chance; the beat shows a rounded value (veteran
+    // bonuses make eff fractional, and the debrief/recs display it as text).
+    const effShown = Math.round(eff);
     return {
       memberId: m.id,
       name: m.name,
       role: m.role,
-      effectiveSkill: eff,
+      effectiveSkill: effShown,
       gearIds: m.gearIds,
       trait: m.traitId ? TRAITS_BY_ID[m.traitId]?.name : undefined,
       passed,
       roll,
       chance,
       quality,
-      detail: beatDetail(m.name, m.role, quality, eff, heist.difficulty, heatHigh),
+      detail: beatDetail(m.name, m.role, quality, effShown, heist.difficulty, heatHigh),
     };
   });
 
