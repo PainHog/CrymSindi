@@ -17,19 +17,18 @@ the work it describes. Newest status at the top.
   veterancy + specialist recruit tiers (PR #4), **map-slot expansion** to 24
   (PR #5), and **automation batch-dispatch** — "Send all idle crews" on the map
   (PR #6), **first-run onboarding** — the send/wait/collect guide strip
-  (PR #7), and **audio & juice (game feel)** — collect-moment floater, cash
-  count-up, prestige bloom, tactile buttons, mute toggle (PR #8). So `main` now
-  has: core loop, heat, traits & synergies, gear, skill
+  (PR #7), **audio & juice (game feel)** — collect-moment floater, cash
+  count-up, prestige bloom, tactile buttons, mute toggle (PR #8), and **Rival
+  Syndicate (turf contests)** — a competitive opponent racing you for jobs
+  (PR #9). So `main` now has: core loop, heat, traits & synergies, gear, skill
   training, offline/welcome-back, daily reward, prestige → Notoriety,
   approaches/prep/injuries/featured, living-map events, the second prestige
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
   veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
-  first-run onboarding guide, and a full game-feel juice layer. Noir map-first
-  UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Rival Syndicate (turf contests)** — Phase 1 DONE
-  (deterministic contest engine + config + rival flavor data + 8 tests). A rival
-  crew stakes a claim on one job per window; beat them to it to seize the turf.
-  Next: launch/collect wiring, then the map UI.
+  first-run onboarding guide, a full game-feel juice layer, and a rival crew
+  contesting the board. Noir map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** nothing substantive — the dev branch carries only
+  this log update on top of `main`, ready for the next feature.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
@@ -37,7 +36,7 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Feature: Rival Syndicate (turf contests)
+## Feature: Rival Syndicate (turf contests) _(shipped — merged in PR #9)_
 
 A competitive opponent on the map — a new gameplay axis, not just more content.
 A rival crew periodically stakes a claim on one specific job (a deterministic
