@@ -287,6 +287,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
     if (odds > best) best = odds;
     return { crew, eligible, odds, why: block };
   });
+  const eligibleIdle = rows.filter((r) => r.eligible).length;
 
   const accent = risk === 'hi' ? 'var(--nf-magenta)' : risk === 'med' ? 'var(--nf-amber)' : 'var(--nf-cyan)';
   return (
@@ -427,6 +428,19 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
             );
           })}
         </div>
+
+        {eligibleIdle >= 2 && (
+          <button
+            className="nf-btn ghost"
+            title="Dispatch every idle, eligible crew to this job at once (uses the chosen approach)"
+            onClick={() => {
+              actions.sendAllIdle(heist.id, approachId, prepArmed);
+              onClose();
+            }}
+          >
+            <Icon name="crew" size={13} /> Send all idle crews · {eligibleIdle}
+          </button>
+        )}
 
         <button className="nf-btn ghost" onClick={onManage}>
           Manage crews & gear

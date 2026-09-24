@@ -20,6 +20,17 @@ describe('sendAllIdle', () => {
     expect(res.state.crews.every((c) => c.status === 'onHeist')).toBe(true);
   });
 
+  it('applies the chosen approach to every dispatched crew', () => {
+    const base = createInitialState(T0);
+    const c2: Crew = { id: 'c2', safehouseId: 's1', memberIds: ['m1', 'm2', 'm3'], maxMembers: 8, status: 'idle' };
+    const state: GameState = { ...base, crews: [base.crews[0], c2] };
+    const res = sendAllIdle(state, 'smash_grab', T0, undefined, 'loud');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.state.activeHeists).toHaveLength(2);
+    expect(res.state.activeHeists.every((a) => a.approachId === 'loud')).toBe(true);
+  });
+
   it('skips a busy crew and errors when none are idle-eligible', () => {
     const base = createInitialState(T0);
     const busy: Crew = { ...base.crews[0], status: 'onHeist' };

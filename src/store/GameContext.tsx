@@ -86,7 +86,7 @@ interface UIState {
 
 type Action =
   | { type: 'launch'; heistId: string; crewId: string; now: number; seed: number; approachId?: ApproachId; prep?: boolean }
-  | { type: 'sendAllIdle'; heistId: string; now: number }
+  | { type: 'sendAllIdle'; heistId: string; now: number; approachId?: ApproachId; prep?: boolean }
   | { type: 'gearUpCrew'; crewId: string }
   | { type: 'fillCrew'; crewId: string }
   | { type: 'collect'; id: string; now: number }
@@ -155,7 +155,11 @@ function reducer(ui: UIState, action: Action): UIState {
         { kind: 'launch' },
       );
     case 'sendAllIdle':
-      return applyResult(ui, sendAllIdle(ui.game, action.heistId, action.now), { kind: 'launch' });
+      return applyResult(
+        ui,
+        sendAllIdle(ui.game, action.heistId, action.now, CONFIG, action.approachId, action.prep),
+        { kind: 'launch' },
+      );
     case 'gearUpCrew':
       return applyResult(ui, gearUpCrew(ui.game, action.crewId), { kind: 'purchase' });
     case 'fillCrew':
@@ -341,7 +345,7 @@ interface GameContextValue {
   away: AwaySummary | null;
   actions: {
     launch: (heistId: string, crewId: string, approachId?: ApproachId, prep?: boolean) => void;
-    sendAllIdle: (heistId: string) => void;
+    sendAllIdle: (heistId: string, approachId?: ApproachId, prep?: boolean) => void;
     gearUpCrew: (crewId: string) => void;
     fillCrew: (crewId: string) => void;
     collect: (id: string) => void;
@@ -436,7 +440,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           approachId,
           prep,
         }),
-      sendAllIdle: (heistId) => dispatch({ type: 'sendAllIdle', heistId, now: Date.now() }),
+      sendAllIdle: (heistId, approachId, prep) =>
+        dispatch({ type: 'sendAllIdle', heistId, now: Date.now(), approachId, prep }),
       gearUpCrew: (crewId) => dispatch({ type: 'gearUpCrew', crewId }),
       fillCrew: (crewId) => dispatch({ type: 'fillCrew', crewId }),
       collect: (id) => dispatch({ type: 'collect', id, now: Date.now() }),
