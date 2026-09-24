@@ -61,13 +61,25 @@ function scopeCandidates(def: EventDef): HeistId[] {
  * The event for a given window index, or null for a quiet window. Deterministic
  * and pure: the same index always yields the same event and flagged jobs.
  */
+/** Deterministic weighted pick from the event catalog (one rng draw, so it
+ *  doesn't shift the downstream Fisher-Yates stream). */
+function pickEvent(r: number): EventDef {
+  const total = EVENTS.reduce((a, d) => a + (d.weight ?? 1), 0);
+  let x = r * total;
+  for (const d of EVENTS) {
+    x -= d.weight ?? 1;
+    if (x < 0) return d;
+  }
+  return EVENTS[EVENTS.length - 1];
+}
+
 export function eventForWindow(index: number, config: Config = CONFIG): ActiveEvent | null {
   const rnd = makeRng((index * 0x85ebca77) >>> 0);
   // Some windows are quiet - roll that first so the stream stays stable.
   if (rnd() >= config.eventChance) return null;
   if (EVENTS.length === 0) return null;
 
-  const def = EVENTS[Math.floor(rnd() * EVENTS.length)];
+  const def = pickEvent(rnd());
   const candidates = scopeCandidates(def);
   if (candidates.length === 0) return null;
 

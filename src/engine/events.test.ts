@@ -119,4 +119,23 @@ describe('living-map events', () => {
     const distinct = new Set([sig(0), sig(1), sig(2), sig(3), sig(4), sig(5), sig(6), sig(7)]);
     expect(distinct.size).toBeGreaterThan(1);
   });
+
+  it('weighted selection: the rare jackpot appears, but far less than a common event', () => {
+    const counts: Record<string, number> = {};
+    let active = 0;
+    for (let i = 0; i < 6000; i++) {
+      const ev = eventForWindow(i);
+      if (!ev) continue;
+      active++;
+      counts[ev.def.id] = (counts[ev.def.id] ?? 0) + 1;
+    }
+    // Every catalog event is still selectable.
+    for (const e of EVENTS) expect(counts[e.id] ?? 0).toBeGreaterThan(0);
+    // The whale (weight 0.35) is meaningfully rarer than a common event (weight 1).
+    const whale = counts['the_whale'] ?? 0;
+    const fence = counts['fence_in_town'] ?? 0;
+    expect(whale).toBeLessThan(fence * 0.6);
+    // Roughly its share of total weight (~0.35 / sum) — sanity, not exact.
+    expect(whale / active).toBeLessThan(0.12);
+  });
 });

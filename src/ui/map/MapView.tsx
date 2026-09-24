@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { APPROACHES, approachFor, type ApproachId } from '../../data/approaches';
 import { CONFIG } from '../../data/config';
 import { HEISTS, type HeistDef } from '../../data/heists';
+import { isJackpotEvent } from '../../data/events';
 import {
   canClaimDaily,
   contractHeistDef,
@@ -246,8 +247,13 @@ export function MapView() {
                 {contested && status === 'open' && <span className="nf-rival-badge">TURF</span>}
                 {featured && status === 'open' && <span className="nf-hot">HOT</span>}
                 {ev && status === 'open' && (
-                  <span className={'nf-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>
-                    {ev.def.kind === 'pressure' ? 'RISK' : 'BONUS'}
+                  <span
+                    className={
+                      'nf-ev ' +
+                      (ev.def.kind === 'pressure' ? 'pressure' : isJackpotEvent(ev.def) ? 'jackpot' : 'opp')
+                    }
+                  >
+                    {ev.def.kind === 'pressure' ? 'RISK' : isJackpotEvent(ev.def) ? 'JACKPOT' : 'BONUS'}
                   </span>
                 )}
                 <span className="nf-core">
@@ -389,7 +395,14 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
           <span className="nf-dos-dot" /> {RISK_LABEL[risk]} · tier {heist.tier}
           {featBonus > 1 && <span className="nf-hot-tag">Featured +{Math.round((featBonus - 1) * 100)}%</span>}
           {ev && (
-            <span className={'nf-ev-tag ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.name}</span>
+            <span
+              className={
+                'nf-ev-tag ' +
+                (ev.def.kind === 'pressure' ? 'pressure' : isJackpotEvent(ev.def) ? 'jackpot' : 'opp')
+              }
+            >
+              {ev.def.name}
+            </span>
           )}
           {rival && <span className="nf-rival-tag">Turf war</span>}
         </div>
@@ -593,10 +606,15 @@ function Stat({ k, v, c }: { k: string; v: string; c?: string }) {
 
 function EventBar({ event, now }: { event: ActiveEvent; now: number }) {
   const pressure = event.def.kind === 'pressure';
+  const jackpot = isJackpotEvent(event.def);
   return (
-    <div className={'nf-eventbar ' + (pressure ? 'pressure' : 'opp')} role="status" aria-live="polite">
+    <div
+      className={'nf-eventbar ' + (pressure ? 'pressure' : jackpot ? 'jackpot' : 'opp')}
+      role="status"
+      aria-live="polite"
+    >
       <span className="nf-eb-ic">
-        <Icon name={pressure ? 'heat' : 'cash'} size={14} />
+        <Icon name={pressure ? 'heat' : jackpot ? 'trophy' : 'cash'} size={14} />
       </span>
       <span className="nf-eb-txt">
         <b>{event.def.name}</b>

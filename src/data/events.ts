@@ -38,6 +38,8 @@ export interface EventDef {
   /** Which catalog jobs this event can flag. Give tiers or explicit ids. */
   scope: { tiers?: number[]; heistIds?: HeistId[] };
   effect: EventEffect;
+  /** Relative selection weight (default 1). A rare jackpot sits below 1. */
+  weight?: number;
 }
 
 export const EVENTS: EventDef[] = [
@@ -81,7 +83,39 @@ export const EVENTS: EventDef[] = [
     scope: { tiers: [3, 4, 5] },
     effect: { rewardMult: 1.35, oddsDelta: -0.12 },
   },
+  {
+    id: 'hot_tip',
+    name: 'Hot tip',
+    blurb: 'Word on the street points to an easy mark — a little more, a little safer.',
+    kind: 'opportunity',
+    scope: { tiers: [1, 2, 3] },
+    effect: { rewardMult: 1.2, oddsDelta: 0.06 },
+  },
+  {
+    id: 'snitch',
+    name: 'Snitch in the wind',
+    blurb: 'Someone’s talking to the cops — jobs here are a coin-flip until it blows over.',
+    kind: 'pressure',
+    scope: { tiers: [2, 3, 4, 5] },
+    effect: { oddsDelta: -0.16 },
+  },
+  {
+    // The rare jackpot: a career score. Low weight, so it turns up only now and
+    // then; when it does, it's the best cash on the board by far.
+    id: 'the_whale',
+    name: 'The Whale',
+    blurb: 'A once-in-a-season score just surfaced — this is the big one.',
+    kind: 'opportunity',
+    scope: { tiers: [3, 4, 5] },
+    effect: { rewardMult: 2.0 },
+    weight: 0.35,
+  },
 ];
+
+/** A jackpot event is a rare opportunity paying a headline take (>= 2x). */
+export function isJackpotEvent(def: EventDef): boolean {
+  return def.kind === 'opportunity' && (def.effect.rewardMult ?? 1) >= 2;
+}
 
 export const EVENTS_BY_ID: Record<string, EventDef> = Object.fromEntries(
   EVENTS.map((e) => [e.id, e]),
