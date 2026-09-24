@@ -63,6 +63,15 @@ export interface Config {
   // Prestige ("go legit") -> permanent Notoriety.
   prestigeThreshold: number; // lifetime cash needed before you can retire
   notorietyDivisor: number; // gain = floor(sqrt(lifetimeCash / this))
+
+  // Ascension ("become a legend") -> permanent Legend, a second meta layer above
+  // Notoriety. Ascending burns Notoriety + the Notoriety perk tree for Legend,
+  // which buys the (stronger) legend perks that persist across ascension.
+  ascendThreshold: number; // Notoriety needed before you can ascend
+  legendDivisor: number; // Legend gain = floor(sqrt(notoriety / this))
+  legendKingpinPct: number; // Kingpin: +this payout multiplier per level
+  legendRepEnginePct: number; // Reputation Engine: +this Notoriety-gain multiplier per level
+  legendDeepPocketsCash: number; // Deep Pockets: +this starting cash per level
   // Notoriety is spent in a perk tree (see data/perks.ts). Per-level effects:
   perkReputationPct: number; // Reputation: +this payout multiplier per level
   perkConnectionsPower: number; // Connections: +this effective skill per level (all members)
@@ -193,6 +202,16 @@ export const CONFIG: Config = {
   perkConnectionsPower: 0.5,
   perkCleanHandsPct: 0.25,
   perkWarChestCash: 750,
+
+  // ---- Ascension / Legend --------------------------------------------------
+  // ~75 Notoriety takes a few prestige cycles to reach; the sqrt curve then
+  // yields ~1-2 Legend per ascension early, scaling slowly. Legend perks are
+  // roughly 2x a Notoriety perk's magnitude to justify the deeper reset.
+  ascendThreshold: 75,
+  legendDivisor: 40,
+  legendKingpinPct: 0.1,
+  legendRepEnginePct: 0.1,
+  legendDeepPocketsCash: 5000,
 
   // ---- Endgame "Syndicate Contract" (repeatable, escalates) ----------------
   contractBaseDifficulty: 54,

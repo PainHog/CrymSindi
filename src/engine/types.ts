@@ -141,6 +141,15 @@ export interface GameState {
    *  Persists across prestige; drives the notoriety bonuses. */
   perks: Record<string, number>;
 
+  // ---- Ascension (second meta layer, persists across ascension) -------------
+  /** Permanent Legend currency, earned by ascending. Never reset. */
+  legend: number;
+  /** How many times the player has ascended ("become a legend"). */
+  ascendCount: number;
+  /** Purchased legend perk levels, keyed by id (see data/legendPerks.ts).
+   *  Persists across ascension; drives the legend bonuses. */
+  legendPerks: Record<string, number>;
+
   /** Timestamp of the last save; used for offline resolution + display. */
   lastSaved: number;
 
