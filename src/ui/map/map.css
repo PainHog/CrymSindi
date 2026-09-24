@@ -85,6 +85,23 @@
   100% { opacity: 0; transform: translateY(-46px) scale(1); }
 }
 
+/* PRESTIGE / ASCEND SCREEN MOMENT -------------------------------------------- */
+/* A brief full-screen bloom punctuating the big reset. Above the drawer, below
+   the report modal. */
+.nf-prestige-flash { position: fixed; inset: 0; z-index: 68; pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, #e2fbff5c 0%, #37e8ff30 22%, #ffb6481a 44%, #0000 70%);
+  animation: nf-prestige 750ms ease-out forwards; }
+@keyframes nf-prestige {
+  0% { opacity: 0; transform: scale(1.14); }
+  24% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* TACTILE PRESS on the primary action controls. */
+.nf-crew-opt:active:not(:disabled), .nf-btn:active:not(:disabled), .nf-icon-btn:active:not(:disabled),
+.nf-daily-btn:active, .nf-appr:active, .nf-prep:active:not(:disabled), .nf-cc-manage:active,
+.nf-wide-btn:active:not(:disabled) { transform: translateY(1px) scale(.98); }
+
 /* FIRST-RUN ONBOARDING STRIP ------------------------------------------------- */
 .nf-onboard { position: relative; z-index: 25; display: flex; align-items: center; gap: 11px;
   padding: 9px 16px; background: linear-gradient(180deg, #0c1c2b, #0a1420); border-bottom: 1px solid #204457;
@@ -522,4 +539,9 @@
   /* Floaters still appear (JS removes them after ~1.3s), just without travel. */
   .nf-floater { animation: none; opacity: 1; }
   .nf-stat .v.cash.gain { transform: none; }
+  /* Drop the full-screen prestige bloom and the press nudges. */
+  .nf-prestige-flash { display: none; }
+  .nf-crew-opt:active:not(:disabled), .nf-btn:active:not(:disabled), .nf-icon-btn:active:not(:disabled),
+  .nf-daily-btn:active, .nf-appr:active, .nf-prep:active:not(:disabled), .nf-cc-manage:active,
+  .nf-wide-btn:active:not(:disabled) { transform: none; }
 }

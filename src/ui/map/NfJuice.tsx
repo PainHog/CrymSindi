@@ -22,12 +22,16 @@ interface Live extends Floater {
 const LIFETIME_MS = 1300;
 const MAX_LIVE = 5;
 
+// A prestige/ascend is a big reset — punctuate it with a brief full-screen bloom.
+const FLASH_MS = 750;
+
 export function NfJuice() {
   const { event, eventId } = useGame();
   const lastId = useRef(0);
   const seq = useRef(0);
   const mounted = useRef(true);
   const [items, setItems] = useState<Live[]>([]);
+  const [flash, setFlash] = useState(0);
 
   useEffect(() => {
     mounted.current = true;
@@ -39,6 +43,13 @@ export function NfJuice() {
   useEffect(() => {
     if (eventId === lastId.current) return;
     lastId.current = eventId;
+    if (event?.kind === 'prestige') {
+      setFlash((n) => n + 1);
+      window.setTimeout(() => {
+        if (mounted.current) setFlash((n) => (n > 0 ? n - 1 : 0));
+      }, FLASH_MS);
+      return;
+    }
     const f = floaterFromEvent(event);
     if (!f) return;
     const key = ++seq.current;
@@ -48,15 +59,20 @@ export function NfJuice() {
     }, LIFETIME_MS);
   }, [event, eventId]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && flash === 0) return null;
   return (
-    <div className="nf-floaters" aria-hidden="true">
-      {items.map((it) => (
-        <span key={it.key} className={'nf-floater ' + it.tone + (it.flawless ? ' flawless' : '')}>
-          +{formatCash(it.payout)}
-          {it.flawless && <i className="nf-floater-perfect">clean</i>}
-        </span>
-      ))}
-    </div>
+    <>
+      {flash > 0 && <div className="nf-prestige-flash" aria-hidden="true" />}
+      {items.length > 0 && (
+        <div className="nf-floaters" aria-hidden="true">
+          {items.map((it) => (
+            <span key={it.key} className={'nf-floater ' + it.tone + (it.flawless ? ' flawless' : '')}>
+              +{formatCash(it.payout)}
+              {it.flawless && <i className="nf-floater-perfect">clean</i>}
+            </span>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

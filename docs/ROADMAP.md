@@ -58,11 +58,15 @@ juice and no mute control.
       map with no off switch there. All `prefers-reduced-motion`-guarded (count-up
       snaps, floater shows without travel). 5 tests. Verified headless (desktop +
       mobile). _(commit on dev)_
-- [ ] **Phase 2 — Audio.** Largely pre-existing (see above). Mute toggle added in
-      Phase 1; cues confirmed firing on the map. Candidate: a level-up cue.
-- [ ] **Phase 3 — Juice the rest.** Ready pins already pulse (`nf-bob`). To add:
-      launch/collect button press feedback, veterancy level-up flash, a
-      prestige/ascend screen moment. All reduced-motion guarded.
+- [x] **Phase 2 — Audio.** Largely pre-existing (see above). Mute toggle added in
+      Phase 1 and confirmed firing on the map. No new code needed. _(dev)_
+- [x] **Phase 3 — Juice the rest.** Tactile press (`:active` scale) on the primary
+      action controls (crew-assign, collect, HUD icons, approach/prep, daily). A
+      **prestige/ascend screen bloom** (`.nf-prestige-flash`, triggered off the
+      `prestige` GameEvent in `NfJuice`) punctuates the big reset. Ready pins were
+      already pulsing (`nf-bob`). All reduced-motion guarded (bloom + presses
+      dropped). Verified headless. **Deferred:** veterancy level-up flash (levels
+      change slowly; needs level-diff tracking — low payoff for now). _(commit on dev)_
 - [ ] **Phase 4 — Polish, perf check, re-deliver the single-file build.**
 
 ---
