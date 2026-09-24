@@ -16,6 +16,8 @@ import { activeSynergies, synergyPower } from '../data/synergies';
 import type { HeistDef } from '../data/heists';
 import { ROLES_BY_ID } from '../data/roles';
 import type { RoleId } from '../data/roles';
+import { recruitTierFor } from '../data/recruits';
+import type { RecruitTierId } from '../data/recruits';
 import { UPGRADES_BY_ID } from '../data/upgrades';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
 import type { Crew, GameState, Member, Safehouse } from './types';
@@ -350,6 +352,27 @@ export function recruitCost(
   return Math.round(
     role.recruitCost * Math.pow(config.recruitCostMultPerMember, crew.memberIds.length),
   );
+}
+
+/** Recruit cost for a given specialist tier (base cost x the tier's multiplier). */
+export function recruitTierCost(
+  crew: Crew,
+  roleId: RoleId,
+  tierId: RecruitTierId | undefined,
+  config: Config = CONFIG,
+): number {
+  return Math.round(recruitCost(crew, roleId, config) * recruitTierFor(tierId).costMult);
+}
+
+/** Starting skill a recruit of this role + tier would have (clamped to the cap). */
+export function recruitTierSkill(
+  roleId: RoleId,
+  tierId: RecruitTierId | undefined,
+  config: Config = CONFIG,
+): number {
+  const role = ROLES_BY_ID[roleId];
+  if (!role) return 0;
+  return Math.min(config.maxMemberSkill, role.baseSkill + recruitTierFor(tierId).skillBonus);
 }
 
 /** Cost of the next skill upgrade for a member (returns Infinity if maxed). */

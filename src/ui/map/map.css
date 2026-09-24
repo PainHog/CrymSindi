@@ -254,6 +254,10 @@
 
 .nf-recruit { margin-top: 2px; }
 .nf-recruit-label { font-family: var(--nf-mono); font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--nf-ink-faint); margin-bottom: 7px; }
+.nf-tier-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 7px; }
+.nf-tier-btn { font-family: var(--nf-disp); font-weight: 600; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; padding: 6px 4px; border-radius: 9px; border: 1px solid var(--nf-line); background: #0b1524; color: var(--nf-ink-dim); cursor: pointer; transition: .15s; }
+.nf-tier-btn:hover { border-color: #2f4a6e; color: var(--nf-ink); }
+.nf-tier-btn.on { border-color: var(--nf-amber); color: var(--nf-amber); background: #191408; }
 .nf-role-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
 .nf-role-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 3px; border-radius: 11px; border: 1px solid var(--nf-line); background: #0b1524; color: var(--nf-ink-dim); cursor: pointer; transition: .15s; }
 .nf-role-btn:hover:not(:disabled) { border-color: var(--nf-cyan); color: var(--nf-cyan); }

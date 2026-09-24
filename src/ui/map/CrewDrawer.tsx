@@ -7,9 +7,11 @@
 // logic here — costs and power all come from the engine selectors.
 // -----------------------------------------------------------------------------
 
+import { useState } from 'react';
 import { CONFIG } from '../../data/config';
 import { gearForRole, GEAR_BY_ID } from '../../data/gear';
 import { ROLES } from '../../data/roles';
+import { RECRUIT_TIERS, type RecruitTierId } from '../../data/recruits';
 import { SAFEHOUSE_TIERS_BY_ID, safehouseTierIndex, SAFEHOUSE_TIERS } from '../../data/safehouses';
 import { TRAITS_BY_ID } from '../../data/traits';
 import {
@@ -23,7 +25,8 @@ import {
   veteranXpForLevel,
   nextCrewCost,
   nextSafehouseCost,
-  recruitCost,
+  recruitTierCost,
+  recruitTierSkill,
   safehouseUpgradeCost,
   skillUpgradeCost,
   type Crew,
@@ -109,6 +112,7 @@ function SafehouseBlock({ safehouse }: { safehouse: Safehouse }) {
 function CrewBlock({ crew }: { crew: Crew }) {
   const { game, actions } = useGame();
   const now = useNow();
+  const [tier, setTier] = useState<RecruitTierId>('street');
   const idx = game.crews.findIndex((c) => c.id === crew.id);
   const members = crew.memberIds.map((id) => getMember(game, id)).filter((m): m is Member => Boolean(m));
   const full = crew.memberIds.length >= crew.maxMembers;
@@ -133,16 +137,29 @@ function CrewBlock({ crew }: { crew: Crew }) {
       {!full && (
         <div className="nf-recruit">
           <div className="nf-recruit-label">Recruit a specialist</div>
+          <div className="nf-tier-row">
+            {RECRUIT_TIERS.map((t) => (
+              <button
+                key={t.id}
+                className={'nf-tier-btn' + (tier === t.id ? ' on' : '')}
+                title={`${t.blurb}${t.skillBonus ? ` +${t.skillBonus} skill` : ''}`}
+                onClick={() => setTier(t.id)}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
           <div className="nf-role-row">
             {ROLES.map((r) => {
-              const cost = recruitCost(crew, r.id);
+              const cost = recruitTierCost(crew, r.id, tier);
+              const startSkill = recruitTierSkill(r.id, tier);
               return (
                 <button
                   key={r.id}
                   className="nf-role-btn"
                   disabled={game.cash < cost}
-                  title={`${r.name} · ${formatCash(cost)}`}
-                  onClick={() => actions.recruit(crew.id, r.id)}
+                  title={`${r.name} · skill ${startSkill} · ${formatCash(cost)}`}
+                  onClick={() => actions.recruit(crew.id, r.id, tier)}
                 >
                   <RoleIcon role={r.id} size={16} />
                   <span>{r.name}</span>

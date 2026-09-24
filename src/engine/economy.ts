@@ -13,6 +13,8 @@ import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
 import { pickUniqueName } from '../data/names';
 import { PERKS_BY_ID, perkCost } from '../data/perks';
 import { LEGEND_PERKS_BY_ID, legendPerkCost } from '../data/legendPerks';
+import { recruitTierFor } from '../data/recruits';
+import type { RecruitTierId } from '../data/recruits';
 import { traitForId } from '../data/traits';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
@@ -29,7 +31,8 @@ import {
   nextCrewCost,
   nextSafehouseCost,
   notorietyGainFor,
-  recruitCost,
+  recruitTierCost,
+  recruitTierSkill,
   safehouseUpgradeCost,
   skillUpgradeCost,
 } from './selectors';
@@ -142,6 +145,7 @@ export function recruitMember(
   state: GameState,
   crewId: string,
   roleId: string,
+  tierId: RecruitTierId = 'street',
   config: Config = CONFIG,
 ): ActionResult {
   const crew = getCrew(state, crewId);
@@ -153,15 +157,16 @@ export function recruitMember(
 
   const role = ROLES_BY_ID[roleId];
   if (!role) return { ok: false, error: 'Unknown role.' };
+  const tier = recruitTierFor(tierId);
 
-  const cost = recruitCost(crew, roleId, config);
+  const cost = recruitTierCost(crew, roleId, tierId, config);
   if (state.cash < cost) return insufficient();
 
   const member: Member = {
     id: `m${state.nextId}`,
     name: pickUniqueName(state.nextId, state.members.map((m) => m.name)),
     role: roleId,
-    skill: role.baseSkill,
+    skill: recruitTierSkill(roleId, tierId, config),
     gearIds: [],
     traitId: traitForId(state.nextId),
   };
@@ -177,7 +182,7 @@ export function recruitMember(
         c.id === crewId ? { ...c, memberIds: [...c.memberIds, member.id] } : c,
       ),
     },
-    message: `Recruited a ${role.name}.`,
+    message: `Recruited a ${tier.id === 'street' ? '' : tier.name + ' '}${role.name}.`,
   };
 }
 

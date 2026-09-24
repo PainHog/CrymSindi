@@ -20,6 +20,7 @@ import {
 } from 'react';
 import { CONFIG } from '../data/config';
 import type { ApproachId } from '../data/approaches';
+import type { RecruitTierId } from '../data/recruits';
 import {
   ascend,
   awardMilestones,
@@ -93,7 +94,7 @@ type Action =
   | { type: 'buySafehouse' }
   | { type: 'upgradeSafehouse'; safehouseId: string }
   | { type: 'formCrew'; safehouseId: string }
-  | { type: 'recruit'; crewId: string; roleId: string }
+  | { type: 'recruit'; crewId: string; roleId: string; tierId?: RecruitTierId }
   | { type: 'buyGear'; memberId: string; gearId: string }
   | { type: 'upgradeSkill'; memberId: string }
   | { type: 'heal'; memberId: string; now: number }
@@ -212,7 +213,9 @@ function reducer(ui: UIState, action: Action): UIState {
     case 'formCrew':
       return applyResult(ui, formCrew(ui.game, action.safehouseId), { kind: 'purchase' });
     case 'recruit':
-      return applyResult(ui, recruitMember(ui.game, action.crewId, action.roleId), { kind: 'purchase' });
+      return applyResult(ui, recruitMember(ui.game, action.crewId, action.roleId, action.tierId), {
+        kind: 'purchase',
+      });
     case 'buyGear':
       return applyResult(ui, buyGear(ui.game, action.memberId, action.gearId), { kind: 'purchase' });
     case 'upgradeSkill':
@@ -346,7 +349,7 @@ interface GameContextValue {
     buySafehouse: () => void;
     upgradeSafehouse: (safehouseId: string) => void;
     formCrew: (safehouseId: string) => void;
-    recruit: (crewId: string, roleId: string) => void;
+    recruit: (crewId: string, roleId: string, tierId?: RecruitTierId) => void;
     buyGear: (memberId: string, gearId: string) => void;
     upgradeSkill: (memberId: string) => void;
     heal: (memberId: string) => void;
@@ -441,7 +444,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       buySafehouse: () => dispatch({ type: 'buySafehouse' }),
       upgradeSafehouse: (safehouseId) => dispatch({ type: 'upgradeSafehouse', safehouseId }),
       formCrew: (safehouseId) => dispatch({ type: 'formCrew', safehouseId }),
-      recruit: (crewId, roleId) => dispatch({ type: 'recruit', crewId, roleId }),
+      recruit: (crewId, roleId, tierId) => dispatch({ type: 'recruit', crewId, roleId, tierId }),
       buyGear: (memberId, gearId) => dispatch({ type: 'buyGear', memberId, gearId }),
       upgradeSkill: (memberId) => dispatch({ type: 'upgradeSkill', memberId }),
       heal: (memberId) => dispatch({ type: 'heal', memberId, now: Date.now() }),
