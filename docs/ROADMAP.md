@@ -28,9 +28,10 @@ the work it describes. Newest status at the top.
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board — now a persistent, escalating feud (PR #10). Noir
   map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Balance & playtest pass** DONE — full reward-stack
-  probe + pacing analysis; conclusion is the game is healthy, no config tuning
-  needed. Added a `balance.test.ts` invariants guard. Ready for a PR.
+- **In flight (dev branch):** nothing substantive — the dev branch carries only
+  this log update on top of `main`, ready for the next feature. The whole-game
+  **balance & playtest pass** merged (PR #11): reward stack + pacing verified
+  healthy, no tuning needed, invariants locked in `engine/balance.test.ts`.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
@@ -38,7 +39,7 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Balance & playtest pass (all systems)
+## Balance & playtest pass (all systems) _(shipped — merged in PR #11)_
 
 A whole-game balance review now that many reward systems interact (approaches,
 prep, featured, events, rivals + rivalry escalation, prestige, ascension,
