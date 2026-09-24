@@ -29,10 +29,16 @@ import {
   launchBlockReason,
   msUntilNextEvent,
   msUntilNextRotation,
+  msUntilNextRival,
   prepCostFor,
+  rivalContestFor,
+  rivalContestsHeist,
+  rivalNow,
+  rivalSpoilsFor,
   type ActiveEvent,
   type Crew,
   type GameState,
+  type RivalContest,
 } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCash, formatCountdown, formatDuration, pct } from '../format';
@@ -87,6 +93,9 @@ export function MapView() {
   const dailyReady = canClaimDaily(game, now);
   const featuredMap = new Map(featuredNow(now).map((f) => [f.heistId, f.bonusMult]));
   const liveEvent = eventNow(now);
+  // A rival contest only matters on the map when it targets a job on the board.
+  const liveRival = rivalNow(now);
+  const rivalOnBoard = liveRival && board.some((h) => h.id === liveRival.heistId) ? liveRival : null;
 
   const selectedHeist = selected ? board.find((h) => h.id === selected) ?? null : null;
 
@@ -125,6 +134,14 @@ export function MapView() {
             <span className="k">Legend</span>
             <span className="v" style={{ color: 'var(--nf-magenta)' }}>
               {game.legend}
+            </span>
+          </div>
+        )}
+        {game.turfWins > 0 && (
+          <div className="nf-stat hide-sm" title="Turf wars won — jobs you beat a rival crew to">
+            <span className="k">Turf</span>
+            <span className="v" style={{ color: 'var(--nf-crimson)' }}>
+              {game.turfWins}
             </span>
           </div>
         )}
@@ -171,6 +188,7 @@ export function MapView() {
         <div className="nf-vig" />
 
         {liveEvent && <EventBar event={liveEvent} now={now} />}
+        {rivalOnBoard && <RivalBar contest={rivalOnBoard} now={now} below={!!liveEvent} />}
 
         {DISTRICTS.map(([name, x, y]) => (
           <div key={name} className="nf-district" style={{ left: x + '%', top: y + '%' }}>
@@ -191,16 +209,20 @@ export function MapView() {
             // Featured wins: a featured job never also shows an event marker.
             const ev = featured ? null : eventForHeist(h.id, now);
             const evClass = ev ? (ev.def.kind === 'pressure' ? ' ev-pressure' : ' ev-opp') : '';
+            // A rival contest is its own axis (a race), so it stacks with the
+            // featured/event badge — its own crimson mark sits on the other corner.
+            const contested = rivalContestsHeist(h.id, now);
             return (
               <button
                 key={h.id}
                 className={
-                  'nf-pin ' + RISK_CLASS[risk] + (selected === h.id ? ' sel' : '') + (featured ? ' featured' : '') + evClass
+                  'nf-pin ' + RISK_CLASS[risk] + (selected === h.id ? ' sel' : '') + (featured ? ' featured' : '') + evClass + (contested ? ' rival' : '')
                 }
                 data-state={status}
                 style={{ left: slot[0] + '%', top: slot[1] + '%' }}
                 onClick={() => setSelected(h.id)}
               >
+                {contested && status === 'open' && <span className="nf-rival-badge">TURF</span>}
                 {featured && status === 'open' && <span className="nf-hot">HOT</span>}
                 {ev && status === 'open' && (
                   <span className={'nf-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>
@@ -214,6 +236,10 @@ export function MapView() {
                   {status === 'ready' ? (
                     <>
                       <b>READY</b> · collect
+                    </>
+                  ) : contested ? (
+                    <>
+                      {h.name} · <b className="turf">TURF</b>
                     </>
                   ) : featured ? (
                     <>
@@ -279,6 +305,8 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const featBonus = featuredBonusFor(heist.id, now);
   // Featured wins: a featured job doesn't also carry an event.
   const ev = featBonus > 1 ? null : eventForHeist(heist.id, now);
+  // Rival contest is orthogonal (a race), so it can coexist with featured/event.
+  const rival = rivalContestFor(heist.id, now);
   const evReward = ev?.def.effect.rewardMult ?? 1;
   const evOdds = ev?.def.effect.oddsDelta ?? 0;
   const evHeat = ev?.def.effect.heatMult ?? 1;
@@ -315,10 +343,17 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
           {ev && (
             <span className={'nf-ev-tag ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.name}</span>
           )}
+          {rival && <span className="nf-rival-tag">Turf war</span>}
         </div>
         <div className="nf-dos-title">{heist.name}</div>
         <div className="nf-dos-sub">{heist.description}</div>
         {ev && <div className={'nf-dos-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.blurb}</div>}
+        {rival && (
+          <div className="nf-dos-rival">
+            <b>{rival.rival.name}</b> is moving on this. Pull it off to seize the turf —{' '}
+            <b>+{formatCash(rivalSpoilsFor(baseTake))} spoils</b>.
+          </div>
+        )}
       </div>
 
       <div className="nf-dos-body">
@@ -512,6 +547,24 @@ function EventBar({ event, now }: { event: ActiveEvent; now: number }) {
         <span className="nf-eb-blurb"> · {event.def.blurb}</span>
       </span>
       <span className="nf-eb-clock">{formatCountdown(msUntilNextEvent(now))}</span>
+    </div>
+  );
+}
+
+// ---- Rival turf-war banner --------------------------------------------------
+
+function RivalBar({ contest, now, below }: { contest: RivalContest; now: number; below: boolean }) {
+  const name = HEISTS.find((h) => h.id === contest.heistId)?.name ?? 'a job';
+  return (
+    <div className={'nf-rivalbar' + (below ? ' below' : '')} role="status" aria-live="polite">
+      <span className="nf-rb-ic">
+        <Icon name="crew" size={14} />
+      </span>
+      <span className="nf-rb-txt">
+        <b>{contest.rival.name}</b>
+        <span className="nf-rb-blurb"> is moving on {name} — beat them to it</span>
+      </span>
+      <span className="nf-rb-clock">{formatCountdown(msUntilNextRival(now))}</span>
     </div>
   );
 }

@@ -150,6 +150,11 @@ function NoirReportBody({ report }: { report: HeistReport }) {
                   {EVENTS_BY_ID[report.eventId].name}
                 </span>
               )}
+              {report.turfSeized && (
+                <span className="nf-turf-tag">
+                  Turf seized{report.rivalSpoils ? ` +${formatCash(report.rivalSpoils)}` : ''}
+                </span>
+              )}
             </div>
             <div className="nf-rep-name">{report.heistName}</div>
           </div>

@@ -12,7 +12,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { CONFIG } from '../data/config';
 import { HEISTS_BY_ID } from '../data/heists';
-import { canAscend, eventNow, featuredNow, isHeistUnlocked, isMemberDown, type GameState } from '../engine';
+import { canAscend, eventNow, featuredNow, isHeistUnlocked, isMemberDown, rivalNow, type GameState } from '../engine';
 import { useGame } from '../store/GameContext';
 import { useHeatSnapshot } from './hooks';
 import type { IconName } from './icons';
@@ -88,6 +88,21 @@ export const EVENTS_TIP: Tip = {
   when: (_g, _heat, now) => eventNow(now) !== null,
 };
 
+export const RIVAL_TIP: Tip = {
+  id: 'rival',
+  icon: 'crew',
+  title: 'A rival crew is muscling in',
+  body: (
+    <>
+      The crimson <strong>TURF</strong> pin is a <strong>rival syndicate</strong> staking a claim on
+      a job. Pull it off before their window closes to <strong>seize the turf</strong> — you keep the
+      take <em>and</em> pocket a cash bonus in spoils, and it goes on your turf record. Ignore it and
+      they take the block; no harm done, just a score you left on the table.
+    </>
+  ),
+  when: (g, _heat, now) => g.stats.heistsCompleted >= 2 && rivalNow(now) !== null,
+};
+
 export const PRESTIGE_TIP: Tip = {
   id: 'prestige',
   icon: 'vault',
@@ -143,6 +158,7 @@ export const MAP_TIPS: Tip[] = [
   INJURY_TIP,
   FEATURED_TIP,
   EVENTS_TIP,
+  RIVAL_TIP,
   PRESTIGE_TIP,
   ASCEND_TIP,
   CAPSTONE_TIP,

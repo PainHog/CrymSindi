@@ -64,9 +64,14 @@ no double-dip with featured/event bonuses if a contest lands on a flagged job.
       across prestige + ascension. Offline & batch dispatch route through
       `launchHeist`/`collectHeist`, so they're covered for free. 5 wiring tests.
       _(commit on dev)_
-- [ ] **Phase 3 — Map UI.** Hostile rival marker on the contested pin, a turf-war
-      banner with the rival's name + a race countdown, a dossier callout, the
-      turf-win record, a coach tip, and a debrief chip.
+- [x] **Phase 3 — Map UI.** Crimson `--nf-crimson` accent throughout. The
+      contested pin gets a crimson core + a `TURF` badge (opposite corner from the
+      featured/event badge, so a job can show both). A turf-war banner (`RivalBar`)
+      with the rival's name + a race countdown, stacked under the event ticker
+      (compact on mobile). Dossier: a `Turf war` eyebrow tag + a callout with the
+      spoils preview. A conditional `Turf` HUD stat (turf-win record). A `RIVAL_TIP`
+      coach tip (fires after 2 jobs). A `Turf seized` debrief chip. Verified headless
+      (desktop + mobile). _(commit on dev)_
 - [ ] **Phase 4 — Balance, verify, build.**
 
 ---
