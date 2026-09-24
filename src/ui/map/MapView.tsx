@@ -7,7 +7,7 @@
 // existing panels inside a slide-over drawer. All game logic stays in the engine.
 // -----------------------------------------------------------------------------
 
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { APPROACHES, approachFor, type ApproachId } from '../../data/approaches';
 import { CONFIG } from '../../data/config';
 import { HEISTS, type HeistDef } from '../../data/heists';
@@ -36,10 +36,13 @@ import {
 } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
 import { crewLabel, formatCash, formatCountdown, formatDuration, pct } from '../format';
+import { useCountUp } from '../hooks';
 import { HeistIcon, Icon, RoleIcon } from '../icons';
+import { isMuted, toggleMuted } from '../sfx';
 import { CityCanvas } from './CityCanvas';
 import { CrewDrawer } from './CrewDrawer';
 import { NfCoach } from './NfCoach';
+import { NfJuice } from './NfJuice';
 import { NfOnboard } from './NfOnboard';
 import { NoirReport } from './NoirReport';
 import { RepDrawer } from './RepDrawer';
@@ -74,6 +77,7 @@ export function MapView() {
   const now = useNow();
   const [selected, setSelected] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<'safehouse' | 'reputation' | 'blackmarket' | null>(null);
+  const [muted, setMuted] = useState(isMuted());
 
   const heat = deriveHeat(game, now);
   const heatPct = (heat / CONFIG.maxHeat) * 100;
@@ -97,10 +101,7 @@ export function MapView() {
           </div>
         </div>
         <div className="nf-spacer" />
-        <div className="nf-stat">
-          <span className="k">Cash</span>
-          <span className="v cash">{formatCash(game.cash)}</span>
-        </div>
+        <CashStat cash={game.cash} />
         <div className="nf-stat nf-heatwrap">
           <span className="k">Heat</span>
           <div className="nf-heat-track">
@@ -138,6 +139,14 @@ export function MapView() {
             Daily +{formatCash(dailyReward(game, now))}
           </button>
         )}
+        <button
+          className={'nf-icon-btn' + (muted ? ' muted' : '')}
+          title={muted ? 'Sound off — click to unmute' : 'Sound on — click to mute'}
+          aria-pressed={muted}
+          onClick={() => setMuted(toggleMuted())}
+        >
+          <Icon name={muted ? 'mute' : 'sound'} size={17} />
+        </button>
         <button className="nf-icon-btn" title="Collect all ready" onClick={actions.collectAll} disabled={readyCount === 0}>
           <Icon name="cash" size={17} />
         </button>
@@ -152,6 +161,7 @@ export function MapView() {
         </button>
       </header>
 
+      <NfJuice />
       <NfOnboard />
 
       <div className="nf-stage">
@@ -450,6 +460,30 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
         </button>
       </div>
     </aside>
+  );
+}
+
+// The HUD cash readout: counts up toward gains and flashes when it climbs, so a
+// banked take reads as money arriving rather than a number silently changing.
+// Snaps down instantly on a spend (no counting backward).
+function CashStat({ cash }: { cash: number }) {
+  const display = useCountUp(cash, 550, true);
+  const prev = useRef(cash);
+  const [gain, setGain] = useState(false);
+  useEffect(() => {
+    if (cash > prev.current) {
+      setGain(true);
+      const id = window.setTimeout(() => setGain(false), 650);
+      prev.current = cash;
+      return () => window.clearTimeout(id);
+    }
+    prev.current = cash;
+  }, [cash]);
+  return (
+    <div className="nf-stat">
+      <span className="k">Cash</span>
+      <span className={'v cash' + (gain ? ' gain' : '')}>{formatCash(display, 'floor')}</span>
+    </div>
   );
 }
 

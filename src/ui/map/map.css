@@ -59,6 +59,48 @@
 .nf-icon-btn { width: 34px; height: 34px; display: grid; place-items: center; background: #0f1826; border: 1px solid var(--nf-line); border-radius: 9px; color: var(--nf-ink-dim); cursor: pointer; transition: .15s; padding: 0; }
 .nf-icon-btn:hover:not(:disabled) { color: var(--nf-cyan); border-color: #2f4a6e; box-shadow: 0 0 12px #37e8ff26; }
 .nf-icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* Mute toggle: dimmed when sound is off; magenta cue on hover. */
+.nf-icon-btn.muted { color: var(--nf-ink-faint); border-color: #2a2338; }
+.nf-icon-btn.muted:hover:not(:disabled) { color: var(--nf-magenta); border-color: #5a2f42; box-shadow: 0 0 12px #ff3d8122; }
+
+/* Cash gain flash: the readout brightens and swells when it climbs. */
+.nf-stat .v.cash { transition: color .2s ease, text-shadow .2s ease, transform .2s ease; }
+.nf-stat .v.cash.gain { color: #fff; text-shadow: 0 0 18px var(--nf-lime), 0 0 7px var(--nf-lime); transform: scale(1.07); }
+
+/* COLLECT-MOMENT FLOATERS ---------------------------------------------------- */
+/* Above the HUD/dossier/drawer, below the report modal (z 70). */
+.nf-floaters { position: fixed; top: 92px; left: 0; right: 0; z-index: 65; display: flex; flex-direction: column;
+  align-items: center; gap: 1px; pointer-events: none; }
+.nf-floater { font-family: var(--nf-disp); font-weight: 700; font-size: 26px; letter-spacing: .5px; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--nf-lime); text-shadow: 0 0 16px var(--nf-lime), 0 2px 6px #000a;
+  animation: nf-float 1.3s ease-out forwards; }
+.nf-floater.bad { color: var(--nf-magenta); text-shadow: 0 0 16px var(--nf-magenta), 0 2px 6px #000a; }
+.nf-floater.flawless { color: #eafff0; text-shadow: 0 0 22px var(--nf-lime), 0 0 11px var(--nf-cyan), 0 2px 6px #000a; }
+.nf-floater-perfect { display: block; font-family: var(--nf-mono); font-weight: 500; font-size: 9px; font-style: normal;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--nf-cyan); margin-top: 2px; text-shadow: 0 0 8px var(--nf-cyan); }
+@keyframes nf-float {
+  0% { opacity: 0; transform: translateY(8px) scale(.85); }
+  14% { opacity: 1; transform: translateY(0) scale(1.1); }
+  32% { transform: translateY(-2px) scale(1); }
+  100% { opacity: 0; transform: translateY(-46px) scale(1); }
+}
+
+/* PRESTIGE / ASCEND SCREEN MOMENT -------------------------------------------- */
+/* A brief full-screen bloom punctuating the big reset. Above the drawer, below
+   the report modal. */
+.nf-prestige-flash { position: fixed; inset: 0; z-index: 68; pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, #e2fbff5c 0%, #37e8ff30 22%, #ffb6481a 44%, #0000 70%);
+  animation: nf-prestige 750ms ease-out forwards; }
+@keyframes nf-prestige {
+  0% { opacity: 0; transform: scale(1.14); }
+  24% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* TACTILE PRESS on the primary action controls. */
+.nf-crew-opt:active:not(:disabled), .nf-btn:active:not(:disabled), .nf-icon-btn:active:not(:disabled),
+.nf-daily-btn:active, .nf-appr:active, .nf-prep:active:not(:disabled), .nf-cc-manage:active,
+.nf-wide-btn:active:not(:disabled) { transform: translateY(1px) scale(.98); }
 
 /* FIRST-RUN ONBOARDING STRIP ------------------------------------------------- */
 .nf-onboard { position: relative; z-index: 25; display: flex; align-items: center; gap: 11px;
@@ -494,4 +536,12 @@
 @media (prefers-reduced-motion: reduce) {
   .nf-pin::before, .nf-pin[data-state="ready"] .nf-core, .nf-heat-fill.hot { animation: none; }
   .nf-eventbar, .nf-coach, .nf-report, .nf-daily-btn { animation: none; }
+  /* Floaters still appear (JS removes them after ~1.3s), just without travel. */
+  .nf-floater { animation: none; opacity: 1; }
+  .nf-stat .v.cash.gain { transform: none; }
+  /* Drop the full-screen prestige bloom and the press nudges. */
+  .nf-prestige-flash { display: none; }
+  .nf-crew-opt:active:not(:disabled), .nf-btn:active:not(:disabled), .nf-icon-btn:active:not(:disabled),
+  .nf-daily-btn:active, .nf-appr:active, .nf-prep:active:not(:disabled), .nf-cc-manage:active,
+  .nf-wide-btn:active:not(:disabled) { transform: none; }
 }

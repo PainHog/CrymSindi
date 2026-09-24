@@ -32,7 +32,9 @@ export type IconName =
   | 'datacenter'
   | 'centralbank'
   | 'crown'
-  | 'trophy';
+  | 'trophy'
+  | 'sound'
+  | 'mute';
 
 function Svg({
   size,
@@ -250,6 +252,21 @@ function paths(name: IconName): ReactNode {
           <path d="M7 4.5h10v4a5 5 0 0 1-10 0v-4Z" />
           <path d="M7 6H4.5v1.5A3 3 0 0 0 7 10.4M17 6h2.5v1.5A3 3 0 0 1 17 10.4" />
           <path d="M9.5 13.5v3M14.5 13.5v3M8 19.5h8M9 16.5h6v3H9z" />
+        </>
+      );
+    case 'sound': // speaker with sound waves
+      return (
+        <>
+          <path d="M4 9.5h3.4L12 5.5v13L7.4 14.5H4z" />
+          <path d="M15.4 9.4a3.6 3.6 0 0 1 0 5.2" />
+          <path d="M17.8 7a7 7 0 0 1 0 10" />
+        </>
+      );
+    case 'mute': // speaker, muted
+      return (
+        <>
+          <path d="M4 9.5h3.4L12 5.5v13L7.4 14.5H4z" />
+          <path d="M16 10l4 4M20 10l-4 4" />
         </>
       );
     default:
