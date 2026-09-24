@@ -77,6 +77,16 @@ export interface ActiveHeist {
   /** Payout multiplier locked in because the job was FEATURED at launch. Resolves
    *  with this bonus even after the featured set rotates. Optional (1 = none). */
   featuredMult?: number;
+  /** The living-map event flagging this job at launch (for the after-action note
+   *  and UI). Its effect is locked into the fields below. Optional. */
+  eventId?: string;
+  /** Payout multiplier from the event at launch. Resolves with this even after
+   *  the event window ends. Optional (1 = none). */
+  eventRewardMult?: number;
+  /** Per-member pass-chance delta from the event at launch, added to the
+   *  approach + prep odds at resolve. Optional (0 = none). The event's heat
+   *  multiplier is applied to launch heat immediately, so it isn't stored. */
+  eventOddsDelta?: number;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */
@@ -212,4 +222,6 @@ export interface HeistReport {
   synergies: string[];
   factors: HeistFactor[];
   recommendations: Recommendation[];
+  /** The living-map event this job launched under, if any (for the debrief). */
+  eventId?: string;
 }

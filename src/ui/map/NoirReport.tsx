@@ -10,6 +10,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { CONFIG } from '../../data/config';
+import { EVENTS_BY_ID } from '../../data/events';
 import { GEAR_BY_ID, gearForRole } from '../../data/gear';
 import type { GearDef } from '../../data/gear';
 import { ROLES_BY_ID } from '../../data/roles';
@@ -139,6 +140,16 @@ function NoirReportBody({ report }: { report: HeistReport }) {
           <div className="nf-rep-title">
             <div className="nf-rep-eyebrow">
               <span className="nf-rep-dot" /> Debrief · {crewLabel(report.crewLabelIndex)}
+              {report.eventId && EVENTS_BY_ID[report.eventId] && (
+                <span
+                  className={
+                    'nf-ev-tag ' +
+                    (EVENTS_BY_ID[report.eventId].kind === 'pressure' ? 'pressure' : 'opp')
+                  }
+                >
+                  {EVENTS_BY_ID[report.eventId].name}
+                </span>
+              )}
             </div>
             <div className="nf-rep-name">{report.heistName}</div>
           </div>

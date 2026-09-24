@@ -19,14 +19,18 @@ import {
   dailyReward,
   deriveHeat,
   estimateSuccess,
+  eventForHeist,
+  eventNow,
   featuredBonusFor,
   featuredNow,
   healthyCrew,
   heistStatusAt,
   isHeistUnlocked,
   launchBlockReason,
+  msUntilNextEvent,
   msUntilNextRotation,
   prepCostFor,
+  type ActiveEvent,
   type Crew,
   type GameState,
 } from '../../engine';
@@ -77,6 +81,7 @@ export function MapView() {
   const readyCount = game.activeHeists.filter((a) => heistStatusAt(a.endsAt, now) === 'ready').length;
   const dailyReady = canClaimDaily(game, now);
   const featuredMap = new Map(featuredNow(now).map((f) => [f.heistId, f.bonusMult]));
+  const liveEvent = eventNow(now);
 
   const selectedHeist = selected ? board.find((h) => h.id === selected) ?? null : null;
 
@@ -144,6 +149,8 @@ export function MapView() {
         <div className="nf-grain" />
         <div className="nf-vig" />
 
+        {liveEvent && <EventBar event={liveEvent} now={now} />}
+
         {DISTRICTS.map(([name, x, y]) => (
           <div key={name} className="nf-district" style={{ left: x + '%', top: y + '%' }}>
             {name}
@@ -160,17 +167,25 @@ export function MapView() {
             const status = pinStatus(game, h.id, now);
             const risk = tierRisk(h.tier);
             const featured = featuredMap.get(h.id);
+            // Featured wins: a featured job never also shows an event marker.
+            const ev = featured ? null : eventForHeist(h.id, now);
+            const evClass = ev ? (ev.def.kind === 'pressure' ? ' ev-pressure' : ' ev-opp') : '';
             return (
               <button
                 key={h.id}
                 className={
-                  'nf-pin ' + RISK_CLASS[risk] + (selected === h.id ? ' sel' : '') + (featured ? ' featured' : '')
+                  'nf-pin ' + RISK_CLASS[risk] + (selected === h.id ? ' sel' : '') + (featured ? ' featured' : '') + evClass
                 }
                 data-state={status}
                 style={{ left: slot[0] + '%', top: slot[1] + '%' }}
                 onClick={() => setSelected(h.id)}
               >
                 {featured && status === 'open' && <span className="nf-hot">HOT</span>}
+                {ev && status === 'open' && (
+                  <span className={'nf-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>
+                    {ev.def.kind === 'pressure' ? 'RISK' : 'BONUS'}
+                  </span>
+                )}
                 <span className="nf-core">
                   <HeistIcon id={h.id} size={13} />
                 </span>
@@ -182,6 +197,10 @@ export function MapView() {
                   ) : featured ? (
                     <>
                       {h.name} · <b>+{Math.round((featured - 1) * 100)}%</b>
+                    </>
+                  ) : ev ? (
+                    <>
+                      {h.name} · <b>{ev.def.name}</b>
                     </>
                   ) : (
                     h.name
@@ -237,12 +256,17 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const heat = deriveHeat(game, now);
   const risk = tierRisk(heist.tier);
   const featBonus = featuredBonusFor(heist.id, now);
-  const baseTake = Math.round(heist.payoutPerSec * heist.durationSec * ap.rewardMult * featBonus);
+  // Featured wins: a featured job doesn't also carry an event.
+  const ev = featBonus > 1 ? null : eventForHeist(heist.id, now);
+  const evReward = ev?.def.effect.rewardMult ?? 1;
+  const evOdds = ev?.def.effect.oddsDelta ?? 0;
+  const evHeat = ev?.def.effect.heatMult ?? 1;
+  const baseTake = Math.round(heist.payoutPerSec * heist.durationSec * ap.rewardMult * featBonus * evReward);
   const previewDur = Math.round(heist.durationSec * ap.timeMult);
-  const previewHeat = Math.round(heist.heatCost * ap.heatMult);
+  const previewHeat = Math.round(heist.heatCost * ap.heatMult * evHeat);
   const prepCost = prepCostFor(heist);
   const canPrep = prepArmed || game.cash >= prepCost;
-  const oddsDelta = ap.oddsDelta + (prepArmed ? CONFIG.prepOddsBonus : 0);
+  const oddsDelta = ap.oddsDelta + (prepArmed ? CONFIG.prepOddsBonus : 0) + evOdds;
 
   const active = game.activeHeists.filter((a) => a.heistId === heist.id);
   const idle = game.crews.filter((c) => c.status === 'idle');
@@ -266,9 +290,13 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
         <div className="nf-dos-eyebrow">
           <span className="nf-dos-dot" /> {RISK_LABEL[risk]} · tier {heist.tier}
           {featBonus > 1 && <span className="nf-hot-tag">Featured +{Math.round((featBonus - 1) * 100)}%</span>}
+          {ev && (
+            <span className={'nf-ev-tag ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.name}</span>
+          )}
         </div>
         <div className="nf-dos-title">{heist.name}</div>
         <div className="nf-dos-sub">{heist.description}</div>
+        {ev && <div className={'nf-dos-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.blurb}</div>}
       </div>
 
       <div className="nf-dos-body">
@@ -407,6 +435,24 @@ function Stat({ k, v, c }: { k: string; v: string; c?: string }) {
       <div className="v" style={{ color: c ?? 'var(--nf-ink)' }}>
         {v}
       </div>
+    </div>
+  );
+}
+
+// ---- Event ticker -----------------------------------------------------------
+
+function EventBar({ event, now }: { event: ActiveEvent; now: number }) {
+  const pressure = event.def.kind === 'pressure';
+  return (
+    <div className={'nf-eventbar ' + (pressure ? 'pressure' : 'opp')} role="status" aria-live="polite">
+      <span className="nf-eb-ic">
+        <Icon name={pressure ? 'heat' : 'cash'} size={14} />
+      </span>
+      <span className="nf-eb-txt">
+        <b>{event.def.name}</b>
+        <span className="nf-eb-blurb"> · {event.def.blurb}</span>
+      </span>
+      <span className="nf-eb-clock">{formatCountdown(msUntilNextEvent(now))}</span>
     </div>
   );
 }
