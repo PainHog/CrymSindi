@@ -78,6 +78,18 @@ export const HEISTS: HeistDef[] = [
     failHeatBonus: 16,
     difficulty: 10,
   },
+  {
+    id: 'pickpocket_ring',
+    tier: 1,
+    name: 'Pickpocket Ring',
+    description: 'Run a crew of dips through a crowded market. A lookout keeps it clean.',
+    requiredRoles: ['lookout'],
+    durationSec: 30,
+    payoutPerSec: 6,
+    heatCost: 6,
+    failHeatBonus: 10,
+    difficulty: 6,
+  },
 
   // ---- Tier 2: bigger, longer jobs (unlock via lifetime cash) --------------
   {
@@ -103,6 +115,18 @@ export const HEISTS: HeistDef[] = [
     heatCost: 54, // > cool-over-duration (0.08*600=48) so chained runs actually build heat
     failHeatBonus: 28,
     difficulty: 14,
+  },
+  {
+    id: 'jewel_courier',
+    tier: 2,
+    name: 'Jewel Courier',
+    description: 'Intercept a courier mid-route. A wheel and a lookout make it clean.',
+    requiredRoles: ['driver', 'lookout'],
+    durationSec: 420,
+    payoutPerSec: 13,
+    heatCost: 40,
+    failHeatBonus: 22,
+    difficulty: 13,
   },
 
   // ---- Tier 3: long jobs to leave running (unlock $30k lifetime) -----------
@@ -130,6 +154,18 @@ export const HEISTS: HeistDef[] = [
     failHeatBonus: 34,
     difficulty: 22,
   },
+  {
+    id: 'penthouse_job',
+    tier: 3,
+    name: 'Penthouse Job',
+    description: 'Crack a private collector’s top-floor safe. Quiet hands, heavy door. ~20 minutes.',
+    requiredRoles: ['hacker', 'muscle'],
+    durationSec: 20 * 60,
+    payoutPerSec: 27,
+    heatCost: 44,
+    failHeatBonus: 30,
+    difficulty: 21,
+  },
 
   // ---- Tier 4: multi-hour scores (unlock $180k lifetime) -------------------
   {
@@ -155,6 +191,18 @@ export const HEISTS: HeistDef[] = [
     heatCost: 78,
     failHeatBonus: 50,
     difficulty: 33,
+  },
+  {
+    id: 'rail_yard',
+    tier: 4,
+    name: 'Rail Yard Heist',
+    description: 'Stop a freight car of bearer bonds and strip it clean. ~3 hours.',
+    requiredRoles: ['muscle', 'driver', 'lookout'],
+    durationSec: 3 * 60 * 60,
+    payoutPerSec: 55,
+    heatCost: 70,
+    failHeatBonus: 45,
+    difficulty: 32,
   },
 
   // ---- Tier 5: the overnight big score (unlock $1.2M lifetime) -------------

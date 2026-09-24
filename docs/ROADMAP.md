@@ -17,9 +17,11 @@ the work it describes. Newest status at the top.
   offline/welcome-back, daily reward, prestige → Notoriety perk tree, ported
   prototype mechanics (approaches, prep, injuries, featured jobs), and living-map
   events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
-- **Done (dev branch, unmerged):** Ascension / Legend — second prestige layer,
-  **all 4 phases**. Ready for a PR to `main` when you want it.
-- **Tests:** 156 passing. Build clean.
+- **Merged to `main`:** the full game (PR #1) and Living-Map Events (PR #2).
+- **In PR review:** Ascension / Legend (PR #3, all 4 phases) — open against `main`.
+- **In flight (dev branch):** Content longevity — **Phase 1 (new heists) DONE**;
+  Phases 2–3 pending.
+- **Tests:** 160 passing. Build clean.
 
 ---
 
@@ -59,6 +61,26 @@ permanent floor.
       **Tuning candidate for real playtest:** the first ascension is a deliberate
       step-back (burn perks for 1 permanent Legend); if it feels bad in play, lower
       `legendDivisor` or `ascendThreshold` so the first payoff is 2 Legend.
+
+---
+
+## Feature: Content longevity
+
+More rungs on the climb, and content that rewards ascension. Fills out the board
+(more targets for events/featured) and gives the deep meta a reason to re-play.
+
+- [x] **Phase 1 — New heists.** Four new jobs on-curve with fresh role combos:
+      Pickpocket Ring (t1, lookout), Jewel Courier (t2, driver+lookout), Penthouse
+      Job (t3, hacker+muscle), Rail Yard Heist (t4, muscle+driver+lookout). Catalog
+      integrity test (well-formed, unique ids, non-overlapping tier bands, board ≤
+      SLOTS). Catalog now 14 heists + contract = 15 pins (SLOTS holds 16).
+      _(commit on dev branch)_
+- [ ] **Phase 2 — Ascension-gated capstone.** A high-end job unlocked by ascending
+      (via a `minAscend` gate on `HeistDef` + `isHeistUnlocked`), so ascension pays
+      out in content, not just multipliers. Tests.
+- [ ] **Phase 3 — Balance & board polish.** Probe the extended curve; headless
+      board check at full unlock (16 pins); capstone coach tip; note SLOTS is at
+      capacity (future content needs more slots).
 
 ---
 
