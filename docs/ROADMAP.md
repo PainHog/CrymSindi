@@ -26,11 +26,10 @@ the work it describes. Newest status at the top.
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
   veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
-  contesting the board. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Rivalry deepening (persistent nemeses)** — Phase 1
-  DONE (per-rival win standing, escalating spoils, a domination payoff, wired into
-  collect with back-compat + 5 tests). Turns the one-shot contests into an ongoing
-  feud. Next: the UI (standing in the dossier + a rivalries list), then ship.
+  contesting the board — now a persistent, escalating feud (PR #10). Noir
+  map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** nothing substantive — the dev branch carries only
+  this log update on top of `main`, ready for the next feature.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
@@ -38,7 +37,7 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Feature: Rivalry deepening (persistent nemeses)
+## Feature: Rivalry deepening (persistent nemeses) _(shipped — merged in PR #10)_
 
 Makes the rival crews *persistent*, not random. Each named rival now remembers
 how many times you've beaten them; the more you win, the harder they come back
