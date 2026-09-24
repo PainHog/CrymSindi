@@ -34,6 +34,8 @@ import {
   collectAllReady,
   collectHeist,
   createInitialState,
+  exportSave as engineExportSave,
+  importSave as engineImportSave,
   fillCrew,
   finishAllNow,
   formCrew,
@@ -372,6 +374,10 @@ interface GameContextValue {
     dev: (op: 'cash' | 'notoriety' | 'finish' | 'ff', amount?: number) => void;
     save: () => void;
     reset: () => void;
+    /** Serialize the current save into a portable, copy-pasteable blob. */
+    exportSave: () => string;
+    /** Load a pasted backup; returns false (and changes nothing) if invalid. */
+    importSave: (text: string) => boolean;
   };
 }
 
@@ -428,6 +434,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'replace', game: createInitialState(Date.now()), message: 'Game reset.' });
   }, []);
 
+  const exportSave = useCallback(() => engineExportSave(gameRef.current, Date.now()), []);
+
+  const importSave = useCallback((text: string): boolean => {
+    const res = engineImportSave(text, Date.now());
+    if (!res) return false;
+    const earned = res.autoCollected > 0 ? ` · Fixer banked ${res.autoCollected} job(s)` : '';
+    dispatch({ type: 'replace', game: res.state, message: `Save imported.${earned}` });
+    return true;
+  }, []);
+
   const actions = useMemo<GameContextValue['actions']>(
     () => ({
       launch: (heistId, crewId, approachId, prep) =>
@@ -468,8 +484,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       dev: (op, amount) => dispatch({ type: 'dev', op, amount, now: Date.now() }),
       save,
       reset,
+      exportSave,
+      importSave,
     }),
-    [save, reset],
+    [save, reset, exportSave, importSave],
   );
 
   const value = useMemo<GameContextValue>(

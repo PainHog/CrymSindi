@@ -28,14 +28,33 @@ the work it describes. Newest status at the top.
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board — now a persistent, escalating feud (PR #10). Noir
   map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** nothing substantive — the dev branch carries only
-  this log update on top of `main`, ready for the next feature. The whole-game
-  **balance & playtest pass** merged (PR #11): reward stack + pacing verified
-  healthy, no tuning needed, invariants locked in `engine/balance.test.ts`.
+- **In flight (dev branch):** **Save management (export/import + settings)** —
+  Phase 1 DONE (portable `exportSave`/`importSave` engine + GameContext actions +
+  6 tests). Protects long-term progress (localStorage is fragile). Next: a settings
+  panel on the map. The whole-game **balance & playtest pass** merged (PR #11).
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
 - **Tests:** 186 passing. Build clean.
+
+---
+
+## Feature: Save management (export / import + settings)
+
+The game now rewards long-term investment (rivalries, ascension, career totals),
+but saves live only in `localStorage` — fragile, and there's no way to back one
+up or move devices. The default map UI also has no settings surface beyond the
+mute button. This adds a portable backup and a settings panel.
+
+- [x] **Phase 1 — Export/import engine.** `exportSave(state, now)` → a
+      copy-pasteable `NFS1:`-prefixed base64 blob; `importSave(text, now)` →
+      validates via the existing `isValidSave`/version/`clampState` pipeline and
+      resolves offline time exactly like `loadGame`, returning null (touching
+      nothing) for garbage or a wrong-version save. Tolerates a raw-JSON paste and
+      a bare base64 blob. GameContext actions `exportSave()`/`importSave()`. UTF-8-
+      safe base64 (works in browser + tests). 6 tests. _(commit on dev)_
+- [ ] **Phase 2 — Settings panel UI.** A settings panel on the noir map (gear
+      icon): manual Save, Export (copy blob), Import (paste), Reset, sound toggle.
 
 ---
 
