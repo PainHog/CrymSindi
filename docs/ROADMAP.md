@@ -17,9 +17,8 @@ the work it describes. Newest status at the top.
   offline/welcome-back, daily reward, prestige → Notoriety perk tree, ported
   prototype mechanics (approaches, prep, injuries, featured jobs), and living-map
   events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
-- **In flight (dev branch):** Ascension / Legend — second prestige layer.
-  **Phases 1–3 DONE** (engine core + effect wiring + UI); Phase 4 (balance &
-  polish) pending.
+- **Done (dev branch, unmerged):** Ascension / Legend — second prestige layer,
+  **all 4 phases**. Ready for a PR to `main` when you want it.
 - **Tests:** 156 passing. Build clean.
 
 ---
@@ -49,8 +48,17 @@ permanent floor.
       Legend balance, the ascend gate/button with gain preview, and the legend
       tree. First-ascend coach tip added. Verified headless (desktop + mobile).
       _(commit on dev branch)_
-- [ ] **Phase 4 — Balance & polish.** Probe the multi-layer economy; tune
-      `ascendThreshold`/`legendDivisor`/magnitudes; reduced-motion where needed.
+- [x] **Phase 4 — Balance & polish.** Probe confirmed a healthy cadence — first
+      ascension ≈ 4 prestiges for 1 Legend (immediately buys Kingpin 1); slow
+      accrual after (2 @300 Notoriety, 5 @1200); payout ceiling from meta perks
+      ×4 (Reputation ×2 × Kingpin ×2) at full deep-endgame investment; whole
+      legend tree costs 243 Legend (long aspirational tail). **No config tuning
+      needed.** Polish: Legend surfaced in the HUD once earned. No new animations
+      (ascension UI is static; existing reduced-motion covers the rest).
+      _(commit on dev branch)_
+      **Tuning candidate for real playtest:** the first ascension is a deliberate
+      step-back (burn perks for 1 permanent Legend); if it feels bad in play, lower
+      `legendDivisor` or `ascendThreshold` so the first payoff is 2 Legend.
 
 ---
 
