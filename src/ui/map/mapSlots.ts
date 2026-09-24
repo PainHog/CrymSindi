@@ -28,6 +28,16 @@ export const SLOTS: Slot[] = [
   [69, 73, 'spire'],
   [83, 68, 'bunker'],
   [45, 56, 'block'],
+  // Room to grow (slots 16+): filled in the empty gaps so the board can hold
+  // more heists as content is added, without pins overlapping.
+  [8, 34, 'block'],
+  [92, 30, 'tower'],
+  [66, 52, 'spire'],
+  [37, 62, 'twin'],
+  [58, 66, 'block'],
+  [78, 55, 'dome'],
+  [18, 48, 'bunker'],
+  [92, 58, 'tower'],
 ];
 
 /** [name, xPct, yPct] district labels drawn under the pins. */

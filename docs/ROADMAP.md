@@ -156,7 +156,8 @@ Captured for later; not committed to unless promoted into a feature above.
 5. **Automation depth** — make sure crews progress toward running themselves so
    mid-game isn't clicky. Believed handled (Fixer perk + automation ladder);
    re-verify against code before ruling out.
-6. **Expand map slots** — board is at SLOTS capacity (16); add slots before more heists.
+6. **Expand map slots** — done. SLOTS now holds **24** (8 added in the empty gaps),
+   so the board has headroom for future heists.
 
 ### Audit findings already actioned (shipped)
 The earlier "what is the audience craving" audit drove the port of the prototype
