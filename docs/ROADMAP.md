@@ -28,10 +28,35 @@ the work it describes. Newest status at the top.
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board — now a persistent, escalating feud (PR #10). Noir
   map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** nothing — branch is clean at `main`. **Release
-  readiness** merged (PR #13): README refreshed to the current game + a GitHub
-  Pages deploy workflow (`.github/workflows/deploy.yml`). **To go live:** enable
-  repo Settings → Pages → Source = GitHub Actions (one-time).
+- **In flight (dev branch):** working through the **outstanding-issues list** (see
+  the section below). Done so far: dev-panel gated out of production + a save
+  migration framework. **Release readiness** merged earlier (PR #13); to put it
+  on a URL, enable repo Settings → Pages → Source = GitHub Actions (one-time).
+
+---
+
+## Outstanding issues & hardening (working list)
+
+Resolving the "remaining improvements & outstanding issues" review, in order.
+
+- [x] **Dev/cheat panel out of production.** The `?dev=1` panel is now gated behind
+      `import.meta.env.DEV` via a lazy import in `App.tsx`, so it is unreachable
+      **and** tree-shaken out of production/single-file bundles (verified: 0 matches
+      for its strings in `dist/`). Still available on the dev server. Added
+      `src/vite-env.d.ts` for the Vite client types.
+- [x] **Save schema migration path.** `engine/migrations.ts` walks an older save
+      forward to `config.version` (per-version `MIGRATIONS`), so a version bump no
+      longer wipes saves — `loadGame`/`importSave` migrate instead of rejecting
+      (and still refuse a newer-than-known or corrupt save). Convention documented
+      in the file. 8 tests.
+- [ ] **CI test gate on PRs** + bump workflow Node versions.
+- [ ] **Accessibility pass** (map + drawers).
+- [ ] **Events v2** (jackpot target + heat-reactive) — deferred backlog.
+- [ ] **Meta-layer onboarding depth + crew backstory flavor.**
+- [ ] **More content** (heists/rivals/events) + a **mobile UX pass.**
+- **Can't resolve from here (need you / external):** live Pages deploy (repo
+  setting), real monetization SDK (a provider/store), a human playtest, cloud save
+  (needs a backend, breaks the 100%-client-side property).
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
