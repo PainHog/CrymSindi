@@ -109,7 +109,7 @@ export function fillCrew(state: GameState, crewId: string, config: Config = CONF
     if (!crew || crew.memberIds.length >= crew.maxMembers) break;
     const role = nextRoleToRecruit(s, crewId, config);
     if (!role) break; // can't afford another recruit
-    const res = recruitMember(s, crewId, role, config);
+    const res = recruitMember(s, crewId, role, 'street', config);
     if (!res.ok) break;
     s = res.state;
     recruited += 1;

@@ -18,9 +18,9 @@ the work it describes. Newest status at the top.
   reward, prestige → Notoriety, approaches/prep/injuries/featured, living-map
   events, the second prestige layer (Legend), and the extended heist catalog +
   ascension-gated capstone. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** Crew identity — **Phases 1–2 DONE** (veterancy engine
-  + UI); Phase 3 pending.
-- **Tests:** 171 passing. Build clean.
+- **In flight (dev branch):** Crew identity — **all 3 phases DONE** (veterancy
+  engine + UI + specialist recruit tiers). Ready for a PR to `main`.
+- **Tests:** 176 passing. Build clean.
 
 ---
 
@@ -40,8 +40,11 @@ veterans — attachment, and a sharper sting when an injury benches one.
       progress bar (green at max). Fixed a display bug the fractional veteran bonus
       exposed: PWR/OUTPUT and the debrief's per-member skill are now rounded for
       display (raw value still drives the odds). Verified headless. _(commit on dev)_
-- [ ] **Phase 3 — Polish.** Maybe specialist recruit tiers; balance the XP curve;
-      headless verify.
+- [x] **Phase 3 — Specialist recruit tiers.** Hire at Street (base), Pro (+3 skill,
+      ×2.5 cost) or Elite (+6 skill, ×6 cost) — pay more for a stronger starting
+      member. `data/recruits.ts` + `recruitTierCost`/`recruitTierSkill` selectors +
+      `recruitMember(tierId)` + GameContext + a tier selector in the crew drawer.
+      5 tests. Verified headless. _(commit on dev)_
 
 ---
 
@@ -151,8 +154,8 @@ Captured for later; not committed to unless promoted into a feature above.
 1. **Living-map events** — shipped (merged, PR #2).
 2. **Second prestige / ascension layer** — shipped (merged, PR #3).
 3. **Content longevity** — shipped (merged, PR #3).
-4. **Crew identity & attachment** — in flight (veterancy, above). Remaining ideas:
-   specialist recruit tiers, backstory/loyalty flavor.
+4. **Crew identity & attachment** — done (veterancy + specialist recruit tiers,
+   above). Remaining idea if revisited: backstory/loyalty flavor.
 5. **Automation depth** — make sure crews progress toward running themselves so
    mid-game isn't clicky. Believed handled (Fixer perk + automation ladder);
    re-verify against code before ruling out.
