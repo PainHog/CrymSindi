@@ -60,9 +60,12 @@ so the clean pure-function design is preserved.
       (`rivalDominateTakeMult` × the clinching take) the win that reaches
       `rivalDominateAt`. Report gains `rivalryLevel`/`rivalDominated`/
       `dominationBonus`. 5 tests. _(commit on dev)_
-- [ ] **Phase 2 — UI.** Standing in the dossier callout (record + rivalry level +
-      escalated spoils) and the turf-war banner; a rivalries list in the Reputation
-      drawer (record, level, dominated badge); the domination moment (debrief chip).
+- [x] **Phase 2 — UI.** The dossier callout now reads the standing ("<Rival> is
+      back for more — you've taken N from them (Lv L)") with the escalated spoils
+      preview; the turf-war banner shows a `Lv L` chip; the Reputation drawer gained
+      a **Rivalries rap sheet** (each rival: tag, turf-taken count, rivalry level,
+      a gold `RUN OUT` badge when dominated); the debrief gained a gold domination
+      chip. Verified headless. _(commit on dev)_
 - [ ] **Phase 3 — Balance, verify, ship.**
 
 ---

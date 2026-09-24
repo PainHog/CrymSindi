@@ -510,6 +510,28 @@
   border-radius: 11px; color: #ffcabf; background: #180b09; border: 1px solid #4a2621; }
 .nf-dos-rival b { color: var(--nf-crimson); }
 
+/* Rivalry level chip in the turf-war banner. */
+.nf-rb-lvl { flex: none; font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
+  color: #fff; background: #6a2019; border: 1px solid #8a3a30; border-radius: 999px; padding: 1px 6px; margin-left: 7px; }
+/* The domination debrief chip reads as a trophy (gold), distinct from the crimson turf chip. */
+.nf-turf-tag.dominate { background: linear-gradient(180deg, #ffd27a, #f0a93a); color: #1a1204; }
+
+/* Rivalries rap sheet (Reputation drawer). */
+.nf-rivlist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 6px; }
+.nf-riv { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 12px; background: #0f0b0c; border: 1px solid #2a1d1d; }
+.nf-riv.dominated { border-color: #5a3a1e; background: #140f08; }
+.nf-riv-ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  color: var(--nf-crimson); background: #1a0a08; border: 1px solid #4a2621; }
+.nf-riv.dominated .nf-riv-ic { color: var(--nf-amber); border-color: #4a3a1e; background: #191408; }
+.nf-riv-main { flex: 1; min-width: 0; }
+.nf-riv-name { font-family: var(--nf-disp); font-weight: 600; font-size: 13px; color: var(--nf-ink); display: flex; align-items: center; gap: 7px; }
+.nf-riv-badge { font-family: var(--nf-mono); font-size: 7.5px; letter-spacing: .5px; color: #1a1204;
+  background: linear-gradient(180deg, #ffd27a, #f0a93a); border-radius: 999px; padding: 1px 6px; }
+.nf-riv-d { font-family: var(--nf-mono); font-size: 9px; letter-spacing: .5px; text-transform: uppercase; color: var(--nf-ink-faint); margin-top: 2px; }
+.nf-riv-rec { flex: none; display: flex; align-items: center; gap: 8px; }
+.nf-riv-wins { font-family: var(--nf-disp); font-weight: 700; font-size: 18px; color: var(--nf-crimson); font-variant-numeric: tabular-nums; }
+.nf-riv-lvl { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase; color: #ff9b8f; border: 1px solid #5a2f2a; border-radius: 999px; padding: 1px 6px; }
+
 /* COACH TIPS ------------------------------------------------------------------
    One-at-a-time contextual hint, tucked bottom-left above the dock. */
 .nf-coach { position: absolute; left: 14px; bottom: 14px; z-index: 24; width: 330px; max-width: calc(100% - 28px);

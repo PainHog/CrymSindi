@@ -34,7 +34,9 @@ import {
   rivalContestFor,
   rivalContestsHeist,
   rivalNow,
-  rivalSpoilsFor,
+  rivalryLevel,
+  rivalWinCount,
+  rivalSpoilsWithStanding,
   type ActiveEvent,
   type Crew,
   type GameState,
@@ -188,7 +190,9 @@ export function MapView() {
         <div className="nf-vig" />
 
         {liveEvent && <EventBar event={liveEvent} now={now} />}
-        {rivalOnBoard && <RivalBar contest={rivalOnBoard} now={now} below={!!liveEvent} />}
+        {rivalOnBoard && (
+          <RivalBar contest={rivalOnBoard} now={now} below={!!liveEvent} level={rivalryLevel(game, rivalOnBoard.rival.id)} />
+        )}
 
         {DISTRICTS.map(([name, x, y]) => (
           <div key={name} className="nf-district" style={{ left: x + '%', top: y + '%' }}>
@@ -348,12 +352,20 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
         <div className="nf-dos-title">{heist.name}</div>
         <div className="nf-dos-sub">{heist.description}</div>
         {ev && <div className={'nf-dos-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.blurb}</div>}
-        {rival && (
-          <div className="nf-dos-rival">
-            <b>{rival.rival.name}</b> is moving on this. Pull it off to seize the turf —{' '}
-            <b>+{formatCash(rivalSpoilsFor(baseTake))} spoils</b>.
-          </div>
-        )}
+        {rival &&
+          (() => {
+            const wins = rivalWinCount(game, rival.rival.id);
+            const lvl = rivalryLevel(game, rival.rival.id);
+            return (
+              <div className="nf-dos-rival">
+                <b>{rival.rival.name}</b>
+                {wins > 0
+                  ? ` is back for more — you've taken ${wins} from them (Lv ${lvl}). Take it again for `
+                  : ' is moving on this. Pull it off to seize the turf — '}
+                <b>+{formatCash(rivalSpoilsWithStanding(game, rival.rival.id, baseTake))} spoils</b>.
+              </div>
+            );
+          })()}
       </div>
 
       <div className="nf-dos-body">
@@ -553,7 +565,7 @@ function EventBar({ event, now }: { event: ActiveEvent; now: number }) {
 
 // ---- Rival turf-war banner --------------------------------------------------
 
-function RivalBar({ contest, now, below }: { contest: RivalContest; now: number; below: boolean }) {
+function RivalBar({ contest, now, below, level }: { contest: RivalContest; now: number; below: boolean; level: number }) {
   const name = HEISTS.find((h) => h.id === contest.heistId)?.name ?? 'a job';
   return (
     <div className={'nf-rivalbar' + (below ? ' below' : '')} role="status" aria-live="polite">
@@ -562,6 +574,7 @@ function RivalBar({ contest, now, below }: { contest: RivalContest; now: number;
       </span>
       <span className="nf-rb-txt">
         <b>{contest.rival.name}</b>
+        {level > 0 && <span className="nf-rb-lvl">Lv {level}</span>}
         <span className="nf-rb-blurb"> is moving on {name} — beat them to it</span>
       </span>
       <span className="nf-rb-clock">{formatCountdown(msUntilNextRival(now))}</span>
