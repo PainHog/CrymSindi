@@ -27,12 +27,43 @@ the work it describes. Newest status at the top.
   veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** nothing substantive — the dev branch carries only
-  this log update on top of `main`, ready for the next feature.
+- **In flight (dev branch):** **Rivalry deepening (persistent nemeses)** — Phase 1
+  DONE (per-rival win standing, escalating spoils, a domination payoff, wired into
+  collect with back-compat + 5 tests). Turns the one-shot contests into an ongoing
+  feud. Next: the UI (standing in the dossier + a rivalries list), then ship.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
 - **Tests:** 186 passing. Build clean.
+
+---
+
+## Feature: Rivalry deepening (persistent nemeses)
+
+Makes the rival crews *persistent*, not random. Each named rival now remembers
+how many times you've beaten them; the more you win, the harder they come back
+and the bigger the spoils — and beating one enough times runs them out of town
+for a one-time payoff. Turns the one-shot contests into an ongoing feud.
+
+Architecture note: contest *selection* stays deterministic/stateless (which
+rival + job each window). Only the *reward magnitude* reads the stored standing,
+so the clean pure-function design is preserved.
+
+- [x] **Phase 1 — Standing + escalation engine.** `GameState.rivalWins`
+      (per-rival win counts) + `rivalsDominated` (career totals, back-compat
+      defaults + carried across prestige/ascension). Selectors in `engine/rivals.ts`:
+      `rivalWinCount`, `rivalryLevel` (one level per `rivalWinsPerLevel` wins),
+      `rivalStakeMult` (+`rivalEscalationStep` per level, capped at
+      `rivalEscalationMax`), `rivalSpoilsWithStanding`, `isRivalDominated`.
+      `collectHeist` now pays escalated spoils (by pre-win standing), increments
+      the per-rival win, and fires a one-time domination bonus
+      (`rivalDominateTakeMult` × the clinching take) the win that reaches
+      `rivalDominateAt`. Report gains `rivalryLevel`/`rivalDominated`/
+      `dominationBonus`. 5 tests. _(commit on dev)_
+- [ ] **Phase 2 — UI.** Standing in the dossier callout (record + rivalry level +
+      escalated spoils) and the turf-war banner; a rivalries list in the Reputation
+      drawer (record, level, dominated badge); the domination moment (debrief chip).
+- [ ] **Phase 3 — Balance, verify, ship.**
 
 ---
 

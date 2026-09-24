@@ -138,6 +138,12 @@ export interface GameState {
   /** Turf contests won by beating a rival crew to a contested job. A career
    *  total (persists across prestige/ascension). */
   turfWins: number;
+  /** Per-rival win counts, keyed by rival id — drives the rivalry level +
+   *  escalating spoils. Career totals (persist across prestige/ascension). */
+  rivalWins: Record<string, number>;
+  /** Rival ids you've "run out of town" (dominated). Persists; each pays its
+   *  one-time domination bonus only once. */
+  rivalsDominated: string[];
   /** Milestone ids already awarded. */
   milestonesEarned: string[];
   /** Day index (see daily.ts) of the last claimed daily reward; -1 if never. */
@@ -244,8 +250,13 @@ export interface HeistReport {
   /** The living-map event this job launched under, if any (for the debrief). */
   eventId?: string;
   /** Set when this job was a rival contest and the run succeeded — the turf was
-   *  seized. `rivalSpoils` is the bonus cash granted; `rivalId` names the crew. */
+   *  seized. `rivalSpoils` is the bonus cash granted; `rivalId` names the crew.
+   *  `rivalryLevel` is the standing after this win; `rivalDominated` is set the
+   *  win that runs the rival out of town, `dominationBonus` its one-time reward. */
   turfSeized?: boolean;
   rivalSpoils?: number;
   rivalId?: string;
+  rivalryLevel?: number;
+  rivalDominated?: boolean;
+  dominationBonus?: number;
 }
