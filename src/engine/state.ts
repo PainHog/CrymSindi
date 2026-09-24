@@ -15,6 +15,7 @@ import { RIVALS_BY_ID } from '../data/rivals';
 import { SAFEHOUSE_TIERS } from '../data/safehouses';
 import { deriveHeat, hasFixer } from './selectors';
 import { collectHeist, launchHeist } from './heists';
+import { migrateSave } from './migrations';
 import type { GameState } from './types';
 
 /** Fresh game: 1 safehouse (1 crew slot), 1 crew of 3 starting members. */
@@ -196,9 +197,11 @@ export function loadGame(now: number, config: Config = CONFIG): OfflineSummary |
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isValidSave(parsed)) return null; // corrupt / wrong-shape save
-    if (parsed.version !== config.version) return null; // incompatible version
-    return resolveOffline(clampState(parsed, config), now, config);
+    // Walk an older save forward to the current schema (or bail on a corrupt /
+    // newer-than-known save) instead of discarding every save on a version bump.
+    const migrated = migrateSave(parsed, config.version);
+    if (!migrated || !isValidSave(migrated)) return null;
+    return resolveOffline(clampState(migrated, config), now, config);
   } catch {
     return null;
   }
@@ -454,8 +457,9 @@ export function importSave(text: string, now: number, config: Config = CONFIG): 
     } catch {
       continue;
     }
-    if (!isValidSave(parsed) || parsed.version !== config.version) continue;
-    return resolveOffline(clampState(parsed, config), now, config);
+    const migrated = migrateSave(parsed, config.version);
+    if (!migrated || !isValidSave(migrated)) continue;
+    return resolveOffline(clampState(migrated, config), now, config);
   }
   return null;
 }

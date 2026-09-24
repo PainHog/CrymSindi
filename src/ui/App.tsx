@@ -1,10 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { GameProvider } from '../store/GameContext';
 import { ActiveHeists } from './components/ActiveHeists';
 import { AscensionPanel } from './components/AscensionPanel';
 import { CoachTips } from './components/CoachTips';
 import { DailyRewardBanner } from './components/DailyRewardBanner';
 import { HeistList } from './components/HeistList';
-import { DevPanel } from './components/DevPanel';
 import { MilestonesPanel } from './components/MilestonesPanel';
 import { OnboardingBanner } from './components/OnboardingBanner';
 import { PremiumPanel } from './components/PremiumPanel';
@@ -19,6 +19,13 @@ import { TopBar } from './components/TopBar';
 import { UpgradePanel } from './components/UpgradePanel';
 import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { MapView } from './map/MapView';
+
+// The dev/cheat panel (?dev=1) is DEV-only: gated behind import.meta.env.DEV so
+// it is never reachable AND is tree-shaken out of production bundles entirely
+// (the dynamic import lives in a branch the bundler drops when DEV is false).
+const DevPanel = import.meta.env.DEV
+  ? lazy(() => import('./components/DevPanel').then((m) => ({ default: m.DevPanel })))
+  : null;
 
 /** The original panel-based layout, kept reachable at ?classic=1 during the
  *  map-first port so nothing is lost while the new UI is built out. */
@@ -73,7 +80,11 @@ export default function App() {
       <Toast />
       {classic && <ReportModal />}
       <WelcomeBackModal />
-      <DevPanel />
+      {DevPanel && (
+        <Suspense fallback={null}>
+          <DevPanel />
+        </Suspense>
+      )}
       <SoundFx />
       <TabTitle />
     </GameProvider>
