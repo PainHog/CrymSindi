@@ -40,6 +40,7 @@ import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { CityCanvas } from './CityCanvas';
 import { CrewDrawer } from './CrewDrawer';
 import { NfCoach } from './NfCoach';
+import { NfOnboard } from './NfOnboard';
 import { NoirReport } from './NoirReport';
 import { RepDrawer } from './RepDrawer';
 import { UpgradesDrawer } from './UpgradesDrawer';
@@ -150,6 +151,8 @@ export function MapView() {
           <Icon name="safehouse" size={17} />
         </button>
       </header>
+
+      <NfOnboard />
 
       <div className="nf-stage">
         <CityCanvas />
