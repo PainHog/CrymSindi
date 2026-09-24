@@ -10,6 +10,8 @@
 export type SfxName =
   | 'launch'
   | 'success'
+  | 'flawless'
+  | 'turf'
   | 'fail'
   | 'purchase'
   | 'ready'
@@ -101,6 +103,15 @@ function arpeggio(c: AudioContext, freqs: number[], step: number, type: Oscillat
 const CUES: Record<SfxName, (c: AudioContext) => void> = {
   launch: (c) => tone(c, { freq: 200, slideTo: 420, dur: 0.18, type: 'sawtooth', gain: 0.12 }),
   success: (c) => arpeggio(c, [523, 659, 784], 0.075, 'triangle', 0.16), // C-E-G
+  // Flawless: a brighter, taller run up to the octave — the best per-job moment.
+  flawless: (c) => arpeggio(c, [523, 659, 784, 1047], 0.07, 'triangle', 0.17), // C-E-G-C'
+  // Turf seized: a bold two-note stab (fifth) with a low body under it — a win
+  // taken off a rival should sound like a claim, not just another success.
+  turf: (c) => {
+    tone(c, { freq: 392, dur: 0.14, type: 'square', gain: 0.13 }); // G
+    tone(c, { freq: 587, dur: 0.2, delay: 0.09, type: 'square', gain: 0.13 }); // D'
+    tone(c, { freq: 147, dur: 0.28, type: 'sawtooth', gain: 0.08 }); // low body
+  },
   fail: (c) => tone(c, { freq: 300, slideTo: 110, dur: 0.34, type: 'sawtooth', gain: 0.14 }),
   purchase: (c) => tone(c, { freq: 520, dur: 0.06, type: 'square', gain: 0.1 }),
   ready: (c) => {

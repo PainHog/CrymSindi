@@ -33,6 +33,7 @@ import {
   heistDefFor,
   isContract,
   isHeistUnlocked,
+  isManhuntAt,
   isMemberDown,
   missingRoles,
   prepCostFor,
@@ -155,6 +156,11 @@ export function launchHeist(
   // window is still open at collect). Reward is applied at collect, not here.
   const rival = rivalContestFor(heistId, now, config);
 
+  // Manhunt: if the city is on high alert at launch (Heat >= threshold), lock in
+  // an extra flat odds penalty for this run. Derived from the same launch-heat
+  // snapshot the resolution uses, so it can't be reload-rerolled.
+  const manhunt = isManhuntAt(heatAtLaunch, config);
+
   const active = {
     id: `h${next.nextId}`,
     heistId,
@@ -171,6 +177,7 @@ export function launchHeist(
     ...(eventRewardMult !== 1 ? { eventRewardMult } : {}),
     ...(eventOddsDelta !== 0 ? { eventOddsDelta } : {}),
     ...(rival ? { rivalId: rival.rival.id } : {}),
+    ...(manhunt ? { manhunt: true } : {}),
     ...(isContract(heistId) ? { contractLevel: state.contractLevel } : {}),
   };
 
@@ -224,12 +231,16 @@ export function collectHeist(
   // Resolve over the members who actually went (snapshot at launch), so a
   // mid-job injury/recovery elsewhere can't change this job's outcome.
   const participantsCrew = active.memberIds ? { ...crew, memberIds: active.memberIds } : crew;
+  // Manhunt penalty locked at launch (extra flat odds hit on top of the
+  // continuous heat penalty resolveHeist already applies from heatAtLaunch).
+  const manhuntOdds = active.manhunt ? -config.manhuntOddsPenalty : 0;
   const report = resolveHeist(state, heist, participantsCrew, now, roll, config, active.heatAtLaunch, {
-    oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0) + (active.eventOddsDelta ?? 0),
+    oddsDelta: approach.oddsDelta + (active.prepOdds ?? 0) + (active.eventOddsDelta ?? 0) + manhuntOdds,
     rewardMult: approach.rewardMult * (active.featuredMult ?? 1) * (active.eventRewardMult ?? 1),
   });
   // Attribute the living-map event this job ran under, for the debrief.
   if (active.eventId) report.eventId = active.eventId;
+  if (active.manhunt) report.manhunt = true;
 
   // Stakes: a blown job can sideline a member (worse the hotter it was), but
   // never the crew's last healthy member. Uses the same seeded rng stream, so

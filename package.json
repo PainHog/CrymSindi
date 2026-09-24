@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Heist Crew Idle - an active idle heist-crew management game (proof of concept).",
+  "description": "Nightfall Syndicate - a map-first idle heist-crew management game.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -29,6 +29,14 @@ export interface Config {
   baseRequiredPasses: number;
   difficultyPerRequiredPass: number;
 
+  // Manhunt: a discrete "city on high alert" state derived purely from live Heat
+  // (no stored flag). When Heat sits at/above the threshold, the law is actively
+  // hunting the crew — a launch made under a manhunt locks in an EXTRA flat odds
+  // penalty for that run (on top of the continuous heatSuccessPenalty), so it
+  // pays to cool off before committing a score. Pure/derived (see selectors.ts).
+  manhuntThreshold: number; // Heat (absolute, 0..maxHeat) at/above which a manhunt is on
+  manhuntOddsPenalty: number; // extra flat pass-chance penalty on a run launched during a manhunt
+
   // Payout model: time-based base, scaled by success quality.
   payoutFloorFrac: number;
   perfectBonusMult: number;
@@ -178,6 +186,14 @@ export const CONFIG: Config = {
   // (this is why higher tiers need bigger crews).
   baseRequiredPasses: 2,
   difficultyPerRequiredPass: 18,
+
+  // ---- Manhunt (high-heat alert state) -------------------------------------
+  // At/above 80 of 100 Heat the city is actively hunting you. A run launched
+  // then eats an extra flat -0.12 pass chance per member (locked at launch, on
+  // top of the continuous heat penalty of ~0.28 at that level). The combined
+  // hit is a sharp incentive to let Heat cool before a big score.
+  manhuntThreshold: 80,
+  manhuntOddsPenalty: 0.12,
 
   // ---- Payout model --------------------------------------------------------
   // base = heist.payoutPerSec * durationSec. On success the take scales with how

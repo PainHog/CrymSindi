@@ -417,6 +417,16 @@ function buildFactors(
     });
   }
 
+  // Manhunt: the extra flat penalty a high-heat launch locks in (see heists.ts).
+  // Derived from the same resolve-heat, so it matches the odds the run ran under.
+  if (heat >= config.manhuntThreshold) {
+    factors.push({
+      label: 'Manhunt',
+      positive: false,
+      note: `The city was on high alert — an extra ~${Math.round(config.manhuntOddsPenalty * 100)}% came off every member's odds.`,
+    });
+  }
+
   if (missing.length > 0) {
     factors.push({
       label: 'Role coverage',

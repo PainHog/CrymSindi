@@ -63,7 +63,7 @@ import { formatCash } from '../engine/format';
 /** A one-shot signal for the juice/sound layer. `eventId` makes each one unique. */
 export type GameEvent =
   | { kind: 'launch' }
-  | { kind: 'collect'; payout: number; success: boolean; flawless: boolean }
+  | { kind: 'collect'; payout: number; success: boolean; flawless: boolean; turfSeized?: boolean }
   | { kind: 'purchase' }
   | { kind: 'prestige' }
   | { kind: 'error' };
@@ -175,6 +175,7 @@ function reducer(ui: UIState, action: Action): UIState {
               payout: res.report.payout,
               success: res.report.success,
               flawless: res.report.perfect,
+              turfSeized: res.report.turfSeized,
             }
           : undefined;
       const nextUi = applyResult(ui, res, event);

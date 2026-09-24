@@ -27,6 +27,7 @@ import {
   healthyCrew,
   heistStatusAt,
   isHeistUnlocked,
+  isManhuntAt,
   launchBlockReason,
   msUntilNextEvent,
   msUntilNextRotation,
@@ -103,6 +104,7 @@ export function MapView() {
 
   const heat = deriveHeat(game, now);
   const heatPct = (heat / CONFIG.maxHeat) * 100;
+  const manhunt = isManhuntAt(heat);
   const idleCrews = game.crews.filter((c) => c.status === 'idle').length;
   const board = boardHeists(game);
   const readyCount = game.activeHeists.filter((a) => heistStatusAt(a.endsAt, now) === 'ready').length;
@@ -211,6 +213,7 @@ export function MapView() {
         {rivalOnBoard && (
           <RivalBar contest={rivalOnBoard} now={now} below={!!liveEvent} level={rivalryLevel(game, rivalOnBoard.rival.id)} />
         )}
+        {manhunt && <ManhuntBar below={!!liveEvent || !!rivalOnBoard} />}
 
         {DISTRICTS.map(([name, x, y]) => (
           <div key={name} className="nf-district" style={{ left: x + '%', top: y + '%' }}>
@@ -350,6 +353,7 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const [prepArmed, setPrepArmed] = useState(false);
   const ap = approachFor(approachId);
   const heat = deriveHeat(game, now);
+  const manhunt = isManhuntAt(heat);
   const risk = tierRisk(heist.tier);
   const featBonus = featuredBonusFor(heist.id, now);
   // Featured wins: a featured job doesn't also carry an event.
@@ -364,7 +368,10 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
   const previewHeat = Math.round(heist.heatCost * ap.heatMult * evHeat);
   const prepCost = prepCostFor(heist);
   const canPrep = prepArmed || game.cash >= prepCost;
-  const oddsDelta = ap.oddsDelta + (prepArmed ? CONFIG.prepOddsBonus : 0) + evOdds;
+  // Preview odds must include the manhunt penalty so the shown success % matches
+  // what the run will actually resolve at (the penalty is locked in at launch).
+  const oddsDelta =
+    ap.oddsDelta + (prepArmed ? CONFIG.prepOddsBonus : 0) + evOdds + (manhunt ? -CONFIG.manhuntOddsPenalty : 0);
 
   const active = game.activeHeists.filter((a) => a.heistId === heist.id);
   const idle = game.crews.filter((c) => c.status === 'idle');
@@ -405,9 +412,15 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
             </span>
           )}
           {rival && <span className="nf-rival-tag">Turf war</span>}
+          {manhunt && <span className="nf-manhunt-tag">Manhunt</span>}
         </div>
         <div className="nf-dos-title">{heist.name}</div>
         <div className="nf-dos-sub">{heist.description}</div>
+        {manhunt && (
+          <div className="nf-dos-manhunt">
+            City on high alert — this run takes an extra {Math.round(CONFIG.manhuntOddsPenalty * 100)}% odds hit until Heat cools.
+          </div>
+        )}
         {ev && <div className={'nf-dos-ev ' + (ev.def.kind === 'pressure' ? 'pressure' : 'opp')}>{ev.def.blurb}</div>}
         {rival &&
           (() => {
@@ -640,6 +653,22 @@ function RivalBar({ contest, now, below, level }: { contest: RivalContest; now: 
         <span className="nf-rb-blurb"> is moving on {name} — beat them to it</span>
       </span>
       <span className="nf-rb-clock">{formatCountdown(msUntilNextRival(now))}</span>
+    </div>
+  );
+}
+
+// ---- Manhunt banner ---------------------------------------------------------
+
+function ManhuntBar({ below }: { below: boolean }) {
+  return (
+    <div className={'nf-manhuntbar' + (below ? ' below' : '')} role="status" aria-live="polite">
+      <span className="nf-mh-ic">
+        <Icon name="heat" size={14} />
+      </span>
+      <span className="nf-mh-txt">
+        <b>MANHUNT</b>
+        <span className="nf-mh-blurb"> · the city is on high alert — every job launched now takes a hit. Lie low and let Heat cool.</span>
+      </span>
     </div>
   );
 }

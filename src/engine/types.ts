@@ -94,6 +94,9 @@ export interface ActiveHeist {
    *  flipping mid-job can't grant/revoke the turf reward. Present = contested;
    *  completing it successfully seizes the turf (cash spoils + a turf-win). */
   rivalId?: string;
+  /** True if the crew was under a manhunt (Heat >= threshold) at launch. Locks
+   *  in the extra manhunt odds penalty for this run regardless of later Heat. */
+  manhunt?: boolean;
 }
 
 /** Career totals that persist across prestige resets (drive milestones). */
@@ -259,4 +262,6 @@ export interface HeistReport {
   rivalryLevel?: number;
   rivalDominated?: boolean;
   dominationBonus?: number;
+  /** True if this run was launched under a manhunt (extra odds penalty applied). */
+  manhunt?: boolean;
 }
