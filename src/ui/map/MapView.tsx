@@ -118,6 +118,14 @@ export function MapView() {
             {game.notoriety}
           </span>
         </div>
+        {(game.legend > 0 || game.ascendCount > 0) && (
+          <div className="nf-stat hide-sm">
+            <span className="k">Legend</span>
+            <span className="v" style={{ color: 'var(--nf-magenta)' }}>
+              {game.legend}
+            </span>
+          </div>
+        )}
         <div className="nf-stat hide-sm">
           <span className="k">Next drop</span>
           <span className="v" style={{ color: 'var(--nf-cyan)' }}>

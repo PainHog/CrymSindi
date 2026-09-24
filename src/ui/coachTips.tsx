@@ -11,7 +11,8 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { CONFIG } from '../data/config';
-import { eventNow, featuredNow, isMemberDown, type GameState } from '../engine';
+import { HEISTS_BY_ID } from '../data/heists';
+import { canAscend, eventNow, featuredNow, isHeistUnlocked, isMemberDown, type GameState } from '../engine';
 import { useGame } from '../store/GameContext';
 import { useHeatSnapshot } from './hooks';
 import type { IconName } from './icons';
@@ -101,12 +102,51 @@ export const PRESTIGE_TIP: Tip = {
   when: (g) => g.prestigeCount > 0 || g.lifetimeCash >= CONFIG.prestigeThreshold * 0.75,
 };
 
+export const ASCEND_TIP: Tip = {
+  id: 'ascend',
+  icon: 'crown',
+  title: 'A second horizon: become a legend',
+  body: (
+    <>
+      You've built enough Notoriety to <strong>ascend</strong>. Burning your Notoriety and its perk
+      tree earns permanent <strong>Legend</strong> — a deeper reset that buys the stronger legend
+      perks, which stick with you through every future ascension. It's the long game past prestige.
+    </>
+  ),
+  when: (g) => canAscend(g),
+};
+
+export const CAPSTONE_TIP: Tip = {
+  id: 'capstone',
+  icon: 'centralbank',
+  title: 'The legendary score is open',
+  body: (
+    <>
+      Ascending unlocked <strong>The Sovereign Reserve</strong> — the biggest job on the board, and
+      only a legend can pull it. It wants a full four-role crew and pays like nothing else. Build up
+      and take the door.
+    </>
+  ),
+  when: (g) => {
+    const cap = HEISTS_BY_ID['sovereign_reserve'];
+    return cap ? isHeistUnlocked(g, cap) : false;
+  },
+};
+
 /** Classic layout: Heat + prestige (the two the intro banner skips). */
 export const BASE_TIPS: Tip[] = [HEAT_TIP, PRESTIGE_TIP];
 
 /** Map layout: also teaches the systems the map surfaces (injuries, featured
  *  jobs, living-map events). Order is priority — most urgent/relevant first. */
-export const MAP_TIPS: Tip[] = [HEAT_TIP, INJURY_TIP, FEATURED_TIP, EVENTS_TIP, PRESTIGE_TIP];
+export const MAP_TIPS: Tip[] = [
+  HEAT_TIP,
+  INJURY_TIP,
+  FEATURED_TIP,
+  EVENTS_TIP,
+  PRESTIGE_TIP,
+  ASCEND_TIP,
+  CAPSTONE_TIP,
+];
 
 /** Drives one-at-a-time coaching over a tip set: returns the active tip (sticky
  *  once fired, so it won't flicker if the condition later goes false) and a

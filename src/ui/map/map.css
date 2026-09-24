@@ -277,6 +277,14 @@
 .nf-perk-buy.cash.off { background: #1a2338; color: var(--nf-ink-faint); }
 .nf-perk.owned { opacity: .72; }
 
+/* Ascension / Legend (second meta layer) — magenta accent vs. amber Notoriety. */
+.nf-wide-btn.ascend { background: linear-gradient(180deg, #ff5f97, #c81f63); color: #fff; border-color: #ff7fae; box-shadow: 0 0 16px #ff3d8144; }
+.nf-legit.nf-legend { border-color: #4a2434; }
+.nf-legit-bar.legend { background: var(--nf-magenta); }
+.nf-perk.legend { border-color: #3a2233; }
+.nf-perk-buy.legend { background: linear-gradient(180deg, #ff5f97, #d81f63); color: #fff; }
+.nf-perk-buy.legend.off { background: #2a1420; color: var(--nf-ink-faint); }
+
 .nf-daily-btn { flex: none; font-family: var(--nf-disp); font-weight: 600; font-size: 12px; letter-spacing: .5px; text-transform: uppercase; color: #1a1204; background: linear-gradient(180deg, #ffd27a, #f0a93a); border: 0; border-radius: 999px; padding: 8px 13px; cursor: pointer; box-shadow: 0 0 16px #ffb64855; animation: nf-daily 1.6s ease-in-out infinite; }
 @keyframes nf-daily { 50% { box-shadow: 0 0 24px #ffb648aa; } }
 

@@ -12,6 +12,7 @@ import type { Config } from '../data/config';
 import { GEAR_BY_ID, gearAllowedForRole } from '../data/gear';
 import { pickUniqueName } from '../data/names';
 import { PERKS_BY_ID, perkCost } from '../data/perks';
+import { LEGEND_PERKS_BY_ID, legendPerkCost } from '../data/legendPerks';
 import { traitForId } from '../data/traits';
 import { ROLES_BY_ID } from '../data/roles';
 import { SAFEHOUSE_TIERS, safehouseTierIndex } from '../data/safehouses';
@@ -22,6 +23,9 @@ import {
   getSafehouse,
   healCost,
   isMemberDown,
+  legendGainFor,
+  legendNotorietyMult,
+  legendStartCash,
   nextCrewCost,
   nextSafehouseCost,
   notorietyGainFor,
@@ -266,7 +270,8 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
   if (state.lifetimeCash < config.prestigeThreshold) {
     return { ok: false, error: 'Not enough of a track record to retire yet.' };
   }
-  const gain = notorietyGainFor(state.lifetimeCash, config);
+  // Notoriety gain is amplified by the Reputation Engine legend perk.
+  const gain = Math.round(notorietyGainFor(state.lifetimeCash, config) * legendNotorietyMult(state, config));
   const fresh = createInitialState(now, config);
   const perks = state.perks ?? {};
   // Perk effects that shape the fresh run:
@@ -276,7 +281,7 @@ export function prestige(state: GameState, now: number, config: Config = CONFIG)
     ok: true,
     state: {
       ...fresh,
-      cash: fresh.cash + warChest,
+      cash: fresh.cash + warChest + legendStartCash(state, config),
       purchasedUpgradeIds: keepUpgrades ? state.purchasedUpgradeIds : fresh.purchasedUpgradeIds,
       notoriety: state.notoriety + gain,
       prestigeCount: state.prestigeCount + 1,
@@ -310,6 +315,63 @@ export function buyPerk(state: GameState, perkId: string): ActionResult {
       ...state,
       notoriety: state.notoriety - cost,
       perks: { ...perks, [perkId]: level + 1 },
+    },
+    message: `${perk.name} → level ${level + 1}.`,
+  };
+}
+
+/**
+ * Ascend ("become a legend") — the second prestige layer. Burns the current
+ * Notoriety and the whole Notoriety perk tree for permanent Legend, and does a
+ * full run reset (like prestige, but deeper: Notoriety, perks, prestige count and
+ * contract all reset too). Legend, the legend perk tree, and true career totals
+ * (careerCash, stats, milestones, daily streak, marks) carry over.
+ */
+export function ascend(state: GameState, now: number, config: Config = CONFIG): ActionResult {
+  if (state.notoriety < config.ascendThreshold) {
+    return { ok: false, error: 'Not enough Notoriety to become a legend yet.' };
+  }
+  const gain = legendGainFor(state.notoriety, config);
+  if (gain < 1) return { ok: false, error: 'Not enough Notoriety to become a legend yet.' };
+  const fresh = createInitialState(now, config);
+  const legend = (state.legend ?? 0) + gain;
+  return {
+    ok: true,
+    state: {
+      ...fresh,
+      // Deep Pockets legend perk still funds the fresh run after ascending.
+      cash: fresh.cash + legendStartCash(state, config),
+      // Second-layer meta + true career totals persist across ascension.
+      legend,
+      legendPerks: state.legendPerks ?? {},
+      ascendCount: (state.ascendCount ?? 0) + 1,
+      careerCash: state.careerCash,
+      stats: state.stats,
+      milestonesEarned: state.milestonesEarned,
+      dailyClaimDay: state.dailyClaimDay,
+      dailyStreak: state.dailyStreak,
+      marks: state.marks,
+      // Notoriety, perks, prestigeCount and contract all reset (fresh defaults).
+    },
+    message: `You're a legend. +${gain} Legend (now ${legend}).`,
+  };
+}
+
+/** Spend Legend on the next level of a legend perk (see data/legendPerks.ts). */
+export function buyLegendPerk(state: GameState, perkId: string): ActionResult {
+  const perk = LEGEND_PERKS_BY_ID[perkId];
+  if (!perk) return { ok: false, error: 'Unknown legend perk.' };
+  const perks = state.legendPerks ?? {};
+  const level = perks[perkId] ?? 0;
+  if (level >= perk.maxLevel) return { ok: false, error: 'That legend perk is maxed.' };
+  const cost = legendPerkCost(perk, level + 1);
+  if ((state.legend ?? 0) < cost) return { ok: false, error: 'Not enough Legend.' };
+  return {
+    ok: true,
+    state: {
+      ...state,
+      legend: state.legend - cost,
+      legendPerks: { ...perks, [perkId]: level + 1 },
     },
     message: `${perk.name} → level ${level + 1}.`,
   };

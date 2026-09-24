@@ -10,20 +10,84 @@ the work it describes. Newest status at the top.
 
 ---
 
-## Current status (2026-09-23)
+## Current status (2026-09-24)
 
-- **Full game shipped and merged to `main`** (PR #1): core loop, heat, traits &
-  synergies, gear, skill training, offline/welcome-back, daily reward, prestige →
-  Notoriety perk tree, and the ported prototype mechanics (approaches, prep,
-  injuries, featured jobs). Noir map-first UI is the default; classic panel
-  layout kept at `?classic=1`.
-- **Shipped (dev branch, unmerged):** Living-Map Events — **all 4 phases DONE**.
-  Ready for a PR to `main` when you want it.
-- **Tests:** 141 passing. Build clean.
+- **Merged to `main`:** the full game (PR #1) and **Living-Map Events** (PR #2,
+  all 4 phases). Core loop, heat, traits & synergies, gear, skill training,
+  offline/welcome-back, daily reward, prestige → Notoriety perk tree, ported
+  prototype mechanics (approaches, prep, injuries, featured jobs), and living-map
+  events. Noir map-first UI is the default; classic panel layout at `?classic=1`.
+- **Merged to `main`:** the full game (PR #1) and Living-Map Events (PR #2).
+- **In PR review:** Ascension / Legend (PR #3, all 4 phases) — open against `main`.
+- **In flight (dev branch):** Content longevity — **all 3 phases DONE** (new
+  heists + ascension-gated capstone + polish). Part of PR #3 (combined with
+  ascension).
+- **Tests:** 164 passing. Build clean.
 
 ---
 
-## Feature: Living-Map Events
+## Feature: Ascension / Legend (second prestige layer)
+
+A meta layer above Notoriety, for long-game retention past the first prestige.
+**Ascend** ("become a legend") burns your Notoriety and the whole Notoriety perk
+tree for permanent **Legend**, which buys a stronger **legend perk tree** that
+persists across ascension. Each ascension restarts the Notoriety loop on a bigger
+permanent floor.
+
+- [x] **Phase 1 — Engine core.** `data/legendPerks.ts` catalog (Kingpin, Reputation
+      Engine, Deep Pockets); config knobs (`ascendThreshold` 75, `legendDivisor` 40,
+      effect magnitudes); `GameState.legend/ascendCount/legendPerks` with clamp +
+      legacy-save defaults; selectors (`legendGainFor`, `canAscend`, `legendPerkLevel`,
+      and effect selectors `legendPayoutMult`/`legendNotorietyMult`/`legendStartCash`);
+      `ascend` + `buyLegendPerk` actions. 10 tests. Effects not yet applied to the
+      economy. _(commit on dev branch)_
+- [x] **Phase 2 — Effect wiring.** `legendPayoutMult` folded into the resolution
+      payout mult; `legendNotorietyMult` scales prestige's Notoriety gain;
+      `legendStartCash` funds the fresh run in both `prestige` and `ascend`. 5
+      wiring tests (payout ratio, notoriety scaling, start cash on both resets,
+      neutral with no perks). _(commit on dev branch)_
+- [x] **Phase 3 — UI.** `ascend`/`buyLegendPerk` wired through GameContext. The
+      Reputation drawer gained an Ascension section (magenta, vs. amber Notoriety):
+      Legend balance, the ascend gate/button with gain preview, and the legend
+      tree. First-ascend coach tip added. Verified headless (desktop + mobile).
+      _(commit on dev branch)_
+- [x] **Phase 4 — Balance & polish.** Probe confirmed a healthy cadence — first
+      ascension ≈ 4 prestiges for 1 Legend (immediately buys Kingpin 1); slow
+      accrual after (2 @300 Notoriety, 5 @1200); payout ceiling from meta perks
+      ×4 (Reputation ×2 × Kingpin ×2) at full deep-endgame investment; whole
+      legend tree costs 243 Legend (long aspirational tail). **No config tuning
+      needed.** Polish: Legend surfaced in the HUD once earned. No new animations
+      (ascension UI is static; existing reduced-motion covers the rest).
+      _(commit on dev branch)_
+      **Tuning candidate for real playtest:** the first ascension is a deliberate
+      step-back (burn perks for 1 permanent Legend); if it feels bad in play, lower
+      `legendDivisor` or `ascendThreshold` so the first payoff is 2 Legend.
+
+---
+
+## Feature: Content longevity
+
+More rungs on the climb, and content that rewards ascension. Fills out the board
+(more targets for events/featured) and gives the deep meta a reason to re-play.
+
+- [x] **Phase 1 — New heists.** Four new jobs on-curve with fresh role combos:
+      Pickpocket Ring (t1, lookout), Jewel Courier (t2, driver+lookout), Penthouse
+      Job (t3, hacker+muscle), Rail Yard Heist (t4, muscle+driver+lookout). Catalog
+      integrity test (well-formed, unique ids, non-overlapping tier bands, board ≤
+      SLOTS). Catalog now 14 heists + contract = 15 pins (SLOTS holds 16).
+      _(commit on dev branch)_
+- [x] **Phase 2 — Ascension-gated capstone.** The Sovereign Reserve (tier 5,
+      4 roles, 180 pps / diff 46) unlocks only after ascending, via a `minAscend`
+      gate on `HeistDef` + `isHeistUnlocked` (still respects the tier gate). Icons
+      mapped for all new jobs (reuse existing glyphs). 4 gate tests. _(commit on dev)_
+- [x] **Phase 3 — Board polish.** Capstone coach tip added; headless board check at
+      full unlock confirmed all **16 pins** (15 heists + contract) lay out without
+      overlap, and Legend shows in the HUD. **NOTE: SLOTS is now at capacity (16);
+      any further heist needs new map slots in `mapSlots.ts`.** _(commit on dev)_
+
+---
+
+## Feature: Living-Map Events _(shipped — merged in PR #2)_
 
 Time-boxed conditions on the city (a fence in town, a crackdown, a blackout) that
 alter specific jobs' take / odds / heat while live. Modelled on featured jobs:
@@ -65,10 +129,8 @@ targeting (needs a pin→district map).
 Captured for later; not committed to unless promoted into a feature above.
 
 ### "Most impactful next" candidates (from the strategy pass)
-1. **Living-map events** — chosen; in flight (above).
-2. **Second prestige / ascension layer** — a higher meta-currency beyond Notoriety
-   to keep the long game rewarding past the first prestige. High retention for
-   committed players; lower novelty.
+1. **Living-map events** — shipped (merged, PR #2).
+2. **Second prestige / ascension layer** — in flight (Ascension / Legend, above).
 3. **Automation depth** — make sure crews progress toward running themselves so
    mid-game isn't clicky. Believed handled (Fixer perk + automation ladder);
    re-verify against code before ruling out.
@@ -86,6 +148,15 @@ softened), the noir after-action debrief, and map coach tips.
 
 ## Decisions log
 
+- **2026-09-24 — Ascension reset scope:** ascending resets the **Notoriety layer**
+  (notoriety → 0, perk tree → {}, prestigeCount → 0) **and the contract** plus the
+  run itself, like a deeper prestige. Legend, the legend perk tree, and true career
+  totals (careerCash, stats, milestones, daily streak, marks) carry over. Chosen so
+  ascension is a meaningful deeper reset, not just an additive bonus.
+- **2026-09-24 — Ascension currency & gain:** currency is **Legend**;
+  `gain = floor(sqrt(notoriety / legendDivisor))`, gated at `ascendThreshold` (75)
+  Notoriety (a few prestige cycles). Legend perks ~2× a Notoriety perk's magnitude
+  to justify the deeper reset. All config-driven, easy to retune in Phase 4.
 - **2026-09-23 — Events targeting (v1):** target jobs by **tier / explicit id list**,
   not by district. No pin→district map needed. Districts remain display flavor.
 - **2026-09-23 — Events × featured stacking (v1):** **mutually exclusive per job,

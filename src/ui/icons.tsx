@@ -311,6 +311,12 @@ const HEIST_ICON: Record<string, IconName> = {
   armored_convoy: 'convoy',
   data_center: 'datacenter',
   central_bank: 'centralbank',
+  // Newer jobs reuse thematically-close existing glyphs (no bespoke art yet).
+  pickpocket_ring: 'smash_grab',
+  jewel_courier: 'jewelry',
+  penthouse_job: 'bank_vault',
+  rail_yard: 'cargo',
+  sovereign_reserve: 'centralbank',
 };
 
 export function HeistIcon({

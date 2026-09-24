@@ -170,6 +170,34 @@ export function canPrestige(state: GameState, config: Config = CONFIG): boolean 
   return state.lifetimeCash >= config.prestigeThreshold;
 }
 
+// ---- Ascension / Legend (second meta layer) --------------------------------
+
+/** Purchased level of a legend perk (0 if unowned). */
+export function legendPerkLevel(state: GameState, perkId: string): number {
+  return state.legendPerks?.[perkId] ?? 0;
+}
+/** Legend you'd earn by ascending now (from your current Notoriety). */
+export function legendGainFor(notoriety: number, config: Config = CONFIG): number {
+  if (notoriety <= 0) return 0;
+  return Math.floor(Math.sqrt(notoriety / config.legendDivisor));
+}
+/** Whether ascension is available (enough Notoriety, and it would yield >=1 Legend). */
+export function canAscend(state: GameState, config: Config = CONFIG): boolean {
+  return state.notoriety >= config.ascendThreshold && legendGainFor(state.notoriety, config) >= 1;
+}
+/** Permanent global payout multiplier from the Kingpin legend perk. */
+export function legendPayoutMult(state: GameState, config: Config = CONFIG): number {
+  return 1 + config.legendKingpinPct * legendPerkLevel(state, 'kingpin');
+}
+/** Multiplier applied to Notoriety earned on retirement (Reputation Engine). */
+export function legendNotorietyMult(state: GameState, config: Config = CONFIG): number {
+  return 1 + config.legendRepEnginePct * legendPerkLevel(state, 'rep_engine');
+}
+/** Extra starting cash each new run gets from the Deep Pockets legend perk. */
+export function legendStartCash(state: GameState, config: Config = CONFIG): number {
+  return config.legendDeepPocketsCash * legendPerkLevel(state, 'deep_pockets');
+}
+
 // ---- Endgame repeatable "Syndicate Contract" -------------------------------
 
 export const CONTRACT_ID = 'syndicate_contract';
@@ -253,7 +281,7 @@ export function maxUnlockedTier(state: GameState, config: Config = CONFIG): numb
 }
 
 export function isHeistUnlocked(state: GameState, heist: HeistDef): boolean {
-  return heist.tier <= maxUnlockedTier(state);
+  return heist.tier <= maxUnlockedTier(state) && (heist.minAscend ?? 0) <= (state.ascendCount ?? 0);
 }
 
 // ---- Heist instance status --------------------------------------------------

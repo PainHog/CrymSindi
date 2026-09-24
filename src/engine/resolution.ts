@@ -30,6 +30,7 @@ import {
   heatGainMult,
   isMemberDown,
   memberPower,
+  legendPayoutMult,
   notorietyMult,
   payoutMult,
 } from './selectors';
@@ -307,7 +308,7 @@ export function resolveHeist(
   // bringing MORE members never lowers the take. A flawless run pays a bonus; a
   // blown run still salvages a fraction of the base for the time invested.
   const base = heist.payoutPerSec * heist.durationSec * rewardMult;
-  const mult = payoutMult(state) * notorietyMult(state, config);
+  const mult = payoutMult(state) * notorietyMult(state, config) * legendPayoutMult(state, config);
   let payout = 0;
   let perfectBonus = 0;
   if (success) {
