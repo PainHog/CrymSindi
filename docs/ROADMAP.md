@@ -12,15 +12,40 @@ the work it describes. Newest status at the top.
 
 ## Current status (2026-09-24)
 
-- **Merged to `main`:** the full game (PR #1), **Living-Map Events** (PR #2), and
-  **Ascension / Legend + Content longevity** (PR #3). So `main` now has: core loop,
-  heat, traits & synergies, gear, skill training, offline/welcome-back, daily
-  reward, prestige → Notoriety, approaches/prep/injuries/featured, living-map
-  events, the second prestige layer (Legend), and the extended heist catalog +
-  ascension-gated capstone. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** Crew identity — **all 3 phases DONE** (veterancy
-  engine + UI + specialist recruit tiers). Ready for a PR to `main`.
-- **Tests:** 176 passing. Build clean.
+- **Merged to `main`:** the full game (PR #1), **Living-Map Events** (PR #2),
+  **Ascension / Legend + Content longevity** (PR #3), **Crew identity** —
+  veterancy + specialist recruit tiers (PR #4), **map-slot expansion** to 24
+  (PR #5), and **automation batch-dispatch** — "Send all idle crews" on the map
+  (PR #6). So `main` now has: core loop, heat, traits & synergies, gear, skill
+  training, offline/welcome-back, daily reward, prestige → Notoriety,
+  approaches/prep/injuries/featured, living-map events, the second prestige
+  layer (Legend), the extended heist catalog + ascension-gated capstone, crew
+  veterancy + recruit tiers, a 24-slot board, and one-tap batch dispatch. Noir
+  map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** **First-run onboarding** — DONE (a dismissible
+  send → wait → collect guide under the map HUD). Ready for a PR to `main`.
+- **Playable build:** a single-file HTML build (`npm run build:single` →
+  `dist-single/index.html`) was delivered to the user, so the whole game runs
+  from one file with no server.
+- **Tests:** 181 passing. Build clean.
+
+---
+
+## Feature: First-run onboarding
+
+A brand-new player lands on a busy map with no idea what to do first. This adds a
+prominent, dismissible guide strip under the HUD that walks them through the core
+loop — **send a crew → wait for the job → bank the take** — then gets out of the
+way for good.
+
+- [x] **Onboarding strip.** `ui/map/onboarding.ts` — a pure `firstRunStep(game,
+      now)` state machine: `send` (nothing running) → `wait` (a job in flight) →
+      `collect` (a job ready) → `null` once `stats.heistsCompleted > 0` (persists,
+      so it never nags a returning player). `ui/map/NfOnboard.tsx` renders a
+      cyan-accented `.nf-onboard` strip (step `N/3`, mask icon, title + body, Skip)
+      mounted between the HUD and the map stage; Skip is remembered in
+      localStorage (`heist-crew-idle/seenMapIntro`). Mobile: icon hidden, text
+      wraps. 4 tests. Verified headless (desktop + mobile). _(commit on dev)_
 
 ---
 

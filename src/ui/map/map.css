@@ -60,6 +60,19 @@
 .nf-icon-btn:hover:not(:disabled) { color: var(--nf-cyan); border-color: #2f4a6e; box-shadow: 0 0 12px #37e8ff26; }
 .nf-icon-btn:disabled { opacity: .4; cursor: not-allowed; }
 
+/* FIRST-RUN ONBOARDING STRIP ------------------------------------------------- */
+.nf-onboard { position: relative; z-index: 25; display: flex; align-items: center; gap: 11px;
+  padding: 9px 16px; background: linear-gradient(180deg, #0c1c2b, #0a1420); border-bottom: 1px solid #204457;
+  box-shadow: 0 6px 20px #0006, inset 0 0 30px #37e8ff10; animation: nf-onb-in .3s ease-out; }
+@keyframes nf-onb-in { from { opacity: 0; transform: translateY(-6px); } }
+.nf-onboard-step { flex: none; font-family: var(--nf-disp); font-weight: 700; font-size: 16px; color: var(--nf-cyan); line-height: 1; }
+.nf-onboard-step small { font-family: var(--nf-mono); font-size: 9px; color: var(--nf-ink-faint); font-weight: 400; }
+.nf-onboard-ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: #08151e; border: 1px solid #204457; color: var(--nf-cyan); }
+.nf-onboard-txt { flex: 1; min-width: 0; font-family: var(--nf-body); font-size: 12.5px; color: var(--nf-ink-dim); overflow: hidden; }
+.nf-onboard-txt b { font-family: var(--nf-disp); font-weight: 600; font-size: 13px; letter-spacing: .4px; text-transform: uppercase; color: var(--nf-ink); }
+.nf-onboard-skip { flex: none; font-family: var(--nf-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--nf-ink-dim); background: none; border: 1px solid var(--nf-line); border-radius: 8px; padding: 6px 11px; cursor: pointer; transition: .15s; }
+.nf-onboard-skip:hover { color: var(--nf-ink); border-color: #2f4a6e; }
+
 /* STAGE ---------------------------------------------------------------------- */
 .nf-stage { position: relative; flex: 1; overflow: hidden; min-height: 0; background: #05070d; }
 .nf-city { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -468,6 +481,10 @@
   /* Ticker stays a compact name + countdown on phones. */
   .nf-eventbar { top: 8px; padding: 6px 12px; max-width: calc(100% - 16px); }
   .nf-eb-blurb { display: none; }
+
+  .nf-onboard { padding: 8px 12px; gap: 9px; }
+  .nf-onboard-ic { display: none; }
+  .nf-onboard-txt { font-size: 11.5px; }
 
   /* Full-screen drawer clears the notch. */
   .nf-drawer { width: 100%; }
