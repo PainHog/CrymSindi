@@ -16,25 +16,26 @@ the work it describes. Newest status at the top.
   **Ascension / Legend + Content longevity** (PR #3), **Crew identity** —
   veterancy + specialist recruit tiers (PR #4), **map-slot expansion** to 24
   (PR #5), and **automation batch-dispatch** — "Send all idle crews" on the map
-  (PR #6), and **first-run onboarding** — the send/wait/collect guide strip
-  (PR #7). So `main` now has: core loop, heat, traits & synergies, gear, skill
+  (PR #6), **first-run onboarding** — the send/wait/collect guide strip
+  (PR #7), and **audio & juice (game feel)** — collect-moment floater, cash
+  count-up, prestige bloom, tactile buttons, mute toggle (PR #8). So `main` now
+  has: core loop, heat, traits & synergies, gear, skill
   training, offline/welcome-back, daily reward, prestige → Notoriety,
   approaches/prep/injuries/featured, living-map events, the second prestige
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
-  veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, and a
-  first-run onboarding guide. Noir map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **Audio & juice (game feel)** — Phase 1 DONE (the
-  collect moment: floating "+$X" payout, HUD cash count-up + gain flash, and a
-  mute toggle so the noir map's audio finally has an off switch). The WebAudio
-  cue engine already shipped and is global. Next: level-up flash + prestige moment.
+  veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, a
+  first-run onboarding guide, and a full game-feel juice layer. Noir map-first
+  UI default; classic at `?classic=1`.
+- **In flight (dev branch):** nothing substantive — the dev branch carries only
+  this log update on top of `main`, ready for the next feature.
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
-  `dist-single/index.html`) with onboarding was delivered to the user, so the
-  whole game runs from one file with no server.
+  `dist-single/index.html`) with onboarding + juice was delivered to the user, so
+  the whole game runs from one file with no server.
 - **Tests:** 186 passing. Build clean.
 
 ---
 
-## Feature: Audio & juice (game feel)
+## Feature: Audio & juice (game feel) _(shipped — merged in PR #8)_
 
 Deep systems, thin moment-to-moment feedback. Idle games retain on the dopamine
 hit of collecting — numbers popping, a satisfying cue, the "one more job" pull.
@@ -67,7 +68,10 @@ juice and no mute control.
       already pulsing (`nf-bob`). All reduced-motion guarded (bloom + presses
       dropped). Verified headless. **Deferred:** veterancy level-up flash (levels
       change slowly; needs level-diff tracking — low payoff for now). _(commit on dev)_
-- [ ] **Phase 4 — Polish, perf check, re-deliver the single-file build.**
+- [x] **Phase 4 — Polish & delivery.** Perf reviewed: the count-up uses rAF only
+      during its ~550ms animation, the floater layer renders nothing when idle,
+      and nothing new runs on the 250ms tick — no regression. Single-file build
+      rebuilt and re-delivered to the user. _(dev)_
 
 ---
 
