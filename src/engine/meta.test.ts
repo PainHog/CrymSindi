@@ -259,7 +259,11 @@ describe('the Fixer (offline auto-collect)', () => {
 
   it('auto-collects and relaunches finished jobs while away', () => {
     const s = makeState(crew, { purchasedUpgradeIds: ['the_fixer'] });
-    const launched = launchHeist(s, 'smash_grab', 'c1', T0); // 20s job
+    // Explicit seed: the offline relaunch chain derives its per-cycle seeds from
+    // this one, so the whole run is deterministic (an unseeded launch defaults to
+    // Math.random and made this test flaky — a rare early injury could break the
+    // chain and drop autoCollected to 1).
+    const launched = launchHeist(s, 'smash_grab', 'c1', T0, 12345); // 20s job
     expect(launched.ok).toBe(true);
     if (!launched.ok) return;
 
