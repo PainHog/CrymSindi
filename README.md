@@ -47,8 +47,10 @@ around.
 ### GitHub Pages
 
 A workflow at `.github/workflows/deploy.yml` builds `dist/` and deploys it to GitHub Pages on every
-push to `main`. To turn it on once: repo **Settings → Pages → Build and deployment → Source:
-GitHub Actions**. After that it's automatic; the site URL appears in the workflow's deploy step.
+push to `main`. It **auto-enables Pages** on the first run (via `configure-pages` with
+`enablement: true`), so it should just work — the live URL appears in the workflow's deploy step.
+If your org restricts Pages and that step fails, enable it once by hand (**Settings → Pages →
+Build and deployment → Source: GitHub Actions**) and re-run the workflow.
 
 ## Test
 
