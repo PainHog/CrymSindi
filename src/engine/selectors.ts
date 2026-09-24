@@ -63,8 +63,38 @@ export function healCost(member: Member, config: Config = CONFIG): number {
 
 // ---- Skill / power ----------------------------------------------------------
 
-/** A member's effective skill including owned-gear bonuses and their trait. */
-export function memberEffectiveSkill(member: Member): number {
+/** A member's veteran level from career XP (0..veteranMaxLevel). */
+export function memberLevel(member: Member, config: Config = CONFIG): number {
+  const xp = member.xp ?? 0;
+  if (xp <= 0) return 0;
+  return Math.min(config.veteranMaxLevel, Math.floor(Math.sqrt(xp / config.veteranXpBase)));
+}
+/** Effective-skill bonus a member gets from their veteran level. */
+export function veteranBonus(member: Member, config: Config = CONFIG): number {
+  return config.veteranSkillPerLevel * memberLevel(member, config);
+}
+/** Total career XP needed to have reached a given veteran level (for a progress bar). */
+export function veteranXpForLevel(level: number, config: Config = CONFIG): number {
+  return config.veteranXpBase * level * level;
+}
+/** XP a participant earns from collecting a job of this difficulty + outcome. */
+export function xpForHeist(
+  difficulty: number,
+  outcome: { success: boolean; flawless: boolean },
+  config: Config = CONFIG,
+): number {
+  const base = config.xpPerHeistBase + config.xpPerDifficulty * difficulty;
+  const mult = outcome.flawless
+    ? config.xpFlawlessMult
+    : outcome.success
+      ? config.xpSuccessMult
+      : config.xpFailMult;
+  return Math.max(0, Math.round(base * mult));
+}
+
+/** A member's effective skill including owned-gear bonuses, their trait, and
+ *  their veteran level. */
+export function memberEffectiveSkill(member: Member, config: Config = CONFIG): number {
   let skill = member.skill;
   for (const gearId of member.gearIds) {
     const gear = GEAR_BY_ID[gearId];
@@ -72,6 +102,7 @@ export function memberEffectiveSkill(member: Member): number {
     skill += gear.skillBonus;
   }
   if (member.traitId) skill += TRAITS_BY_ID[member.traitId]?.skillBonus ?? 0;
+  skill += veteranBonus(member, config);
   return skill;
 }
 
