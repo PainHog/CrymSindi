@@ -65,7 +65,16 @@ Resolving the "remaining improvements & outstanding issues" review, in order.
       pins are a labelled group. Verified headless (Escape closes both; focus lands
       on the dossier close). Also confirmed the **single-file build runs clean**
       (its CSP allows the inlined script; 0 console errors on load).
-- [ ] **Events v2** (jackpot target + heat-reactive) — deferred backlog.
+- [x] **Events v2 (jackpot + weighting + variety).** Added optional `weight` to
+      `EventDef` + deterministic weighted selection (one rng draw, so the stream
+      stays stable). New rare **jackpot event "The Whale"** (2× take, weight 0.35,
+      tier 3–5) with a distinct pulsing **JACKPOT** pin badge, gold trophy ticker,
+      and dossier tag; plus two variety events (Hot tip, Snitch in the wind). The
+      balance invariant now separates the sustained cap (≤2.5×) from the rare
+      jackpot cap (≤3.5×). Tests for weighted rarity + the split invariant.
+      Verified headless. **Heat-reactive events deferred by design** — they'd need
+      per-player event state, which breaks the stateless deterministic-timestamp
+      model the whole event/featured/rival system relies on; noted as a v3 idea.
 - [ ] **Meta-layer onboarding depth + crew backstory flavor.**
 - [ ] **More content** (heists/rivals/events) + a **mobile UX pass.**
 - **Can't resolve from here (need you / external):** live Pages deploy (repo

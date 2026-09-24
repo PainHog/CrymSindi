@@ -14,15 +14,28 @@ import { EVENTS } from '../data/events';
 // -----------------------------------------------------------------------------
 
 describe('reward-stack ceiling', () => {
-  it('the payout-multiplier chain stays bounded (featured & events are exclusive)', () => {
+  it('the sustained payout-multiplier chain stays bounded (featured & events are exclusive)', () => {
     const maxApproach = Math.max(...APPROACHES.map((a) => a.rewardMult)); // loud = 1.4
     const maxFeatured = CONFIG.featuredBonusMax; // 1.6
-    const maxEventReward = Math.max(1, ...EVENTS.map((e) => e.effect.rewardMult ?? 1));
+    // Common (weight >= 1) events are the sustained case; a rare jackpot (weight
+    // < 1) is allowed a higher, separate ceiling below.
+    const common = EVENTS.filter((e) => (e.weight ?? 1) >= 1);
+    const maxCommonReward = Math.max(1, ...common.map((e) => e.effect.rewardMult ?? 1));
     // A job carries featured OR an event, never both — so the special bonus is
     // the max of the two, not their product.
-    const payoutMultCeiling = maxApproach * Math.max(maxFeatured, maxEventReward);
-    // ~2.24 today; keep the sustained payout multiplier under 2.5x base.
-    expect(payoutMultCeiling).toBeLessThanOrEqual(2.5);
+    const sustainedCeiling = maxApproach * Math.max(maxFeatured, maxCommonReward);
+    expect(sustainedCeiling).toBeLessThanOrEqual(2.5); // ~2.24 today
+  });
+
+  it('a rare jackpot event is bigger but still bounded', () => {
+    const maxApproach = Math.max(...APPROACHES.map((a) => a.rewardMult));
+    const rare = EVENTS.filter((e) => (e.weight ?? 1) < 1);
+    const maxRareReward = Math.max(1, ...rare.map((e) => e.effect.rewardMult ?? 1));
+    // The jackpot (loud x The Whale) is a rare, time-boxed spike — allow up to
+    // 3.5x base, no more.
+    expect(maxApproach * maxRareReward).toBeLessThanOrEqual(3.5); // 1.4 * 2.0 = 2.8
+    // And it must actually be rare (well below a common event's weight of 1).
+    for (const e of rare) expect(e.weight!).toBeLessThan(0.6);
   });
 
   it('rival spoils (separate cash, escalation included) stay bounded', () => {
