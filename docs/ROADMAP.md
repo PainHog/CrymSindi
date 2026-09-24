@@ -28,9 +28,9 @@ the work it describes. Newest status at the top.
   first-run onboarding guide, a full game-feel juice layer, and a rival crew
   contesting the board — now a persistent, escalating feud (PR #10). Noir
   map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** nothing substantive — the dev branch carries only
-  this log update on top of `main`, ready for the next feature. **Save management**
-  (portable export/import + a settings panel on the map) merged (PR #12).
+- **In flight (dev branch):** **Release readiness** — refreshed the README (current
+  name/feature set) and added a GitHub Pages deploy workflow. **Save management**
+  merged (PR #12).
 - **Playable build:** a single-file HTML build (`npm run build:single` ->
   `dist-single/index.html`) with onboarding + juice was delivered to the user, so
   the whole game runs from one file with no server.
