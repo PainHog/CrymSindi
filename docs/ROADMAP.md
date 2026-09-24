@@ -66,7 +66,13 @@ so the clean pure-function design is preserved.
       a **Rivalries rap sheet** (each rival: tag, turf-taken count, rivalry level,
       a gold `RUN OUT` badge when dominated); the debrief gained a gold domination
       chip. Verified headless. _(commit on dev)_
-- [ ] **Phase 3 — Balance, verify, ship.**
+- [x] **Phase 3 — Balance, verify, ship.** Balance reasoned: escalation caps at
+      ×2 spoils but needs 15 wins vs one rival (a long, aspirational grind);
+      domination pays 5× the clinching take but only once per rival (5 one-time
+      bonuses across the whole game). All cash — no meta-economy perturbation.
+      **No tuning needed.** Verified headless (dossier standing callout, banner
+      level chip, rap sheet with a dominated crew); single-file build rebuilt +
+      re-delivered. _(dev)_
 
 ---
 
