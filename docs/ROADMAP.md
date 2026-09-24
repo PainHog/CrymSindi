@@ -16,18 +16,54 @@ the work it describes. Newest status at the top.
   **Ascension / Legend + Content longevity** (PR #3), **Crew identity** —
   veterancy + specialist recruit tiers (PR #4), **map-slot expansion** to 24
   (PR #5), and **automation batch-dispatch** — "Send all idle crews" on the map
-  (PR #6). So `main` now has: core loop, heat, traits & synergies, gear, skill
+  (PR #6), and **first-run onboarding** — the send/wait/collect guide strip
+  (PR #7). So `main` now has: core loop, heat, traits & synergies, gear, skill
   training, offline/welcome-back, daily reward, prestige → Notoriety,
   approaches/prep/injuries/featured, living-map events, the second prestige
   layer (Legend), the extended heist catalog + ascension-gated capstone, crew
-  veterancy + recruit tiers, a 24-slot board, and one-tap batch dispatch. Noir
-  map-first UI default; classic at `?classic=1`.
-- **In flight (dev branch):** **First-run onboarding** — DONE (a dismissible
-  send → wait → collect guide under the map HUD). Ready for a PR to `main`.
-- **Playable build:** a single-file HTML build (`npm run build:single` →
-  `dist-single/index.html`) was delivered to the user, so the whole game runs
-  from one file with no server.
-- **Tests:** 181 passing. Build clean.
+  veterancy + recruit tiers, a 24-slot board, one-tap batch dispatch, and a
+  first-run onboarding guide. Noir map-first UI default; classic at `?classic=1`.
+- **In flight (dev branch):** **Audio & juice (game feel)** — Phase 1 DONE (the
+  collect moment: floating "+$X" payout, HUD cash count-up + gain flash, and a
+  mute toggle so the noir map's audio finally has an off switch). The WebAudio
+  cue engine already shipped and is global. Next: level-up flash + prestige moment.
+- **Playable build:** a single-file HTML build (`npm run build:single` ->
+  `dist-single/index.html`) with onboarding was delivered to the user, so the
+  whole game runs from one file with no server.
+- **Tests:** 186 passing. Build clean.
+
+---
+
+## Feature: Audio & juice (game feel)
+
+Deep systems, thin moment-to-moment feedback. Idle games retain on the dopamine
+hit of collecting — numbers popping, a satisfying cue, the "one more job" pull.
+This layer makes the loop *feel* good the first time and the thousandth.
+
+**Already shipped (found in the codebase):** a WebAudio cue engine (`ui/sfx.ts`)
++ an invisible `SoundFx` consumer, mounted globally in `App.tsx`, so synthesized
+cues (launch / success / fail / purchase / ready-ping / prestige / error) already
+play on the noir map. The classic `ResourceBar` also already had a cash count-up
++ coin burst. The gap was the **noir map** (default UI) had no visual collect
+juice and no mute control.
+
+- [x] **Phase 1 — Collect moment.** `ui/map/juice.ts` — pure
+      `floaterFromEvent(event)` maps the one-shot GameEvent to a floating payout
+      (money moments only; skips a zero-take bust). `ui/map/NfJuice.tsx` spawns a
+      rising, fading "+$X" floater near the HUD on each collect (lime for a clean
+      take, magenta for a failed-but-paid job, a "clean" flourish when flawless);
+      capped + self-removing. The HUD cash readout now counts up toward gains and
+      flashes when it climbs (`CashStat`, reusing `useCountUp`). Added a **mute
+      toggle** to the noir HUD (new `sound`/`mute` icons) — audio played on the
+      map with no off switch there. All `prefers-reduced-motion`-guarded (count-up
+      snaps, floater shows without travel). 5 tests. Verified headless (desktop +
+      mobile). _(commit on dev)_
+- [ ] **Phase 2 — Audio.** Largely pre-existing (see above). Mute toggle added in
+      Phase 1; cues confirmed firing on the map. Candidate: a level-up cue.
+- [ ] **Phase 3 — Juice the rest.** Ready pins already pulse (`nf-bob`). To add:
+      launch/collect button press feedback, veterancy level-up flash, a
+      prestige/ascend screen moment. All reduced-motion guarded.
+- [ ] **Phase 4 — Polish, perf check, re-deliver the single-file build.**
 
 ---
 
