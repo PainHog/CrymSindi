@@ -30,7 +30,8 @@ the work it describes. Newest status at the top.
   map-first UI default; classic at `?classic=1`.
 - **In flight (dev branch):** working through the **outstanding-issues list** (see
   the section below). Done so far: dev-panel gated out of production + a save
-  migration framework (PR #15); a PR CI test gate. **Release readiness** merged
+  migration framework (PR #15); a PR CI test gate (PR #16); an accessibility pass.
+  **Release readiness** merged
   earlier (PR #13); to put it on a URL, enable repo Settings → Pages → Source =
   GitHub Actions (one-time).
 
@@ -56,7 +57,14 @@ Resolving the "remaining improvements & outstanding issues" review, in order.
       run warning is GitHub auto-upgrading the *actions'* runtime — checkout /
       setup-node are already at their latest major `v4`, so there's nothing to
       change on our side; it's informational, not our config.)
-- [ ] **Accessibility pass** (map + drawers).
+- [x] **Accessibility pass (map + drawers).** `index.html` title fixed to
+      "Nightfall Syndicate" + a meta description. HUD icon buttons got explicit
+      `aria-label`s. The drawer is now a labelled `role="dialog" aria-modal` with
+      focus moved in on open; the dossier is a labelled `role="dialog"` with focus
+      moved in; **Escape closes** the top-most overlay (drawer, then dossier). The
+      pins are a labelled group. Verified headless (Escape closes both; focus lands
+      on the dossier close). Also confirmed the **single-file build runs clean**
+      (its CSP allows the inlined script; 0 console errors on load).
 - [ ] **Events v2** (jackpot target + heat-reactive) — deferred backlog.
 - [ ] **Meta-layer onboarding depth + crew backstory flavor.**
 - [ ] **More content** (heists/rivals/events) + a **mobile UX pass.**

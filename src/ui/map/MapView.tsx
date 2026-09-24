@@ -88,6 +88,18 @@ export function MapView() {
   const [drawer, setDrawer] = useState<'safehouse' | 'reputation' | 'blackmarket' | 'settings' | null>(null);
   const [muted, setMuted] = useState(isMuted());
 
+  // Escape closes the top-most overlay (drawer first, then the dossier), so
+  // keyboard users can dismiss without reaching for the pointer.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (drawer) setDrawer(null);
+      else if (selected) setSelected(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawer, selected]);
+
   const heat = deriveHeat(game, now);
   const heatPct = (heat / CONFIG.maxHeat) * 100;
   const idleCrews = game.crews.filter((c) => c.status === 'idle').length;
@@ -162,24 +174,25 @@ export function MapView() {
         <button
           className={'nf-icon-btn' + (muted ? ' muted' : '')}
           title={muted ? 'Sound off — click to unmute' : 'Sound on — click to mute'}
+          aria-label={muted ? 'Unmute sound' : 'Mute sound'}
           aria-pressed={muted}
           onClick={() => setMuted(toggleMuted())}
         >
           <Icon name={muted ? 'mute' : 'sound'} size={17} />
         </button>
-        <button className="nf-icon-btn" title="Collect all ready" onClick={actions.collectAll} disabled={readyCount === 0}>
+        <button className="nf-icon-btn" title="Collect all ready" aria-label="Collect all ready jobs" onClick={actions.collectAll} disabled={readyCount === 0}>
           <Icon name="cash" size={17} />
         </button>
-        <button className="nf-icon-btn" title="Black market — upgrades" onClick={() => setDrawer('blackmarket')}>
+        <button className="nf-icon-btn" title="Black market — upgrades" aria-label="Black market upgrades" onClick={() => setDrawer('blackmarket')}>
           <Icon name="vault" size={17} />
         </button>
-        <button className="nf-icon-btn" title="Reputation & perks" onClick={() => setDrawer('reputation')}>
+        <button className="nf-icon-btn" title="Reputation & perks" aria-label="Reputation and perks" onClick={() => setDrawer('reputation')}>
           <Icon name="crown" size={17} />
         </button>
-        <button className="nf-icon-btn" title="Safehouse & crews" onClick={() => setDrawer('safehouse')}>
+        <button className="nf-icon-btn" title="Safehouse & crews" aria-label="Safehouse and crews" onClick={() => setDrawer('safehouse')}>
           <Icon name="safehouse" size={17} />
         </button>
-        <button className="nf-icon-btn" title="Settings — save, backup, reset" onClick={() => setDrawer('settings')}>
+        <button className="nf-icon-btn" title="Settings — save, backup, reset" aria-label="Settings" onClick={() => setDrawer('settings')}>
           <Icon name="gear" size={17} />
         </button>
       </header>
@@ -208,7 +221,7 @@ export function MapView() {
           <div className="nf-hl">HQ</div>
         </div>
 
-        <div className="nf-pins">
+        <div className="nf-pins" role="group" aria-label="Heists on the map">
           {board.map((h, i) => {
             const slot = SLOTS[i % SLOTS.length];
             const status = pinStatus(game, h.id, now);
@@ -283,8 +296,22 @@ export function MapView() {
 
       {drawer && (
         <div className="nf-drawer-wrap" onClick={() => setDrawer(null)}>
-          <aside className="nf-drawer" onClick={(e) => e.stopPropagation()}>
-            <button className="nf-drawer-close" onClick={() => setDrawer(null)} aria-label="Close">
+          <aside
+            className="nf-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label={
+              drawer === 'safehouse'
+                ? 'Safehouse and crews'
+                : drawer === 'reputation'
+                  ? 'Reputation and perks'
+                  : drawer === 'blackmarket'
+                    ? 'Black market'
+                    : 'Settings'
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="nf-drawer-close" onClick={() => setDrawer(null)} aria-label="Close" autoFocus>
               ✕
             </button>
             <div className="nf-drawer-body">
@@ -348,9 +375,14 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
 
   const accent = risk === 'hi' ? 'var(--nf-magenta)' : risk === 'med' ? 'var(--nf-amber)' : 'var(--nf-cyan)';
   return (
-    <aside className="nf-dossier open" style={{ '--c': accent } as CSSProperties}>
+    <aside
+      className="nf-dossier open"
+      role="dialog"
+      aria-label={`${heist.name} — job dossier`}
+      style={{ '--c': accent } as CSSProperties}
+    >
       <div className="nf-dos-head">
-        <button className="nf-dos-close" onClick={onClose} aria-label="Close">
+        <button className="nf-dos-close" onClick={onClose} aria-label={`Close ${heist.name} dossier`} autoFocus>
           ✕
         </button>
         <div className="nf-dos-eyebrow">
