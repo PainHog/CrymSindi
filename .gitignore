@@ -6,6 +6,8 @@ dist/
 dist-single/
 dist-ssr/
 *.tsbuildinfo
+# itch.io upload bundle (produced by `npm run build:itch`)
+*-itch.zip
 
 # Local env files
 .env

@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:single": "tsc -b && vite build --config vite.config.single.ts",
+    "build:itch": "npm run build && rm -f nightfall-syndicate-itch.zip && cd dist && zip -r -q ../nightfall-syndicate-itch.zip . && cd .. && echo 'itch upload ready: nightfall-syndicate-itch.zip (index.html at zip root, relative paths)'",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -15,6 +16,7 @@
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/oswald": "^5.3.0",
+    "phaser": "^3.90.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
