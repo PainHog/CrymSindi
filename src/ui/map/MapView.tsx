@@ -50,6 +50,7 @@ import { useCountUp } from '../hooks';
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { isMuted, toggleMuted } from '../sfx';
 import { CityCanvas } from './CityCanvas';
+import { SceneLayer } from '../scene/SceneLayer';
 import { CrewDrawer } from './CrewDrawer';
 import { NfCoach } from './NfCoach';
 import { NfJuice } from './NfJuice';
@@ -205,6 +206,7 @@ export function MapView() {
 
       <div className="nf-stage">
         <CityCanvas />
+        <SceneLayer />
         <div className="nf-scanline" />
         <div className="nf-grain" />
         <div className="nf-vig" />
