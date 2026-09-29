@@ -1,21 +1,23 @@
 // -----------------------------------------------------------------------------
 // SCENE LAYER — feature flag + capability checks
 // -----------------------------------------------------------------------------
-// The animated Phaser actor layer is additive polish over the map. It defaults
-// ON, but we never mount it when the player has asked for reduced motion, and a
-// localStorage kill-switch ('nf/scene' = 'off') disables it entirely so a device
-// that struggles (or a player who dislikes it) always has a way back to the
-// static map. Pure reads, all guarded — safe in any environment.
+// The animated Phaser actor layer is additive polish over the map. Its state is
+// tri-valued and stored in localStorage under 'nf/scene':
+//   * unset  → AUTO: on, unless the OS/browser requests reduced motion
+//   * 'on'   → the player explicitly turned it on (overrides reduced motion —
+//              an explicit opt-in to animation is a deliberate choice)
+//   * 'off'  → the player explicitly turned it off (always off; the static map)
+// All reads are guarded so this is safe in any environment.
 // -----------------------------------------------------------------------------
 
 const KEY = 'nf/scene';
 
-/** True if the player explicitly turned the animated layer off. */
-function killed(): boolean {
+function pref(): 'on' | 'off' | null {
   try {
-    return localStorage.getItem(KEY) === 'off';
+    const v = localStorage.getItem(KEY);
+    return v === 'on' || v === 'off' ? v : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -28,20 +30,25 @@ export function prefersReducedMotion(): boolean {
   }
 }
 
-/** Whether the animated scene layer should mount right now. */
+/** Whether the animated scene layer should be mounted right now. */
 export function sceneEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  if (killed()) return false;
-  if (prefersReducedMotion()) return false;
-  return true;
+  const p = pref();
+  if (p === 'off') return false;
+  if (p === 'on') return true; // explicit opt-in overrides reduced motion
+  return !prefersReducedMotion(); // AUTO: on unless the system asks otherwise
 }
 
-/** Turn the animated layer on/off (persists). Off falls back to the static map. */
+/** Record the player's explicit choice (persists) and let the live layer react. */
 export function setSceneEnabled(on: boolean): void {
   try {
-    if (on) localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, 'off');
+    localStorage.setItem(KEY, on ? 'on' : 'off');
   } catch {
     /* storage blocked — the choice just won't persist */
+  }
+  try {
+    window.dispatchEvent(new Event('nf-scene-toggle'));
+  } catch {
+    /* no window (SSR/tests) — nothing listening anyway */
   }
 }

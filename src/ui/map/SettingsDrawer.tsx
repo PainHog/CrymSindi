@@ -10,11 +10,13 @@
 import { useState } from 'react';
 import { useGame } from '../../store/GameContext';
 import { usePrefersReducedMotion } from '../hooks';
+import { sceneEnabled, setSceneEnabled } from '../scene/flags';
 import { isMuted, toggleMuted } from '../sfx';
 
 export function SettingsDrawer() {
   const { actions } = useGame();
   const [muted, setMuted] = useState(isMuted());
+  const [sceneOn, setSceneOn] = useState(sceneEnabled());
   const [blob, setBlob] = useState('');
   const [importText, setImportText] = useState('');
   const [msg, setMsg] = useState('');
@@ -62,6 +64,23 @@ export function SettingsDrawer() {
           </div>
           <button className="nf-set-toggle" aria-pressed={!muted} onClick={() => setMuted(toggleMuted())}>
             {muted ? 'Off' : 'On'}
+          </button>
+        </div>
+        <div className="nf-set-row">
+          <div className="nf-set-rowtext">
+            <b>Animated city</b>
+            <span>Traffic, pedestrians, police chases and mini-scenes on the map. Turn off for a calmer, lighter map.</span>
+          </div>
+          <button
+            className="nf-set-toggle"
+            aria-pressed={sceneOn}
+            onClick={() => {
+              const on = !sceneOn;
+              setSceneEnabled(on);
+              setSceneOn(on);
+            }}
+          >
+            {sceneOn ? 'On' : 'Off'}
           </button>
         </div>
         <div className="nf-set-note">
