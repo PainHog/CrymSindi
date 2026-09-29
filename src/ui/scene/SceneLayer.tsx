@@ -12,13 +12,14 @@ import type PhaserNS from 'phaser';
 import { CONFIG } from '../../data/config';
 import { deriveHeat, isManhuntAt } from '../../engine';
 import { useGame, useNow } from '../../store/GameContext';
+import { slotForHeist } from '../map/board';
 import { sceneEnabled } from './flags';
 
 export function SceneLayer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<PhaserNS.Game | null>(null);
 
-  const { game } = useGame();
+  const { game, event, eventId } = useGame();
   const now = useNow();
   const heat = deriveHeat(game, now);
   const manhunt = isManhuntAt(heat);
@@ -54,6 +55,28 @@ export function SceneLayer() {
     g.registry.set('manhunt', manhunt);
     g.registry.set('heatFrac', heatFrac);
   }, [manhunt, heatFrac]);
+
+  // Fire a one-shot vignette at the relevant pin when a job launches/collects.
+  const lastVig = useRef(0);
+  useEffect(() => {
+    const g = gameRef.current;
+    if (!g || !event || eventId === lastVig.current) return;
+    lastVig.current = eventId;
+    let kind: string | null = null;
+    let heistId: string | undefined;
+    if (event.kind === 'launch') {
+      kind = 'arrive';
+      heistId = event.heistId;
+    } else if (event.kind === 'collect') {
+      heistId = event.heistId;
+      kind = !event.success ? 'bust' : event.turfSeized ? 'turf' : 'getaway';
+    }
+    if (!kind || !heistId) return;
+    const pos = slotForHeist(game, heistId);
+    if (!pos) return;
+    g.events.emit('nf-vignette', { kind, nx: pos.nx, ny: pos.ny });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event, eventId]);
 
   return <div ref={containerRef} className="nf-scene" aria-hidden="true" />;
 }

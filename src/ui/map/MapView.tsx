@@ -14,8 +14,6 @@ import { HEISTS, type HeistDef } from '../../data/heists';
 import { isJackpotEvent } from '../../data/events';
 import {
   canClaimDaily,
-  contractHeistDef,
-  contractUnlocked,
   crewPower,
   dailyReward,
   deriveHeat,
@@ -26,7 +24,6 @@ import {
   featuredNow,
   healthyCrew,
   heistStatusAt,
-  isHeistUnlocked,
   isManhuntAt,
   launchBlockReason,
   msUntilNextEvent,
@@ -50,6 +47,7 @@ import { useCountUp } from '../hooks';
 import { HeistIcon, Icon, RoleIcon } from '../icons';
 import { isMuted, toggleMuted } from '../sfx';
 import { CityCanvas } from './CityCanvas';
+import { boardHeists } from './board';
 import { SceneLayer } from '../scene/SceneLayer';
 import { CrewDrawer } from './CrewDrawer';
 import { NfCoach } from './NfCoach';
@@ -67,13 +65,6 @@ function oddColor(ch: number): string {
 }
 const RISK_LABEL = { lo: 'Low risk', med: 'Moderate', hi: 'High risk' } as const;
 const RISK_CLASS = { lo: 'risk-lo', med: 'risk-med', hi: 'risk-hi' } as const;
-
-/** The unlocked heists that make up the current board, in a stable order. */
-function boardHeists(game: GameState): HeistDef[] {
-  const list = HEISTS.filter((h) => isHeistUnlocked(game, h));
-  if (contractUnlocked(game)) list.push(contractHeistDef(game.contractLevel));
-  return list;
-}
 
 type PinStatus = 'open' | 'active' | 'ready';
 
