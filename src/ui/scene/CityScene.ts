@@ -48,6 +48,7 @@ export class CityScene extends Phaser.Scene {
   private sirenT = 0;
   private sirenOn = false;
   private chaseCooldown = 0;
+  private vigCount = 0;
 
   constructor() {
     super('city');
@@ -59,7 +60,12 @@ export class CityScene extends Phaser.Scene {
     for (let i = 0; i < MAX_CARS; i++) this.cars.push(this.makeVehicle('car', true));
     for (let i = 0; i < MAX_PEDS; i++) this.peds.push(this.makePed(true));
     this.scale.on('resize', this.readDims, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', this.readDims, this));
+    // One-shot gameplay vignettes are pushed from React via the game emitter.
+    this.game.events.on('nf-vignette', this.onVignette);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off('resize', this.readDims, this);
+      this.game.events.off('nf-vignette', this.onVignette);
+    });
   }
 
   private readDims(): void {
@@ -189,6 +195,147 @@ export class CityScene extends Phaser.Scene {
     chaser.body.setTexture(this.sirenOn ? KEYS.cruiserRed : KEYS.cruiserBlue);
     chaser.glow.setTexture(this.sirenOn ? KEYS.glowRed : KEYS.glowBlue);
     chaser.glow.setAlpha(0.75);
+  }
+
+  // ---- one-shot vignettes ---------------------------------------------------
+
+  private onVignette = (p: { kind: string; nx: number; ny: number }): void => {
+    const x = Phaser.Math.Clamp(p.nx, 0, 1) * this.W;
+    const y = Phaser.Math.Clamp(p.ny, 0, 1) * this.H;
+    switch (p.kind) {
+      case 'arrive':
+        this.vArrive(x, y);
+        break;
+      case 'getaway':
+        this.vGetaway(x, y);
+        break;
+      case 'bust':
+        this.vBust(x, y);
+        break;
+      case 'turf':
+        this.vTurf(x, y);
+        break;
+    }
+  };
+
+  /** Build a vignette in its own container that self-destructs after `life` ms
+   *  (which stops any tweens on its children). Capped so bursts can't pile up. */
+  private runVignette(build: (c: Phaser.GameObjects.Container) => number): void {
+    if (this.vigCount >= 4) return;
+    this.vigCount += 1;
+    const c = this.add.container(0, 0).setDepth(10);
+    const life = build(c);
+    this.time.delayedCall(life, () => {
+      c.destroy(true);
+      this.vigCount -= 1;
+    });
+  }
+
+  private addGlow(c: Phaser.GameObjects.Container, x: number, y: number, key: string, scale: number, alpha: number): Phaser.GameObjects.Image {
+    const g = this.add.image(x, y, key).setBlendMode(Phaser.BlendModes.ADD).setScale(scale).setAlpha(alpha);
+    c.add(g);
+    return g;
+  }
+
+  /** Launch: a van pulls up to the job, a figure slips out toward it, van departs. */
+  private vArrive(x: number, y: number): void {
+    this.runVignette((c) => {
+      const fromLeft = x < this.W / 2;
+      const sx = fromLeft ? -34 : this.W + 34;
+      const van = this.add.image(sx, y, KEYS.van);
+      van.rotation = fromLeft ? 0 : Math.PI;
+      const glow = this.addGlow(c, sx, y, KEYS.glow, 0.5, 0.5);
+      c.add(van);
+      this.tweens.add({
+        targets: [van, glow],
+        x,
+        duration: 850,
+        ease: 'Sine.easeOut',
+        onComplete: () => {
+          const ped = this.add.image(x, y + 2, KEYS.peds[0]);
+          c.add(ped);
+          this.tweens.add({ targets: ped, y: y - 12, alpha: 0, duration: 550, ease: 'Sine.easeIn' });
+          this.time.delayedCall(450, () => {
+            this.tweens.add({
+              targets: [van, glow],
+              x: fromLeft ? this.W + 40 : -40,
+              alpha: 0,
+              duration: 750,
+              ease: 'Sine.easeIn',
+            });
+          });
+        },
+      });
+      return 2200;
+    });
+  }
+
+  /** Success: a gold cash burst, then the getaway van speeds off the board. */
+  private vGetaway(x: number, y: number): void {
+    this.runVignette((c) => {
+      const toRight = x <= this.W / 2;
+      const ex = toRight ? this.W + 40 : -40;
+      const van = this.add.image(x, y, KEYS.van);
+      van.rotation = toRight ? 0 : Math.PI;
+      const glow = this.addGlow(c, x, y, KEYS.glow, 0.5, 0.6);
+      c.add(van);
+      for (let i = 0; i < 5; i++) {
+        const s = this.add.image(x, y, KEYS.glow).setBlendMode(Phaser.BlendModes.ADD).setTint(0xffd27a).setScale(0.24).setAlpha(0.9);
+        c.add(s);
+        const ang = (Math.PI * 2 * i) / 5 + Math.random();
+        this.tweens.add({
+          targets: s,
+          x: x + Math.cos(ang) * 26,
+          y: y + Math.sin(ang) * 26,
+          alpha: 0,
+          scale: 0.05,
+          duration: 700,
+          ease: 'Sine.easeOut',
+        });
+      }
+      this.time.delayedCall(220, () => {
+        this.tweens.add({ targets: [van, glow], x: ex, alpha: 0, duration: 900, ease: 'Sine.easeIn' });
+      });
+      return 1500;
+    });
+  }
+
+  /** Blown job: two cruisers converge on the spot, light-bars flashing. */
+  private vBust(x: number, y: number): void {
+    this.runVignette((c) => {
+      const unit = (sx: number, sy: number, tx: number, ty: number, rot: number) => {
+        const car = this.add.image(sx, sy, KEYS.cruiserRed);
+        car.rotation = rot;
+        const gr = this.addGlow(c, sx, sy, KEYS.glowRed, 0.55, 0.85);
+        const gb = this.addGlow(c, sx, sy, KEYS.glowBlue, 0.55, 0);
+        c.add(car);
+        this.tweens.add({ targets: [car, gr, gb], x: tx, y: ty, duration: 650, ease: 'Sine.easeOut' });
+        this.tweens.add({ targets: gr, alpha: 0, duration: 180, yoyo: true, repeat: -1 });
+        this.tweens.add({ targets: gb, alpha: 0.85, duration: 180, yoyo: true, repeat: -1 });
+      };
+      unit(-34, y, x - 16, y, 0);
+      unit(x, -34, x, y - 16, Math.PI / 2);
+      return 1700;
+    });
+  }
+
+  /** Turf seized: crew and rival clash, an impact flash, the rival breaks off. */
+  private vTurf(x: number, y: number): void {
+    this.runVignette((c) => {
+      const a = this.add.image(x - 10, y, KEYS.peds[0]);
+      const b = this.add.image(x + 10, y, KEYS.peds[1]).setTint(0xff6a5a);
+      c.add([a, b]);
+      this.tweens.add({ targets: a, x: x - 3, duration: 260, yoyo: true, repeat: 1, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: b, x: x + 3, duration: 260, yoyo: true, repeat: 1, ease: 'Sine.easeInOut' });
+      this.time.delayedCall(260, () => {
+        const fl = this.addGlow(c, x, y - 2, KEYS.glow, 0.2, 0.9);
+        this.tweens.add({ targets: fl, scale: 0.7, alpha: 0, duration: 380, ease: 'Sine.easeOut' });
+      });
+      this.time.delayedCall(760, () => {
+        this.tweens.add({ targets: b, x: x + 40, alpha: 0, duration: 600, ease: 'Sine.easeIn' });
+      });
+      return 1500;
+    });
   }
 
   // ---- registry sync --------------------------------------------------------

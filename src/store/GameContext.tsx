@@ -62,8 +62,8 @@ import { formatCash } from '../engine/format';
 
 /** A one-shot signal for the juice/sound layer. `eventId` makes each one unique. */
 export type GameEvent =
-  | { kind: 'launch' }
-  | { kind: 'collect'; payout: number; success: boolean; flawless: boolean; turfSeized?: boolean }
+  | { kind: 'launch'; heistId?: string }
+  | { kind: 'collect'; payout: number; success: boolean; flawless: boolean; turfSeized?: boolean; heistId?: string }
   | { kind: 'purchase' }
   | { kind: 'prestige' }
   | { kind: 'error' };
@@ -154,13 +154,13 @@ function reducer(ui: UIState, action: Action): UIState {
       return applyResult(
         ui,
         launchHeist(ui.game, action.heistId, action.crewId, action.now, action.seed, undefined, action.approachId, action.prep),
-        { kind: 'launch' },
+        { kind: 'launch', heistId: action.heistId },
       );
     case 'sendAllIdle':
       return applyResult(
         ui,
         sendAllIdle(ui.game, action.heistId, action.now, CONFIG, action.approachId, action.prep),
-        { kind: 'launch' },
+        { kind: 'launch', heistId: action.heistId },
       );
     case 'gearUpCrew':
       return applyResult(ui, gearUpCrew(ui.game, action.crewId), { kind: 'purchase' });
@@ -176,6 +176,7 @@ function reducer(ui: UIState, action: Action): UIState {
               success: res.report.success,
               flawless: res.report.perfect,
               turfSeized: res.report.turfSeized,
+              heistId: res.report.heistId,
             }
           : undefined;
       const nextUi = applyResult(ui, res, event);
