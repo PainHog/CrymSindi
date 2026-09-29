@@ -7,7 +7,7 @@
 // unless this actually mounts. Honors the reduced-motion / kill-switch flag.
 // -----------------------------------------------------------------------------
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type PhaserNS from 'phaser';
 import { CONFIG } from '../../data/config';
 import { deriveHeat, isManhuntAt } from '../../engine';
@@ -30,23 +30,38 @@ export function SceneLayer() {
   const stateRef = useRef({ manhunt, heatFrac });
   stateRef.current = { manhunt, heatFrac };
 
-  // Mount once. Phaser arrives via dynamic import → its own chunk.
-  useEffect(() => {
-    if (!sceneEnabled() || !containerRef.current) return;
-    let cancelled = false;
+  // Mount/unmount the Phaser game. Phaser arrives via dynamic import → its own
+  // chunk, so it's never loaded unless the layer actually mounts.
+  const mountedRef = useRef(false);
+  const mount = useCallback(() => {
+    if (mountedRef.current || gameRef.current || !containerRef.current || !sceneEnabled()) return;
+    mountedRef.current = true;
     void import('./game').then(({ createGame }) => {
-      if (cancelled || !containerRef.current) return;
+      // Bail if we were toggled off (or already mounted) during the async import.
+      if (!mountedRef.current || gameRef.current || !containerRef.current) return;
       const g = createGame(containerRef.current);
       gameRef.current = g;
       g.registry.set('manhunt', stateRef.current.manhunt);
       g.registry.set('heatFrac', stateRef.current.heatFrac);
     });
-    return () => {
-      cancelled = true;
-      gameRef.current?.destroy(true);
-      gameRef.current = null;
-    };
   }, []);
+  const unmount = useCallback(() => {
+    mountedRef.current = false;
+    gameRef.current?.destroy(true);
+    gameRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    mount();
+    // The Settings toggle flips the flag then dispatches this event so the layer
+    // appears/disappears live, no reload.
+    const onToggle = () => (sceneEnabled() ? mount() : unmount());
+    window.addEventListener('nf-scene-toggle', onToggle);
+    return () => {
+      window.removeEventListener('nf-scene-toggle', onToggle);
+      unmount();
+    };
+  }, [mount, unmount]);
 
   // Feed state changes through to the scene.
   useEffect(() => {
