@@ -39,75 +39,121 @@ function darken(color: number, f: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
+/** Multiply an 0xRRGGBB colour toward white (for highlights). */
+function lighten(color: number, f: number): number {
+  const r = Math.min(255, Math.round(((color >> 16) & 0xff) * f));
+  const g = Math.min(255, Math.round(((color >> 8) & 0xff) * f));
+  const b = Math.min(255, Math.round((color & 0xff) * f));
+  return (r << 16) | (g << 8) | b;
+}
+
+/** A top-down car/van (faces east): wheels, shaded body, cabin with front + rear
+ *  glass, head/taillights. Detailed enough to read as a vehicle at map zoom. */
 function bakeVehicle(scene: Phaser.Scene, key: string, w: number, h: number, body: number, roof: number): void {
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
-  // drop shadow (slightly offset, soft)
+  // drop shadow
   g.fillStyle(0x000000, 0.35);
-  g.fillRoundedRect(1, 3, w - 2, h - 2, 4);
-  // body
+  g.fillRoundedRect(2, 4, w - 3, h - 3, 5);
+  // wheels poking out along both sides, near front and rear
+  g.fillStyle(0x0a0d12, 1);
+  const ww = Math.max(3, w * 0.14);
+  const wh = 2.5;
+  for (const wx of [w * 0.2, w * 0.64]) {
+    g.fillRoundedRect(wx, 0.5, ww, wh, 1);
+    g.fillRoundedRect(wx, h - wh - 1.5, ww, wh, 1);
+  }
+  // body + top highlight band + outline
   g.fillStyle(body, 1);
-  g.fillRoundedRect(0, 1, w - 2, h - 4, 4);
-  g.lineStyle(1, darken(body, 0.55), 0.9);
-  g.strokeRoundedRect(0.5, 1.5, w - 3, h - 5, 4);
+  g.fillRoundedRect(1, 2, w - 3, h - 5, 5);
+  g.fillStyle(lighten(body, 1.28), 0.45);
+  g.fillRoundedRect(2, 3, w - 5, (h - 5) * 0.42, 4);
+  g.lineStyle(1, darken(body, 0.5), 0.9);
+  g.strokeRoundedRect(1.5, 2.5, w - 4, h - 6, 5);
   // cabin / roof
   g.fillStyle(roof, 1);
-  g.fillRoundedRect(w * 0.26, 3, w * 0.4, h - 8, 2);
-  // windshield glint toward the front
-  g.fillStyle(0x9fe0ff, 0.5);
-  g.fillRect(w * 0.6, 3.5, Math.max(1, w * 0.06), h - 9);
-  // headlights (front / right) — warm
+  g.fillRoundedRect(w * 0.3, 4.5, w * 0.34, h - 10, 2);
+  // front windshield + rear window
+  g.fillStyle(0xbfefff, 0.6);
+  g.fillRect(w * 0.6, 5, Math.max(1, w * 0.045), h - 11);
+  g.fillStyle(0x8fc8e0, 0.5);
+  g.fillRect(w * 0.31, 5, Math.max(1, w * 0.035), h - 11);
+  // headlights (front) + taillights (rear)
   g.fillStyle(0xfff3c0, 1);
-  g.fillRect(w - 3, 2.5, 2, 2);
-  g.fillRect(w - 3, h - 6.5, 2, 2);
-  // taillights (rear / left) — crimson
+  g.fillRect(w - 3, 3.5, 2, 2.5);
+  g.fillRect(w - 3, h - 7, 2, 2.5);
   g.fillStyle(0xff5a48, 1);
-  g.fillRect(1, 2.5, 1.5, 2);
-  g.fillRect(1, h - 6.5, 1.5, 2);
+  g.fillRect(1.5, 3.5, 1.5, 2.5);
+  g.fillRect(1.5, h - 7, 1.5, 2.5);
   g.generateTexture(key, w, h);
   g.destroy();
 }
 
+/** A two-tone police cruiser (faces east): white body, black hood, grey roof with
+ *  a two-cell light bar (the lit colours alternate per frame → siren flash). */
 function bakeCruiser(scene: Phaser.Scene, key: string, litLeft: number, litRight: number): void {
-  const w = 30;
-  const h = 16;
+  const w = 36;
+  const h = 18;
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
   g.fillStyle(0x000000, 0.35);
-  g.fillRoundedRect(1, 3, w - 2, h - 2, 4);
-  // dark unmarked-cruiser body
-  g.fillStyle(0x161b24, 1);
-  g.fillRoundedRect(0, 1, w - 2, h - 4, 4);
-  g.lineStyle(1, 0x0a0d12, 0.9);
-  g.strokeRoundedRect(0.5, 1.5, w - 3, h - 5, 4);
-  // roof + light bar (two cells that alternate per frame → flashing)
-  g.fillStyle(0x20262f, 1);
-  g.fillRoundedRect(w * 0.26, 3, w * 0.42, h - 8, 2);
+  g.fillRoundedRect(2, 4, w - 3, h - 3, 5);
+  // wheels
+  g.fillStyle(0x0a0d12, 1);
+  for (const wx of [w * 0.2, w * 0.64]) {
+    g.fillRoundedRect(wx, 0.5, w * 0.14, 2.5, 1);
+    g.fillRoundedRect(wx, h - 4, w * 0.14, 2.5, 1);
+  }
+  // white body
+  g.fillStyle(0xe8edf2, 1);
+  g.fillRoundedRect(1, 2, w - 3, h - 5, 5);
+  g.lineStyle(1, 0x8a939c, 0.9);
+  g.strokeRoundedRect(1.5, 2.5, w - 4, h - 6, 5);
+  // black hood (front third)
+  g.fillStyle(0x11151b, 1);
+  g.fillRoundedRect(w * 0.66, 3, w * 0.3, h - 7, 3);
+  // grey roof + light bar
+  g.fillStyle(0x9aa4ae, 1);
+  g.fillRoundedRect(w * 0.3, 4.5, w * 0.3, h - 10, 2);
   g.fillStyle(litLeft, 1);
-  g.fillRect(w * 0.3, 4, w * 0.16, h - 10);
+  g.fillRect(w * 0.33, 5, w * 0.11, h - 11);
   g.fillStyle(litRight, 1);
-  g.fillRect(w * 0.5, 4, w * 0.16, h - 10);
-  // headlights
+  g.fillRect(w * 0.46, 5, w * 0.11, h - 11);
+  // headlights on the black hood
   g.fillStyle(0xffffff, 1);
-  g.fillRect(w - 3, 2.5, 2, 2);
-  g.fillRect(w - 3, h - 6.5, 2, 2);
+  g.fillRect(w - 3, 3.5, 2, 2.5);
+  g.fillRect(w - 3, h - 7, 2, 2.5);
   g.generateTexture(key, w, h);
   g.destroy();
 }
 
+/** A top-down pedestrian: legs, a coat/torso with shoulders, and a head with a
+ *  cap. Baked facing "down"; the scene keeps peds upright. */
 function bakePed(scene: Phaser.Scene, key: string, coat: number): void {
-  const w = 10;
-  const h = 14;
+  const w = 12;
+  const h = 16;
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
   // ground shadow
   g.fillStyle(0x000000, 0.3);
-  g.fillEllipse(w / 2, h - 2, w - 2, 3);
-  // coat / body
+  g.fillEllipse(w / 2, h - 1.5, w - 3, 3);
+  // legs
+  g.fillStyle(0x171b26, 1);
+  g.fillRect(w * 0.34, h - 6, 2, 5);
+  g.fillRect(w * 0.55, h - 6, 2, 5);
+  // shoulders / arms
+  g.fillStyle(darken(coat, 0.8), 1);
+  g.fillRect(w * 0.14, 6.5, 1.8, h - 12);
+  g.fillRect(w * 0.78, 6.5, 1.8, h - 12);
+  // coat / torso
   g.fillStyle(coat, 1);
-  g.fillRoundedRect(2, 4, w - 4, h - 5, 2);
+  g.fillRoundedRect(w * 0.24, 5, w * 0.52, h - 9, 2);
+  g.fillStyle(lighten(coat, 1.25), 0.4);
+  g.fillRect(w * 0.32, 5.5, w * 0.36, 1.6);
   g.lineStyle(1, darken(coat, 0.5), 0.8);
-  g.strokeRoundedRect(2, 4, w - 4, h - 5, 2);
-  // head
+  g.strokeRoundedRect(w * 0.24, 5, w * 0.52, h - 9, 2);
+  // head + cap
   g.fillStyle(0xd9bd9a, 1);
-  g.fillCircle(w / 2, 3.4, 2.3);
+  g.fillCircle(w / 2, 4, 2.7);
+  g.fillStyle(0x20242c, 1);
+  g.fillEllipse(w / 2, 3, 5.4, 3.4);
   g.generateTexture(key, w, h);
   g.destroy();
 }
@@ -134,9 +180,9 @@ export function bakeAtlas(scene: Phaser.Scene): void {
     [0x2f4a44, 0x456a60], // teal
   ];
   KEYS.cars.forEach((k, i) => {
-    if (!has(k)) bakeVehicle(scene, k, 30, 16, carColors[i][0], carColors[i][1]);
+    if (!has(k)) bakeVehicle(scene, k, 36, 18, carColors[i][0], carColors[i][1]);
   });
-  if (!has(KEYS.van)) bakeVehicle(scene, KEYS.van, 34, 18, 0x1f2733, 0x2c3a4c);
+  if (!has(KEYS.van)) bakeVehicle(scene, KEYS.van, 42, 20, 0x1f2733, 0x2c3a4c);
   if (!has(KEYS.cruiserRed)) bakeCruiser(scene, KEYS.cruiserRed, 0xff3b3b, 0x101830);
   if (!has(KEYS.cruiserBlue)) bakeCruiser(scene, KEYS.cruiserBlue, 0x14203a, 0x3b6bff);
   KEYS.peds.forEach((k, i) => {

@@ -27,6 +27,7 @@ interface Actor {
   role: 'car' | 'ped' | 'patrol' | 'runner' | 'chaser';
   glow?: Phaser.GameObjects.Image;
   body?: Phaser.GameObjects.Image; // cruisers: swapped for siren flash
+  phase?: number; // pedestrian walk-bob phase
 }
 
 const PATROL_AT = 0.4; // heatFrac at/above which a lone patrol cruises
@@ -112,7 +113,7 @@ export class CityScene extends Phaser.Scene {
     const body = this.add.image(0, 0, KEYS.peds[Math.floor(Math.random() * KEYS.peds.length)]);
     const c = this.add.container(0, 0, [body]);
     c.setDepth(3);
-    const a: Actor = { c, axis: 'h', dir, speed: 12 + Math.random() * 10, lane, role: 'ped' };
+    const a: Actor = { c, axis: 'h', dir, speed: 12 + Math.random() * 10, lane, role: 'ped', phase: Math.random() * 6.283 };
     this.placeAlongLane(a, scatter ? Math.random() : dir === 1 ? -0.05 : 1.05);
     return a;
   }
@@ -358,6 +359,8 @@ export class CityScene extends Phaser.Scene {
     }
     for (const a of this.peds) {
       this.step(a, dt);
+      // subtle walk bob so pedestrians read as moving, not sliding
+      a.c.y = a.lane + Math.sin(this.time.now / 180 + (a.phase ?? 0)) * 1.3;
       if (this.offscreen(a)) this.recycle(a);
     }
 
