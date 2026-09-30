@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { CONFIG } from '../../data/config';
+import { avatarFor } from '../../data/avatars';
 import { backstoryFor } from '../../data/backstories';
 import { gearForRole, GEAR_BY_ID } from '../../data/gear';
 import { ROLES } from '../../data/roles';
@@ -199,7 +200,10 @@ function MemberRow({ member }: { member: Member }) {
     <div className={'nf-member' + (down ? ' down' : '')}>
       <div className="nf-member-top">
         <span className="nf-member-ic">
-          <RoleIcon role={member.role} size={16} />
+          <img className="nf-member-avatar" src={avatarFor(member.id)} alt="" width={40} height={40} loading="lazy" />
+          <span className="nf-member-rolebadge" title={member.role}>
+            <RoleIcon role={member.role} size={11} />
+          </span>
         </span>
         <div className="nf-member-id">
           <div className="nf-member-name">
