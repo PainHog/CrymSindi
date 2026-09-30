@@ -1,16 +1,16 @@
 // -----------------------------------------------------------------------------
 // CREW AVATARS (portraits)
 // -----------------------------------------------------------------------------
-// A stable pixel-art portrait for each crew member, generated OFFLINE from the
-// member id with DiceBear (MIT core + the CC0 "pixel-art" style — public domain,
-// no attribution, no external requests, so the "100% client-side" claim holds
-// and it works inside itch's iframe). Derived from the id like the backstory, so
-// a given member always has the same face. Swapping `pixelArt` for another CC0
-// style (notionists, openPeeps, lorelei, thumbs, …) is a one-line change.
+// A stable, clean line-art portrait for each crew member, generated OFFLINE from
+// the member id with DiceBear (MIT core + the CC0 "lorelei" style — public
+// domain, no attribution, no external requests, so the "100% client-side" claim
+// holds and it works inside itch's iframe). Derived from the id like the
+// backstory, so a given member always has the same face. Swapping `lorelei` for
+// another CC0 style (notionists, openPeeps, thumbs, …) is a one-line change.
 // -----------------------------------------------------------------------------
 
 import { createAvatar } from '@dicebear/core';
-import { pixelArt } from '@dicebear/collection';
+import { lorelei } from '@dicebear/collection';
 
 const cache = new Map<string, string>();
 
@@ -18,7 +18,7 @@ const cache = new Map<string, string>();
 export function avatarFor(id: string): string {
   const cached = cache.get(id);
   if (cached) return cached;
-  const uri = createAvatar(pixelArt, {
+  const uri = createAvatar(lorelei, {
     seed: id,
     size: 64,
     radius: 12,
