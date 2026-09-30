@@ -47,8 +47,8 @@ function makeState(specs: Spec[]): GameState {
 
 describe('resolution numbers', () => {
   it('memberPassChance follows the formula and clamps', () => {
-    // 0.5 + 0.045*3 - 0.02*4 - 0 = 0.555
-    expect(memberPassChance(3, 4, 0)).toBeCloseTo(0.555, 5);
+    // 0.5 + 0.05*3 - 0.016*4 - 0 = 0.586
+    expect(memberPassChance(3, 4, 0)).toBeCloseTo(0.586, 5);
     expect(memberPassChance(1000, 4, 0)).toBe(CONFIG.memberChanceMax);
     expect(memberPassChance(0, 1000, 0)).toBe(CONFIG.memberChanceMin);
   });
@@ -61,11 +61,11 @@ describe('resolution numbers', () => {
 
   it('requiredPasses and minMembers scale with difficulty', () => {
     expect(requiredPassesFor(HEISTS_BY_ID['smash_grab'])).toBe(2);
-    expect(requiredPassesFor(HEISTS_BY_ID['cargo_port'])).toBe(3); // 2 + floor(22/18)
-    expect(requiredPassesFor(HEISTS_BY_ID['central_bank'])).toBe(4); // 2 + floor(38/18)
+    expect(requiredPassesFor(HEISTS_BY_ID['cargo_port'])).toBe(3); // 2 + floor(22/20)
+    expect(requiredPassesFor(HEISTS_BY_ID['central_bank'])).toBe(3); // 2 + floor(32/20)
     // minMembers = max(floor, roles, requiredPasses + 1 slack), capped at crewMax
     expect(minMembersFor(HEISTS_BY_ID['smash_grab'])).toBe(3); // max(3, 0, 2+1)
-    expect(minMembersFor(HEISTS_BY_ID['central_bank'])).toBe(5); // max(3, 3, 4+1)
+    expect(minMembersFor(HEISTS_BY_ID['central_bank'])).toBe(4); // max(3, 3, 3+1)
   });
 });
 
@@ -149,15 +149,17 @@ describe('resolveHeist outcomes', () => {
   });
 
   it('fails a high-difficulty job when too few members pass', () => {
-    const central = HEISTS_BY_ID['central_bank']; // requiredPasses 4
+    const penthouse = HEISTS_BY_ID['penthouse_job']; // requiredPasses 3, requires hacker+muscle
     const state = makeState([
       { role: 'hacker', skill: 20 },
       { role: 'muscle', skill: 20 },
       { role: 'driver', skill: 20 },
+      { role: 'lookout', skill: 20 },
     ]);
-    const report = resolveHeist(state, central, getCrew(state, 'c1')!, T0, seq(0)); // all 3 pass
-    expect(report.passCount).toBe(3);
-    expect(report.requiredPasses).toBe(4);
+    // hacker + muscle pass (both required roles covered), driver + lookout fail
+    const report = resolveHeist(state, penthouse, getCrew(state, 'c1')!, T0, seq(0, 0, 0.999, 0.999));
+    expect(report.passCount).toBe(2);
+    expect(report.requiredPasses).toBe(3);
     expect(report.success).toBe(false); // roles covered, but not enough hands
     expect(report.recommendations.some((r) => r.kind === 'crewSize')).toBe(true);
   });

@@ -177,15 +177,15 @@ export const CONFIG: Config = {
   // A heist succeeds if every required role has a member who passed AND the
   // number of passers reaches requiredPasses (below).
   memberBaseChance: 0.5,
-  memberSkillWeight: 0.045,
-  memberDifficultyWeight: 0.02,
+  memberSkillWeight: 0.05, // skill investment matters more toward the cap
+  memberDifficultyWeight: 0.016, // softer difficulty slope so high tiers stay reachable
   memberChanceMin: 0.05,
   memberChanceMax: 0.97,
   heatSuccessPenalty: 0.35, // at full heat, subtract this from each member's chance
   // requiredPasses = baseRequiredPasses + floor(difficulty / difficultyPerRequiredPass)
   // (this is why higher tiers need bigger crews).
   baseRequiredPasses: 2,
-  difficultyPerRequiredPass: 18,
+  difficultyPerRequiredPass: 20, // top tiers no longer demand a near-flawless run
 
   // ---- Manhunt (high-heat alert state) -------------------------------------
   // At/above 80 of 100 Heat the city is actively hunting you. A run launched
