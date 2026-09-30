@@ -100,6 +100,46 @@ export const EVENTS: EventDef[] = [
     effect: { oddsDelta: -0.16 },
   },
   {
+    id: 'festival',
+    name: 'Street festival',
+    blurb: 'The district is packed for a festival — the crowd swallows a crew whole.',
+    kind: 'opportunity',
+    scope: { tiers: [1, 2, 3] },
+    effect: { oddsDelta: 0.1, heatMult: 0.7 },
+  },
+  {
+    id: 'bought_badge',
+    name: 'A badge on the take',
+    blurb: 'Someone with a shield is looking the other way tonight — cleaner, cooler.',
+    kind: 'opportunity',
+    scope: { tiers: [2, 3, 4, 5] },
+    effect: { oddsDelta: 0.06, heatMult: 0.55 },
+  },
+  {
+    id: 'courier_slip',
+    name: 'Courier route leaked',
+    blurb: 'A courier’s manifest slipped out — the take runs fatter here.',
+    kind: 'opportunity',
+    scope: { tiers: [1, 2, 3] },
+    effect: { rewardMult: 1.3 },
+  },
+  {
+    id: 'stakeout',
+    name: 'Stakeout',
+    blurb: 'Unmarked cars on the block — they’re watching. Worse odds, more heat.',
+    kind: 'pressure',
+    scope: { tiers: [1, 2, 3, 4, 5] },
+    effect: { oddsDelta: -0.1, heatMult: 1.4 },
+  },
+  {
+    id: 'copycats',
+    name: 'Copycat crews',
+    blurb: 'Amateurs are hitting the same block — more cash on the table, more chaos.',
+    kind: 'pressure',
+    scope: { tiers: [2, 3, 4] },
+    effect: { rewardMult: 1.25, oddsDelta: -0.1, heatMult: 1.2 },
+  },
+  {
     // The rare jackpot: a career score. Low weight, so it turns up only now and
     // then; when it does, it's the best cash on the board by far.
     id: 'the_whale',
@@ -109,6 +149,16 @@ export const EVENTS: EventDef[] = [
     scope: { tiers: [3, 4, 5] },
     effect: { rewardMult: 2.0 },
     weight: 0.35,
+  },
+  {
+    // A second, even bigger jackpot — top-tier only, rarer still.
+    id: 'the_vault_crack',
+    name: 'The Vault Crack',
+    blurb: 'A legendary door is standing open for one night only — the score of a lifetime.',
+    kind: 'opportunity',
+    scope: { tiers: [4, 5] },
+    effect: { rewardMult: 2.2 },
+    weight: 0.3,
   },
 ];
 
