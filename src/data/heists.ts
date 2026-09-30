@@ -181,7 +181,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 48,
     heatCost: 62,
     failHeatBonus: 40,
-    difficulty: 31,
+    difficulty: 27,
   },
   {
     id: 'data_center',
@@ -193,7 +193,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 62,
     heatCost: 78,
     failHeatBonus: 50,
-    difficulty: 33,
+    difficulty: 29,
   },
   {
     id: 'rail_yard',
@@ -205,7 +205,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 55,
     heatCost: 70,
     failHeatBonus: 45,
-    difficulty: 32,
+    difficulty: 28,
   },
 
   // ---- Tier 5: the overnight big score (unlock $1.2M lifetime) -------------
@@ -219,7 +219,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 112,
     heatCost: 92,
     failHeatBonus: 60,
-    difficulty: 38, // hardest job, but clearable by a just-unlocked tier-5 crew so it leads $/min
+    difficulty: 32, // the retire-on score: reachable with an invested crew, top $/min once you can run it
   },
 
   // ---- Capstone: unlocked only after ascending (see minAscend) -------------
@@ -234,7 +234,7 @@ export const HEISTS: HeistDef[] = [
     payoutPerSec: 180,
     heatCost: 115,
     failHeatBonus: 75,
-    difficulty: 46,
+    difficulty: 40, // capstone: hard even for a maxed crew, wants full buffs — legend-only
     minAscend: 1,
   },
 ];
