@@ -243,12 +243,12 @@ export const CONFIG: Config = {
   rivalDominateTakeMult: 5, // domination pays a one-time 5x the clinching take
 
   // ---- Prestige / Notoriety ------------------------------------------------
-  // Must sit at/above the tier-5 unlock (tierUnlocks[5]) so "going legit" is
-  // gated behind actually reaching the capstone you retire on — otherwise the
-  // concave notoriety curve makes retiring early optimal and the tier-5 content
-  // never gets played. Set a touch above the unlock so a capstone score lands
-  // first.
-  prestigeThreshold: 1500000,
+  // Sits well above the tier-5 unlock (tierUnlocks[5] = 1.2M) so "going legit"
+  // isn't reachable the instant tier 5 opens — you spend real time running the
+  // tier-4/5 endgame (a single Central Bank score is ~4M) before you can retire,
+  // so the marquee content actually gets played instead of being skipped on a
+  // rush to prestige.
+  prestigeThreshold: 4000000,
   notorietyDivisor: 2500,
   perkReputationPct: 0.05,
   perkConnectionsPower: 0.5,
