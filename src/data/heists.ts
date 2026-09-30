@@ -132,6 +132,19 @@ export const HEISTS: HeistDef[] = [
     difficulty: 13,
   },
 
+  {
+    id: 'museum_wing',
+    tier: 2,
+    name: 'Museum Wing',
+    description: 'Lift a piece from a guarded exhibit after hours. Eyes and a hacker.',
+    requiredRoles: ['hacker', 'lookout'],
+    durationSec: 480,
+    payoutPerSec: 14,
+    heatCost: 40,
+    failHeatBonus: 24,
+    difficulty: 12,
+  },
+
   // ---- Tier 3: long jobs to leave running (unlock $30k lifetime) -----------
   {
     id: 'jewelry_exchange',
@@ -168,6 +181,19 @@ export const HEISTS: HeistDef[] = [
     heatCost: 44,
     failHeatBonus: 30,
     difficulty: 21,
+  },
+
+  {
+    id: 'subway_vault',
+    tier: 3,
+    name: 'Subway Vault',
+    description: 'Break a transit-authority cash vault between the last train and the first. ~25 minutes.',
+    requiredRoles: ['hacker', 'driver'],
+    durationSec: 25 * 60,
+    payoutPerSec: 26,
+    heatCost: 42,
+    failHeatBonus: 28,
+    difficulty: 20,
   },
 
   // ---- Tier 4: multi-hour scores (unlock $180k lifetime) -------------------

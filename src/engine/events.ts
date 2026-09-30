@@ -47,14 +47,16 @@ export function msUntilNextEvent(now: number, config: Config = CONFIG): number {
   return period - (now % period);
 }
 
-/** Catalog jobs eligible for an event's scope (by explicit id, else by tier). */
+/** Catalog jobs eligible for an event's scope (by explicit id, else by tier).
+ *  Ascension-gated jobs (the capstone) are never flagged by a tier scope — most
+ *  players can't launch them, so an event on one would just be a dead marker. */
 function scopeCandidates(def: EventDef): HeistId[] {
   if (def.scope.heistIds && def.scope.heistIds.length > 0) {
     const known = new Set(HEISTS.map((h) => h.id));
     return def.scope.heistIds.filter((id) => known.has(id));
   }
   const tiers = new Set(def.scope.tiers ?? []);
-  return HEISTS.filter((h) => tiers.has(h.tier)).map((h) => h.id);
+  return HEISTS.filter((h) => tiers.has(h.tier) && !h.minAscend).map((h) => h.id);
 }
 
 /**
