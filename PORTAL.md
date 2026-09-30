@@ -10,6 +10,7 @@ Next: A playtest with friends and family to see how the game feels.
 - [x] Sound, satisfying effects and a guide for first-time players
 - [x] Save backups and a settings panel
 - [x] Animated city streets and crew portraits
-- [ ] Friends and family playtest
-- [ ] Optional reward ads and the in-game shop switched on for real
-- [ ] Game published online for anyone to play
+- [ ] A real playtest with friends and family
+- [ ] Choose a provider for in-game purchases or ads, then switch on the optional reward ads and the shop for real
+- [ ] Web hosting turned on so the game is published online for anyone to play
+- [ ] Optional: cloud saves, so progress follows you between devices (needs a server)
