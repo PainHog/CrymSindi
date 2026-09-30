@@ -283,7 +283,11 @@
 
 .nf-member { background: #0a1220; border: 1px solid var(--nf-line-soft); border-radius: 11px; padding: 9px 10px; margin-bottom: 7px; }
 .nf-member-top { display: flex; align-items: center; gap: 9px; }
-.nf-member-ic { width: 26px; height: 26px; border-radius: 8px; background: #122036; display: grid; place-items: center; color: var(--nf-cyan); flex: none; }
+.nf-member-ic { position: relative; width: 40px; height: 40px; flex: none; }
+.nf-member-avatar { width: 40px; height: 40px; border-radius: 9px; display: block; background: #122036;
+  border: 1px solid var(--nf-line); image-rendering: pixelated; }
+.nf-member-rolebadge { position: absolute; right: -4px; bottom: -4px; width: 17px; height: 17px; border-radius: 50%;
+  background: #0a1220; border: 1px solid var(--nf-line); display: grid; place-items: center; color: var(--nf-cyan); }
 .nf-member-id { flex: 1; min-width: 0; }
 .nf-member-name { font-family: var(--nf-disp); font-weight: 600; font-size: 14px; letter-spacing: .3px; display: flex; align-items: center; gap: 7px; }
 .nf-member-trait { font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase; color: var(--nf-amber); border: 1px solid #4a3a1e; background: #181203; border-radius: 999px; padding: 1px 6px; }
@@ -307,7 +311,8 @@
 .nf-mact.gr:hover:not(:disabled) { background: #0c2231; color: #8fe9ff; }
 .nf-mact:disabled { opacity: .4; cursor: not-allowed; }
 .nf-member.down { border-color: #3a2233; background: #0e0a10; }
-.nf-member.down .nf-member-ic { color: var(--nf-ink-faint); background: #1a1016; }
+.nf-member.down .nf-member-avatar { filter: grayscale(1) brightness(0.6); }
+.nf-member.down .nf-member-rolebadge { color: var(--nf-ink-faint); }
 .nf-member-trait.hurt { color: var(--nf-magenta); border-color: #5a2f42; background: #1a0810; }
 .nf-member-down { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 .nf-member-downt { font-family: var(--nf-mono); font-size: 10px; letter-spacing: .3px; color: var(--nf-magenta); flex: 1; }
