@@ -285,7 +285,7 @@
 .nf-member-top { display: flex; align-items: center; gap: 9px; }
 .nf-member-ic { position: relative; width: 40px; height: 40px; flex: none; }
 .nf-member-avatar { width: 40px; height: 40px; border-radius: 9px; display: block; background: #122036;
-  border: 1px solid var(--nf-line); image-rendering: pixelated; }
+  border: 1px solid var(--nf-line); }
 .nf-member-rolebadge { position: absolute; right: -4px; bottom: -4px; width: 17px; height: 17px; border-radius: 50%;
   background: #0a1220; border: 1px solid var(--nf-line); display: grid; place-items: center; color: var(--nf-cyan); }
 .nf-member-id { flex: 1; min-width: 0; }
