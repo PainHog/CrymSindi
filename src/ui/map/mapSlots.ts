@@ -11,44 +11,51 @@ export type LandmarkKind = 'spire' | 'tower' | 'twin' | 'block' | 'dome' | 'bunk
 /** [xPct, yPct, kind] — a known building the city always draws. */
 export type Slot = readonly [number, number, LandmarkKind];
 
-export const SLOTS: Slot[] = [
-  [18, 20, 'spire'],
-  [31, 14, 'tower'],
-  [46, 22, 'twin'],
-  [62, 16, 'block'],
-  [79, 24, 'tower'],
-  [87, 42, 'block'],
-  [72, 36, 'dome'],
-  [57, 38, 'bunker'],
-  [40, 36, 'tower'],
-  [24, 40, 'block'],
-  [14, 58, 'tower'],
-  [30, 72, 'dome'],
-  [50, 80, 'twin'],
-  [69, 73, 'spire'],
-  [83, 68, 'bunker'],
-  [45, 56, 'block'],
-  // Room to grow (slots 16+): filled in the empty gaps so the board can hold
-  // more heists as content is added, without pins overlapping.
-  [8, 34, 'block'],
-  [92, 30, 'tower'],
-  [66, 52, 'spire'],
-  [37, 62, 'twin'],
-  [58, 66, 'block'],
-  [78, 55, 'dome'],
-  [18, 48, 'bunker'],
-  [92, 58, 'tower'],
+// The city is laid out on ONE lattice shared by the street grid, the filler
+// blocks and the landmarks (see CityCanvas), so every building sits centred in
+// its own block instead of floating across the grid lines. Buildings live in a
+// staggered brick pattern (rows of 3 and 4) across the inner columns, which
+// reads as a real street plan and keeps edge columns clear of clipping.
+export const GRID_COLS = 12;
+export const GRID_ROWS = 9;
+
+/** Percent-of-stage centre of a lattice cell. */
+export function cellCenter(col: number, row: number): readonly [number, number] {
+  return [((col + 0.5) / GRID_COLS) * 100, ((row + 0.5) / GRID_ROWS) * 100];
+}
+
+// [col, row, kind] — landmark cells on the shared lattice, in BOARD ORDER. Pins
+// fill these in sequence as heists unlock, so the list is sequenced to scatter
+// the early pins across the map (corners, then centre, then fill) rather than
+// run along one edge. Buildings live in rows 1..7, leaving the top/bottom rows
+// as margin so pins clear the event banners and the crew panel.
+const CELLS: ReadonlyArray<readonly [number, number, LandmarkKind]> = [
+  [2, 1, 'tower'], [8, 1, 'block'], [1, 6, 'tower'], [10, 6, 'dome'],
+  [5, 5, 'block'], [7, 2, 'spire'], [3, 3, 'twin'], [6, 7, 'bunker'],
+  [10, 2, 'tower'], [1, 4, 'block'], [5, 1, 'dome'], [9, 7, 'block'],
+  [3, 7, 'twin'], [7, 4, 'spire'], [1, 2, 'tower'], [8, 5, 'bunker'],
+  [4, 6, 'block'], [10, 4, 'dome'], [2, 5, 'tower'], [6, 3, 'spire'],
+  [4, 2, 'twin'], [9, 3, 'block'], [7, 6, 'bunker'], [4, 4, 'tower'],
 ];
 
+/** Landmark footprints, planted on the lattice. Heist pins sit on these by
+ *  index (MapView), so a pin always lands centred on its building. */
+export const SLOTS: Slot[] = CELLS.map(([c, r, kind]) => {
+  const [x, y] = cellCenter(c, r);
+  return [x, y, kind] as const;
+});
+
 /** [name, xPct, yPct] district labels drawn under the pins. */
+// District labels sit on empty cells (the "streets" between landmarks) so they
+// stay legible over the new block layout.
 export const DISTRICTS: ReadonlyArray<readonly [string, number, number]> = [
-  ['Sable Heights', 30, 10],
-  ['Little Kowloon', 83, 15],
-  ['Grid Center', 63, 47],
-  ['Dockside', 12, 66],
-  ['Underline', 50, 60],
-  ['The Mirage Mile', 80, 63],
-  ['Old Quarter', 40, 86],
+  ['Sable Heights', 29.2, 11.1],
+  ['Little Kowloon', 79.2, 11.1],
+  ['Grid Center', 50, 44.4],
+  ['Dockside', 20.8, 66.7],
+  ['Underline', 50, 55.6],
+  ['The Mirage Mile', 79.2, 66.7],
+  ['Old Quarter', 45.8, 88.9],
 ];
 
 /** HQ marker position (percent of the stage). */
