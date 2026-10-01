@@ -43,6 +43,6 @@ describe('crew synergies', () => {
     const members = [m('driver', 5), m('hacker', 5), m('muscle', 5), m('lookout', 5)];
     expect(crewSynergyPower(members)).toBe(3); // Tight Unit (+1) + Full Deck (+2)
     expect(synergyPower(['driver', 'hacker', 'muscle', 'lookout'])).toBe(3);
-    expect(crewSynergyPower([m('driver', 5), m('driver', 5)])).toBe(0); // dupes, size 2
+    expect(crewSynergyPower([m('driver', 5), m('driver', 5)])).toBe(1); // 2 drivers -> Wheels Up (+1)
   });
 });

@@ -40,6 +40,12 @@ export const BACKSTORIES: string[] = [
   'Keeps the scanner on even on days off.',
   'Took the fall once so the crew could walk.',
   'Never misses a tail, never forgets a face.',
+  'Retired twice. It never takes.',
+  'Keeps the whole plan in their head, nothing on paper.',
+  'Owns a bar that somehow never turns a profit.',
+  'Can hotwire anything built after 1980.',
+  'Sends money home to a town that disowned them.',
+  'Was the best in the city once — wants that back.',
 ];
 
 /** Stable index into the backstory pool from an arbitrary id string. */
