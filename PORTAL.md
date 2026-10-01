@@ -1,5 +1,9 @@
 Now: Polishing the look of the city and the crew, and fine-tuning the late game, before a playtest.
 Next: A playtest with friends and family to see how the game feels.
+Number: Heist jobs = 17
+Number: Crew roles = 4
+Number: Random city events = 14
+Number: Rival gangs = 10
 
 - [x] First playable version: send a crew on a heist, wait, and collect the cash
 - [x] Noir style and a live city map as the main screen
