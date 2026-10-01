@@ -421,11 +421,12 @@ function Dossier({ heist, onClose, onManage }: { heist: HeistDef; onClose: () =>
             const lvl = rivalryLevel(game, rival.rival.id);
             return (
               <div className="nf-dos-rival">
-                <b>{rival.rival.name}</b>
+                <b>{rival.rival.name}</b> <span className="nf-dos-rival-tag">({rival.rival.tag})</span>
                 {wins > 0
                   ? ` is back for more — you've taken ${wins} from them (Lv ${lvl}). Take it again for `
                   : ' is moving on this. Pull it off to seize the turf — '}
                 <b>+{formatCash(rivalSpoilsWithStanding(game, rival.rival.id, baseTake))} spoils</b>.
+                <span className="nf-dos-rival-taunt">“{rival.rival.taunt}”</span>
               </div>
             );
           })()}
