@@ -37,6 +37,9 @@ export const MILESTONES: MilestoneDef[] = [
   { id: 'turf_warrior', name: 'Turf Warrior', description: 'Win 10 turf contests against rival crews.', reward: { notoriety: 4 } },
   { id: 'run_them_out', name: 'Run Them Out', description: 'Run a rival crew out of town.', reward: { notoriety: 6 } },
   { id: 'living_legend', name: 'Living Legend', description: 'Become a legend for the first time.', reward: { notoriety: 10 } },
+  { id: 'twice_a_legend', name: 'Twice a Legend', description: 'Ascend a second time — and unlock The Last Score.', reward: { notoriety: 12 } },
+  { id: 'score_of_a_legend', name: 'Score of a Legend', description: 'Land a single score of $5,000,000+.', reward: { notoriety: 15 } },
+  { id: 'dynasty', name: 'Dynasty', description: 'Become a legend five times over.', reward: { notoriety: 30 } },
 ];
 
 export const MILESTONES_BY_ID: Record<string, MilestoneDef> = Object.fromEntries(

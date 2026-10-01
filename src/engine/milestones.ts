@@ -31,6 +31,9 @@ const CHECKS: Record<string, Check> = {
   turf_warrior: (s) => s.turfWins >= 10,
   run_them_out: (s) => s.rivalsDominated.length >= 1,
   living_legend: (s) => s.ascendCount >= 1,
+  twice_a_legend: (s) => s.ascendCount >= 2,
+  score_of_a_legend: (s) => s.stats.biggestScore >= 5_000_000,
+  dynasty: (s) => s.ascendCount >= 5,
 };
 
 /** Grant any newly-met milestones and apply their rewards. */
