@@ -153,7 +153,7 @@ function CrewBlock({ crew }: { crew: Crew }) {
           </div>
           <div className="nf-role-row">
             {ROLES.map((r) => {
-              const cost = recruitTierCost(crew, r.id, tier);
+              const cost = recruitTierCost(game, crew, r.id, tier);
               const startSkill = recruitTierSkill(r.id, tier);
               return (
                 <button

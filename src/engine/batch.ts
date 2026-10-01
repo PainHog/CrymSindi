@@ -88,7 +88,7 @@ function nextRoleToRecruit(state: GameState, crewId: string, config: Config): Ro
   const present = new Set(crew.memberIds.map((id) => getMember(state, id)?.role));
   const affordable = ROLES.map((r) => ({
     id: r.id,
-    cost: recruitCost(crew, r.id, config),
+    cost: recruitCost(state, crew, r.id, config),
     missing: !present.has(r.id),
   })).filter((x) => x.cost <= state.cash);
   if (affordable.length === 0) return null;

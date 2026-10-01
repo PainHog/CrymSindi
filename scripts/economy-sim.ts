@@ -75,7 +75,7 @@ function invest(s: GameState): GameState {
       if (crew.status !== 'idle' || crew.memberIds.length >= 5) continue;
       const roles = new Set(crew.memberIds.map((id) => memRole(s, id)));
       const role = ROLE_PRIORITY.find((r) => !roles.has(r)) ?? ROLE_PRIORITY[crew.memberIds.length % 4];
-      opts.push({ cost: recruitTierCost(crew, role, 'street'), run: () => recruitMember(s, crew.id, role, 'street') });
+      opts.push({ cost: recruitTierCost(s, crew, role, 'street'), run: () => recruitMember(s, crew.id, role, 'street') });
     }
     const up = s.members.filter((m) => m.skill < CONFIG.maxMemberSkill).sort((a, b) => a.skill - b.skill)[0];
     if (up) opts.push({ cost: skillUpgradeCost(up), run: () => upgradeSkill(s, up.id) });

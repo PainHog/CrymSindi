@@ -117,9 +117,10 @@ export function crewSynergyNames(members: Member[]): string[] {
   return activeSynergies(members.map((m) => m.role)).map((s) => s.name);
 }
 
-/** A member's effective skill including the global Notoriety aura. */
+/** A member's effective skill including the global Notoriety aura and the
+ *  Master Plan legend perk. */
 export function memberPower(state: GameState, member: Member, config: Config = CONFIG): number {
-  return memberEffectiveSkill(member) + notorietySkillBonus(state, config);
+  return memberEffectiveSkill(member) + notorietySkillBonus(state, config) + legendCrewSkill(state, config);
 }
 
 /** Sum of member power across a crew — including trait, Notoriety, and the
@@ -229,6 +230,19 @@ export function legendNotorietyMult(state: GameState, config: Config = CONFIG): 
 /** Extra starting cash each new run gets from the Deep Pockets legend perk. */
 export function legendStartCash(state: GameState, config: Config = CONFIG): number {
   return config.legendDeepPocketsCash * legendPerkLevel(state, 'deep_pockets');
+}
+/** Flat effective-skill every member gains from the Master Plan legend perk. */
+export function legendCrewSkill(state: GameState, config: Config = CONFIG): number {
+  return config.legendMasterPlanSkill * legendPerkLevel(state, 'master_plan');
+}
+/** Multiplier on heat added by a job, from the Ghost Protocol legend perk
+ *  (<= 1; floored so it can never fully negate heat). */
+export function legendHeatMult(state: GameState, config: Config = CONFIG): number {
+  return Math.max(0.3, 1 - config.legendGhostPct * legendPerkLevel(state, 'ghost_protocol'));
+}
+/** Multiplier on recruit cost, from the Inner Circle legend perk (<= 1). */
+export function legendRecruitMult(state: GameState, config: Config = CONFIG): number {
+  return Math.max(0.3, 1 - config.legendInnerCirclePct * legendPerkLevel(state, 'inner_circle'));
 }
 
 // ---- Endgame repeatable "Syndicate Contract" -------------------------------
@@ -355,27 +369,29 @@ export function nextCrewCost(state: GameState, config: Config = CONFIG): number 
   return Math.round(config.newCrewBaseCost * Math.pow(config.newCrewCostMult, owned - 1));
 }
 
-/** Cost of recruiting a member of `roleId` into `crew` (scales with crew size). */
+/** Cost of recruiting a member of `roleId` into `crew` (scales with crew size,
+ *  discounted by the Inner Circle legend perk). */
 export function recruitCost(
+  state: GameState,
   crew: Crew,
   roleId: RoleId,
   config: Config = CONFIG,
 ): number {
   const role = ROLES_BY_ID[roleId];
   if (!role) return Infinity;
-  return Math.round(
-    role.recruitCost * Math.pow(config.recruitCostMultPerMember, crew.memberIds.length),
-  );
+  const base = role.recruitCost * Math.pow(config.recruitCostMultPerMember, crew.memberIds.length);
+  return Math.round(base * legendRecruitMult(state, config));
 }
 
 /** Recruit cost for a given specialist tier (base cost x the tier's multiplier). */
 export function recruitTierCost(
+  state: GameState,
   crew: Crew,
   roleId: RoleId,
   tierId: RecruitTierId | undefined,
   config: Config = CONFIG,
 ): number {
-  return Math.round(recruitCost(crew, roleId, config) * recruitTierFor(tierId).costMult);
+  return Math.round(recruitCost(state, crew, roleId, config) * recruitTierFor(tierId).costMult);
 }
 
 /** Starting skill a recruit of this role + tier would have (clamped to the cap). */
