@@ -2,7 +2,7 @@ Now: Real cars and people are driving and walking the city map; polishing the lo
 Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 19
 Number: Crew roles = 4
-Number: Random city events = 14
+Number: Random city events = 20
 Number: Rival gangs = 12
 Number: Crew team-up bonuses = 6
 

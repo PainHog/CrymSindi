@@ -140,6 +140,46 @@ export const EVENTS: EventDef[] = [
     effect: { rewardMult: 1.25, oddsDelta: -0.1, heatMult: 1.2 },
   },
   {
+    id: 'gala_night',
+    name: 'Gala night',
+    blurb: 'A black-tie gala has every guard watching the wrong door — better odds, cooler.',
+    kind: 'opportunity',
+    scope: { tiers: [2, 3, 4] },
+    effect: { oddsDelta: 0.1, heatMult: 0.8 },
+  },
+  {
+    id: 'dock_strike',
+    name: 'Dock strike',
+    blurb: 'Dockworkers walked out — cargo is piling up unguarded. The take runs fatter.',
+    kind: 'opportunity',
+    scope: { tiers: [1, 2, 3] },
+    effect: { rewardMult: 1.3 },
+  },
+  {
+    id: 'fog_bank',
+    name: 'Fog off the water',
+    blurb: 'Fog swallows the streets — easy to move, easy to vanish.',
+    kind: 'opportunity',
+    scope: { tiers: [1, 2, 3, 4, 5] },
+    effect: { oddsDelta: 0.08, heatMult: 0.75 },
+  },
+  {
+    id: 'armored_reroute',
+    name: 'Armored reroute',
+    blurb: 'An armored route got pushed through your blocks tonight — fat and brief.',
+    kind: 'opportunity',
+    scope: { tiers: [3, 4, 5] },
+    effect: { rewardMult: 1.35 },
+  },
+  {
+    id: 'fed_taskforce',
+    name: 'Federal task force',
+    blurb: 'Feds in town working the big scores — these jobs run hot and tight.',
+    kind: 'pressure',
+    scope: { tiers: [3, 4, 5] },
+    effect: { heatMult: 1.5, oddsDelta: -0.08 },
+  },
+  {
     // The rare jackpot: a career score. Low weight, so it turns up only now and
     // then; when it does, it's the best cash on the board by far.
     id: 'the_whale',
@@ -159,6 +199,16 @@ export const EVENTS: EventDef[] = [
     scope: { tiers: [4, 5] },
     effect: { rewardMult: 2.2 },
     weight: 0.3,
+  },
+  {
+    // A third jackpot: a one-night crown score. Rare and top-tier.
+    id: 'the_crown_job',
+    name: 'The Crown Job',
+    blurb: 'A crown jewel is in transit for one night — the richest mark in years.',
+    kind: 'opportunity',
+    scope: { tiers: [4, 5] },
+    effect: { rewardMult: 2.3 },
+    weight: 0.28,
   },
 ];
 
