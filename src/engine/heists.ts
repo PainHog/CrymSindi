@@ -30,6 +30,7 @@ import {
   getMember,
   healthyCrew,
   heatGainMult,
+  legendHeatMult,
   heistDefFor,
   isContract,
   isHeistUnlocked,
@@ -126,7 +127,7 @@ export function launchHeist(
   // the approach scales it (loud is hotter, ghost cooler) and an event can too.
   let next = addHeat(
     state,
-    def.heatCost * heatGainMult(state) * approach.heatMult * eventHeatMult,
+    def.heatCost * heatGainMult(state) * legendHeatMult(state, config) * approach.heatMult * eventHeatMult,
     now,
     config,
   );

@@ -1,4 +1,4 @@
-Now: Real cars and people are driving and walking the city map; polishing the look toward a playtest.
+Now: Deepening the late game — new permanent perks for players who go all the way (become a legend).
 Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 21
 Number: Crew roles = 4

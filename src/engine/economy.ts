@@ -159,7 +159,7 @@ export function recruitMember(
   if (!role) return { ok: false, error: 'Unknown role.' };
   const tier = recruitTierFor(tierId);
 
-  const cost = recruitTierCost(crew, roleId, tierId, config);
+  const cost = recruitTierCost(state, crew, roleId, tierId, config);
   if (state.cash < cost) return insufficient();
 
   const member: Member = {

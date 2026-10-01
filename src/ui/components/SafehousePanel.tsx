@@ -127,7 +127,7 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
   const power = crewPower(game, crew);
   // Gates for the one-click crew actions (avoid firing an action that can only
   // return an error toast).
-  const cheapestRecruit = Math.min(...ROLES.map((r) => recruitCost(crew, r.id)));
+  const cheapestRecruit = Math.min(...ROLES.map((r) => recruitCost(game, crew, r.id)));
   const canFill = openSeats > 0 && game.cash >= cheapestRecruit;
   const canGear = crew.memberIds.some((id) => {
     const m = getMember(game, id);
@@ -207,7 +207,7 @@ function CrewCard({ crew, index }: { crew: Crew; index: number }) {
           <span className="recruit-label">Recruit ({openSeats} open)</span>
           <div className="recruit-buttons">
             {ROLES.map((role) => {
-              const cost = recruitCost(crew, role.id);
+              const cost = recruitCost(game, crew, role.id);
               return (
                 <button
                   key={role.id}

@@ -10,6 +10,9 @@ import {
   legendPayoutMult,
   legendPerkLevel,
   legendStartCash,
+  legendCrewSkill,
+  legendHeatMult,
+  legendRecruitMult,
 } from './selectors';
 import type { GameState } from './types';
 
@@ -39,6 +42,22 @@ describe('ascension selectors', () => {
     // Neutral with no legend perks.
     expect(legendPayoutMult(base)).toBe(1);
     expect(legendStartCash(base)).toBe(0);
+  });
+
+  it('new legend perks (master_plan / ghost_protocol / inner_circle) scale and are neutral at 0', () => {
+    const base = createInitialState(T0);
+    const s: GameState = { ...base, legendPerks: { master_plan: 3, ghost_protocol: 2, inner_circle: 4 } };
+    expect(legendCrewSkill(s)).toBe(CONFIG.legendMasterPlanSkill * 3);
+    expect(legendHeatMult(s)).toBeCloseTo(1 - CONFIG.legendGhostPct * 2, 5);
+    expect(legendRecruitMult(s)).toBeCloseTo(1 - CONFIG.legendInnerCirclePct * 4, 5);
+    // Neutral (identity) with no legend perks.
+    expect(legendCrewSkill(base)).toBe(0);
+    expect(legendHeatMult(base)).toBe(1);
+    expect(legendRecruitMult(base)).toBe(1);
+    // Heat/recruit multipliers are floored so they can never go negative.
+    const maxed: GameState = { ...base, legendPerks: { ghost_protocol: 99, inner_circle: 99 } };
+    expect(legendHeatMult(maxed)).toBe(0.3);
+    expect(legendRecruitMult(maxed)).toBe(0.3);
   });
 });
 

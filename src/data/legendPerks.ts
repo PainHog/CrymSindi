@@ -47,6 +47,30 @@ export const LEGEND_PERKS: LegendPerkDef[] = [
     baseCost: 1,
     costGrowth: 1.6,
   },
+  {
+    id: 'master_plan',
+    name: 'Master Plan',
+    description: 'Your reputation sharpens the whole crew. +1 effective skill to every member, per level.',
+    maxLevel: 5,
+    baseCost: 2,
+    costGrowth: 1.7,
+  },
+  {
+    id: 'ghost_protocol',
+    name: 'Ghost Protocol',
+    description: 'You move unseen. −8% heat from every job, per level.',
+    maxLevel: 5,
+    baseCost: 1,
+    costGrowth: 1.6,
+  },
+  {
+    id: 'inner_circle',
+    name: 'Inner Circle',
+    description: 'Everyone wants in with a legend. −7% recruit cost, per level.',
+    maxLevel: 5,
+    baseCost: 1,
+    costGrowth: 1.5,
+  },
 ];
 
 export const LEGEND_PERKS_BY_ID: Record<LegendPerkId, LegendPerkDef> = Object.fromEntries(

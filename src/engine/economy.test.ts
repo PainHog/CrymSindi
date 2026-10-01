@@ -80,7 +80,7 @@ describe('recruiting', () => {
     const expected = Math.round(
       driverBase * Math.pow(CONFIG.recruitCostMultPerMember, crew.memberIds.length),
     );
-    expect(recruitCost(crew, 'driver')).toBe(expected);
+    expect(recruitCost(state, crew, 'driver')).toBe(expected);
 
     const before = crew.memberIds.length;
     const res = recruitMember(state, 'c1', 'lookout');

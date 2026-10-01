@@ -24,17 +24,18 @@ describe('recruit tier selectors', () => {
   });
 
   it('recruitTierCost scales the base recruit cost by the tier multiplier', () => {
-    const crew = rich().crews[0];
-    const street = recruitTierCost(crew, 'hacker', 'street');
-    expect(recruitTierCost(crew, 'hacker', 'pro')).toBe(Math.round(street * RECRUIT_TIERS_BY_ID.pro.costMult));
-    expect(recruitTierCost(crew, 'hacker', 'elite')).toBe(Math.round(street * RECRUIT_TIERS_BY_ID.elite.costMult));
+    const s = rich();
+    const crew = s.crews[0];
+    const street = recruitTierCost(s, crew, 'hacker', 'street');
+    expect(recruitTierCost(s, crew, 'hacker', 'pro')).toBe(Math.round(street * RECRUIT_TIERS_BY_ID.pro.costMult));
+    expect(recruitTierCost(s, crew, 'hacker', 'elite')).toBe(Math.round(street * RECRUIT_TIERS_BY_ID.elite.costMult));
   });
 });
 
 describe('recruitMember with tiers', () => {
   it('hires at the tier skill and charges the tier cost', () => {
     const s = rich();
-    const cost = recruitTierCost(s.crews[0], 'muscle', 'elite');
+    const cost = recruitTierCost(s, s.crews[0], 'muscle', 'elite');
     const r = recruitMember(s, CREW, 'muscle', 'elite');
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -51,12 +52,13 @@ describe('recruitMember with tiers', () => {
     if (!r.ok) return;
     const hired = r.state.members[r.state.members.length - 1];
     expect(hired.skill).toBe(ROLES_BY_ID.driver.baseSkill);
-    expect(r.state.cash).toBe(s.cash - recruitTierCost(s.crews[0], 'driver', 'street'));
+    expect(r.state.cash).toBe(s.cash - recruitTierCost(s, s.crews[0], 'driver', 'street'));
   });
 
   it('refuses when cash is short for the (pricier) tier', () => {
-    const crew0 = createInitialState(T0).crews[0];
-    const eliteCost = recruitTierCost(crew0, 'hacker', 'elite');
+    const s0 = createInitialState(T0);
+    const crew0 = s0.crews[0];
+    const eliteCost = recruitTierCost(s0, crew0, 'hacker', 'elite');
     const s: GameState = { ...createInitialState(T0), cash: eliteCost - 1 };
     expect(recruitMember(s, CREW, 'hacker', 'elite').ok).toBe(false);
     // ...but the cheap Street tier is affordable at the same cash.

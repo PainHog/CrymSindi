@@ -95,6 +95,9 @@ export interface Config {
   legendKingpinPct: number; // Kingpin: +this payout multiplier per level
   legendRepEnginePct: number; // Reputation Engine: +this Notoriety-gain multiplier per level
   legendDeepPocketsCash: number; // Deep Pockets: +this starting cash per level
+  legendMasterPlanSkill: number; // Master Plan: +this effective skill to every member per level
+  legendGhostPct: number; // Ghost Protocol: -this fraction of a job's heat per level
+  legendInnerCirclePct: number; // Inner Circle: -this fraction of recruit cost per level
 
   // Crew veterancy: members earn XP per job and level up for a small permanent
   // effective-skill bonus (attachment — your long-serving crew get better).
@@ -264,6 +267,9 @@ export const CONFIG: Config = {
   legendKingpinPct: 0.1,
   legendRepEnginePct: 0.1,
   legendDeepPocketsCash: 5000,
+  legendMasterPlanSkill: 1,
+  legendGhostPct: 0.08,
+  legendInnerCirclePct: 0.07,
 
   // ---- Crew veterancy ------------------------------------------------------
   // level 1 after ~2 early jobs; ~100+ jobs to max a member at +3 skill (a long
