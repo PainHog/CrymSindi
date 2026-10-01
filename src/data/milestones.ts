@@ -29,8 +29,14 @@ export const MILESTONES: MilestoneDef[] = [
   { id: 'top_brass', name: 'Top Brass', description: 'Unlock the tier-5 heist.', reward: { notoriety: 3 } },
   { id: 'contractor', name: 'Contractor', description: 'Clear a Syndicate Contract.', reward: { cash: 15000 } },
   { id: 'gone_legit', name: 'Gone Legit', description: 'Retire a crew for Notoriety.', reward: { cash: 10000 } },
+  { id: 'getting_paid', name: 'Getting Paid', description: 'Earn $100,000 across your career.', reward: { cash: 2500 } },
   { id: 'millionaire', name: 'Millionaire', description: 'Earn $1,000,000 across your career.', reward: { notoriety: 4 } },
   { id: 'kingpin', name: 'Kingpin', description: 'Earn $10,000,000 across your career.', reward: { notoriety: 12 } },
+  { id: 'seasoned', name: 'Seasoned Crew', description: 'Complete 150 heists.', reward: { notoriety: 5 } },
+  { id: 'the_big_one', name: 'The Big One', description: 'Land a single score of $250,000+.', reward: { notoriety: 5 } },
+  { id: 'turf_warrior', name: 'Turf Warrior', description: 'Win 10 turf contests against rival crews.', reward: { notoriety: 4 } },
+  { id: 'run_them_out', name: 'Run Them Out', description: 'Run a rival crew out of town.', reward: { notoriety: 6 } },
+  { id: 'living_legend', name: 'Living Legend', description: 'Become a legend for the first time.', reward: { notoriety: 10 } },
 ];
 
 export const MILESTONES_BY_ID: Record<string, MilestoneDef> = Object.fromEntries(

@@ -5,6 +5,7 @@ Number: Crew roles = 4
 Number: Random city events = 20
 Number: Rival gangs = 12
 Number: Crew team-up bonuses = 6
+Number: Career milestones = 18
 
 - [x] First playable version: send a crew on a heist, wait, and collect the cash
 - [x] Noir style and a live city map as the main screen
