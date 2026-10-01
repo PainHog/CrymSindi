@@ -173,7 +173,9 @@ export const heatGainMult = (s: GameState) => upgradeProduct(s, 'heatGainMult');
 export const payoutMult = (s: GameState) => upgradeProduct(s, 'payoutMult');
 /** Heat cools faster with the Clean Hands perk on top of any upgrades. */
 export const heatCoolRateMult = (s: GameState, config: Config = CONFIG) =>
-  upgradeProduct(s, 'heatCoolRateMult') * (1 + config.perkCleanHandsPct * perkLevel(s, 'clean_hands'));
+  upgradeProduct(s, 'heatCoolRateMult') *
+  (1 + config.perkCleanHandsPct * perkLevel(s, 'clean_hands')) *
+  (1 + config.legendLieLowPct * legendPerkLevel(s, 'lie_low'));
 
 /** Does any purchased upgrade grant the offline auto-collect Fixer? */
 export function hasFixer(state: GameState): boolean {
@@ -243,6 +245,11 @@ export function legendHeatMult(state: GameState, config: Config = CONFIG): numbe
 /** Multiplier on recruit cost, from the Inner Circle legend perk (<= 1). */
 export function legendRecruitMult(state: GameState, config: Config = CONFIG): number {
   return Math.max(0.3, 1 - config.legendInnerCirclePct * legendPerkLevel(state, 'inner_circle'));
+}
+/** Multiplier on job duration, from the Fast Hands legend perk (<= 1; floored so
+ *  a job always takes real time). */
+export function legendSpeedMult(state: GameState, config: Config = CONFIG): number {
+  return Math.max(0.5, 1 - config.legendFastHandsPct * legendPerkLevel(state, 'fast_hands'));
 }
 
 // ---- Endgame repeatable "Syndicate Contract" -------------------------------

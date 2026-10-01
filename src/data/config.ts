@@ -98,6 +98,8 @@ export interface Config {
   legendMasterPlanSkill: number; // Master Plan: +this effective skill to every member per level
   legendGhostPct: number; // Ghost Protocol: -this fraction of a job's heat per level
   legendInnerCirclePct: number; // Inner Circle: -this fraction of recruit cost per level
+  legendFastHandsPct: number; // Fast Hands: -this fraction of job duration per level
+  legendLieLowPct: number; // Lie Low: +this fraction of heat cooldown rate per level
 
   // Crew veterancy: members earn XP per job and level up for a small permanent
   // effective-skill bonus (attachment — your long-serving crew get better).
@@ -270,6 +272,8 @@ export const CONFIG: Config = {
   legendMasterPlanSkill: 1,
   legendGhostPct: 0.08,
   legendInnerCirclePct: 0.07,
+  legendFastHandsPct: 0.06,
+  legendLieLowPct: 0.15,
 
   // ---- Crew veterancy ------------------------------------------------------
   // level 1 after ~2 early jobs; ~100+ jobs to max a member at +3 skill (a long

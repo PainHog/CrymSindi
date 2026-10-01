@@ -1,4 +1,4 @@
-Now: Deepening the late game — a brand-new circuit of the biggest, hardest jobs that only open once you've become a legend.
+Now: Deepening the late game — more permanent legend perks for players deep in the ascension loop (faster jobs, faster cooldowns).
 Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 24
 Number: Crew roles = 4

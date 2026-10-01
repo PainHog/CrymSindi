@@ -71,6 +71,22 @@ export const LEGEND_PERKS: LegendPerkDef[] = [
     baseCost: 1,
     costGrowth: 1.5,
   },
+  {
+    id: 'fast_hands',
+    name: 'Fast Hands',
+    description: 'Your crews work like they have somewhere to be. −6% job time, per level.',
+    maxLevel: 5,
+    baseCost: 1,
+    costGrowth: 1.6,
+  },
+  {
+    id: 'lie_low',
+    name: 'Lie Low',
+    description: 'A legend knows how to disappear. Heat cools +15% faster, per level.',
+    maxLevel: 5,
+    baseCost: 1,
+    costGrowth: 1.5,
+  },
 ];
 
 export const LEGEND_PERKS_BY_ID: Record<LegendPerkId, LegendPerkDef> = Object.fromEntries(
