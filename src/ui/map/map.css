@@ -526,6 +526,10 @@
 .nf-dos-rival { font-family: var(--nf-body); font-size: 12px; line-height: 1.45; margin-top: 9px; padding: 8px 11px;
   border-radius: 11px; color: #ffcabf; background: #180b09; border: 1px solid #4a2621; }
 .nf-dos-rival b { color: var(--nf-crimson); }
+/* The rival's style tag, muted, next to their name. */
+.nf-dos-rival-tag { font-family: var(--nf-mono); font-size: 10px; letter-spacing: .3px; color: #b07a72; }
+/* The rival's signature taunt — its own line, in their voice. */
+.nf-dos-rival-taunt { display: block; margin-top: 6px; font-style: italic; color: #e0a79c; opacity: .85; }
 
 /* Rivalry level chip in the turf-war banner. */
 .nf-rb-lvl { flex: none; font-family: var(--nf-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
