@@ -15,7 +15,7 @@ import { HEISTS_BY_ID } from '../src/data/heists.ts';
 import { createInitialState, estimateSuccess, type GameState, type Member } from '../src/engine/index.ts';
 
 const NOW = 1_700_000_000_000;
-const JOBS = ['penthouse_job', 'cargo_port', 'armored_convoy', 'rail_yard', 'data_center', 'central_bank', 'sovereign_reserve'];
+const JOBS = ['penthouse_job', 'cargo_port', 'subway_vault', 'armored_convoy', 'rail_yard', 'data_center', 'gold_depository', 'central_bank', 'diamond_exchange', 'sovereign_reserve'];
 
 function crewAt(skill: number): GameState {
   const base = createInitialState(NOW);

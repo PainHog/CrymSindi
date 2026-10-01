@@ -234,6 +234,19 @@ export const HEISTS: HeistDef[] = [
     difficulty: 28,
   },
 
+  {
+    id: 'gold_depository',
+    tier: 4,
+    name: 'Gold Depository',
+    description: 'Clean out a private bullion vault on the graveyard shift. ~2 hours.',
+    requiredRoles: ['hacker', 'driver', 'lookout'],
+    durationSec: 2 * 60 * 60,
+    payoutPerSec: 52,
+    heatCost: 66,
+    failHeatBonus: 42,
+    difficulty: 28,
+  },
+
   // ---- Tier 5: the overnight big score (unlock $1.2M lifetime) -------------
   {
     id: 'central_bank',
@@ -246,6 +259,18 @@ export const HEISTS: HeistDef[] = [
     heatCost: 92,
     failHeatBonus: 60,
     difficulty: 32, // the retire-on score: reachable with an invested crew, top $/min once you can run it
+  },
+  {
+    id: 'diamond_exchange',
+    tier: 5,
+    name: 'Diamond Exchange',
+    description: 'Crack an overnight diamond clearinghouse — a different door to the same riches. ~12 hours.',
+    requiredRoles: ['hacker', 'muscle', 'lookout'],
+    durationSec: 12 * 60 * 60,
+    payoutPerSec: 108,
+    heatCost: 95,
+    failHeatBonus: 62,
+    difficulty: 33, // an alt tier-5 overnight score; a touch harder/leaner than Central Bank so it's a choice, not a strict upgrade
   },
 
   // ---- Capstone: unlocked only after ascending (see minAscend) -------------
