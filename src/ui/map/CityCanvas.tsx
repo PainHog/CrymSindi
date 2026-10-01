@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 
 import { useEffect, useRef } from 'react';
-import { SLOTS, type LandmarkKind } from './mapSlots';
+import { SLOTS, GRID_COLS, GRID_ROWS, type LandmarkKind } from './mapSlots';
 
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -20,6 +20,9 @@ function mulberry32(seed: number): () => number {
   };
 }
 
+// Footprint aspect per kind (relative units). The actual pixel size is scaled to
+// fit the building inside its lattice cell (see drawCity), so a landmark always
+// sits centred in its block at any screen size.
 const FOOTPRINT: Record<LandmarkKind, [number, number]> = {
   tower: [30, 40],
   block: [62, 42],
@@ -29,9 +32,8 @@ const FOOTPRINT: Record<LandmarkKind, [number, number]> = {
   spire: [26, 50],
 };
 
-function drawLandmark(cx: CanvasRenderingContext2D, x: number, y: number, kind: LandmarkKind, seed: number) {
+function drawLandmark(cx: CanvasRenderingContext2D, x: number, y: number, kind: LandmarkKind, seed: number, w: number, h: number) {
   const rnd = mulberry32(seed);
-  const [w, h] = FOOTPRINT[kind] ?? [46, 40];
   // ground glow — a lit building, not a random color blob
   const gg = cx.createRadialGradient(x, y + 4, 2, x, y + 4, Math.max(w, h) * 1.15);
   gg.addColorStop(0, 'rgba(255,196,130,0.10)');
@@ -42,7 +44,7 @@ function drawLandmark(cx: CanvasRenderingContext2D, x: number, y: number, kind: 
   cx.fill();
   const L = x - w / 2;
   const T = y - h / 2;
-  const ex = 7;
+  const ex = Math.max(3, h * 0.16);
   cx.fillStyle = '#070c15';
   cx.fillRect(L, T, w, h + ex);
   const tg = cx.createLinearGradient(L, T, L, T + h);
@@ -146,40 +148,58 @@ function drawCity(cx: CanvasRenderingContext2D, W: number, H: number) {
   cx.lineWidth = 1;
   cx.stroke();
   cx.restore();
-  // faint street grid
-  const step = Math.max(46, Math.min(W, H) / 13);
-  for (let gx = 0; gx <= W + step; gx += step) {
-    const j = (rnd() - 0.5) * 8;
-    cx.strokeStyle = 'rgba(38,55,82,' + (0.16 + rnd() * 0.2) + ')';
+  // The whole city shares ONE lattice: straight streets on cell boundaries, so
+  // filler blocks and landmarks sit squarely inside their blocks.
+  const cellW = W / GRID_COLS;
+  const cellH = H / GRID_ROWS;
+  // faint street grid — straight lines on the cell boundaries
+  cx.strokeStyle = 'rgba(38,55,82,0.22)';
+  cx.lineWidth = 1;
+  for (let c = 0; c <= GRID_COLS; c++) {
+    const gx = Math.round(c * cellW) + 0.5;
     cx.beginPath();
-    cx.moveTo(gx + j, 0);
-    cx.lineTo(gx + j * 1.5, H);
+    cx.moveTo(gx, 0);
+    cx.lineTo(gx, H);
     cx.stroke();
   }
-  for (let gy = 0; gy <= H + step; gy += step) {
-    const j = (rnd() - 0.5) * 8;
-    cx.strokeStyle = 'rgba(38,55,82,' + (0.14 + rnd() * 0.2) + ')';
+  for (let r = 0; r <= GRID_ROWS; r++) {
+    const gy = Math.round(r * cellH) + 0.5;
     cx.beginPath();
-    cx.moveTo(0, gy + j);
-    cx.lineTo(W, gy + j * 1.5);
+    cx.moveTo(0, gy);
+    cx.lineTo(W, gy);
     cx.stroke();
   }
-  // dim filler blocks so landmarks stand out
-  for (let bx = step; bx < W - step; bx += step) {
-    for (let by = step; by < H - step; by += step) {
-      if (rnd() < 0.55) continue;
-      const pad = 8 + rnd() * 8;
-      const bw = step - pad * 2;
-      const bh = step - pad * 2;
-      if (bw < 8 || bh < 8) continue;
+  // which cells a landmark occupies (so filler blocks fill the gaps, not overlap)
+  const occupied = new Set(
+    SLOTS.map((sl) => {
+      const c = Math.round((sl[0] / 100) * GRID_COLS - 0.5);
+      const r = Math.round((sl[1] / 100) * GRID_ROWS - 0.5);
+      return c + ',' + r;
+    }),
+  );
+  // dim filler blocks centred in empty cells, so landmarks stand out
+  for (let c = 0; c < GRID_COLS; c++) {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      if (occupied.has(c + ',' + r) || rnd() < 0.6) continue;
+      const bw = cellW * (0.4 + rnd() * 0.14);
+      const bh = cellH * (0.4 + rnd() * 0.14);
+      if (bw < 6 || bh < 6) continue;
+      const fx = (c + 0.5) * cellW - bw / 2;
+      const fy = (r + 0.5) * cellH - bh / 2;
       cx.fillStyle = 'rgba(14,22,36,' + (0.5 + rnd() * 0.3) + ')';
-      cx.fillRect(bx + pad, by + pad, bw, bh);
+      cx.fillRect(fx, fy, bw, bh);
       cx.strokeStyle = 'rgba(30,44,68,0.4)';
-      cx.strokeRect(bx + pad, by + pad, bw, bh);
+      cx.strokeRect(fx, fy, bw, bh);
     }
   }
-  // landmarks at every slot
-  SLOTS.forEach((sl, i) => drawLandmark(cx, (sl[0] / 100) * W, (sl[1] / 100) * H, sl[2], 100 + i * 77));
+  // landmarks at every slot, scaled to sit inside their cell with a street margin
+  const maxW = cellW * 0.72;
+  const maxH = cellH * 0.72;
+  SLOTS.forEach((sl, i) => {
+    const [fw, fh] = FOOTPRINT[sl[2]] ?? [46, 40];
+    const s = Math.min(maxW / fw, maxH / fh);
+    drawLandmark(cx, (sl[0] / 100) * W, (sl[1] / 100) * H, sl[2], 100 + i * 77, fw * s, fh * s);
+  });
 }
 
 /** Full-bleed procedural city, redrawn whenever its container resizes. */
