@@ -131,6 +131,18 @@ export const HEISTS: HeistDef[] = [
     failHeatBonus: 22,
     difficulty: 13,
   },
+  {
+    id: 'payroll_lift',
+    tier: 2,
+    name: 'Payroll Lift',
+    description: 'Take down an armored payroll drop. Muscle to crack it, a wheel to vanish.',
+    requiredRoles: ['driver', 'muscle'],
+    durationSec: 360,
+    payoutPerSec: 13,
+    heatCost: 38,
+    failHeatBonus: 22,
+    difficulty: 13,
+  },
 
   {
     id: 'museum_wing',
@@ -194,6 +206,19 @@ export const HEISTS: HeistDef[] = [
     heatCost: 42,
     failHeatBonus: 28,
     difficulty: 20,
+  },
+
+  {
+    id: 'nightclub_count',
+    tier: 3,
+    name: 'Nightclub Count Room',
+    description: 'Hit the back-room count before the night’s cash is banked. Muscle at the door, eyes on the street. ~22 minutes.',
+    requiredRoles: ['muscle', 'lookout'],
+    durationSec: 22 * 60,
+    payoutPerSec: 26,
+    heatCost: 44,
+    failHeatBonus: 30,
+    difficulty: 21,
   },
 
   // ---- Tier 4: multi-hour scores (unlock $180k lifetime) -------------------
