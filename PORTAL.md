@@ -1,11 +1,11 @@
-Now: Deepening the late game — more permanent legend perks for players deep in the ascension loop (faster jobs, faster cooldowns).
+Now: Deepening the late game — endgame goals for the ascension loop and the new legend circuit.
 Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 24
 Number: Crew roles = 4
 Number: Random city events = 20
 Number: Rival gangs = 12
 Number: Crew team-up bonuses = 6
-Number: Career milestones = 18
+Number: Career milestones = 21
 
 - [x] First playable version: send a crew on a heist, wait, and collect the cash
 - [x] Noir style and a live city map as the main screen
