@@ -33,6 +33,12 @@ export const TRAITS: TraitDef[] = [
   { id: 'cat_burglar', name: 'Cat Burglar', description: 'Silent, patient, gone before dawn.', skillBonus: 2 },
   { id: 'prodigy', name: 'Prodigy', description: 'A natural — rare talent.', skillBonus: 3 },
   { id: 'mastermind', name: 'Mastermind', description: 'Sees the whole board. Very rare.', skillBonus: 3 },
+  { id: 'hothead', name: 'Hothead', description: 'Quick to the first punch, slow to the second thought.', skillBonus: 0 },
+  { id: 'sharp_eye', name: 'Sharp Eye', description: 'Catches the detail everyone else walks past.', skillBonus: 1 },
+  { id: 'smooth_talker', name: 'Smooth Talker', description: 'Talks past trouble before it starts.', skillBonus: 1 },
+  { id: 'safecracker', name: 'Safecracker', description: 'Feels the tumblers fall by touch.', skillBonus: 2 },
+  { id: 'shadow', name: 'Shadow', description: 'Moves like the dark itself.', skillBonus: 2 },
+  { id: 'virtuoso', name: 'Virtuoso', description: 'The best to ever do it. Vanishingly rare.', skillBonus: 3 },
 ];
 
 export const TRAITS_BY_ID: Record<TraitId, TraitDef> = Object.fromEntries(
