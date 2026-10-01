@@ -1,6 +1,6 @@
-Now: Polishing the look of the city and the crew, and fine-tuning the late game, before a playtest.
+Now: Adding more jobs and crew personality, and keeping the late game balanced, before a playtest.
 Next: A playtest with friends and family to see how the game feels.
-Number: Heist jobs = 17
+Number: Heist jobs = 19
 Number: Crew roles = 4
 Number: Random city events = 14
 Number: Rival gangs = 10

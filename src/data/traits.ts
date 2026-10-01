@@ -18,13 +18,21 @@ export interface TraitDef {
   skillBonus: number;
 }
 
+// NOTE: the bonus distribution is kept balanced (average ~1.5) so adding variety
+// here doesn't quietly shift crew power — recruits just feel more distinct.
 export const TRAITS: TraitDef[] = [
   { id: 'rookie', name: 'Rookie', description: 'Still learning the ropes.', skillBonus: 0 },
+  { id: 'reckless', name: 'Reckless', description: 'More guts than sense.', skillBonus: 0 },
   { id: 'steady', name: 'Steady', description: 'Reliable when it counts.', skillBonus: 1 },
   { id: 'ghost', name: 'Ghost', description: 'Never leaves a trace.', skillBonus: 1 },
+  { id: 'cool_head', name: 'Cool Head', description: "Doesn't rattle when the alarm trips.", skillBonus: 1 },
+  { id: 'wheelman', name: 'Wheelman', description: 'Born behind the wheel.', skillBonus: 1 },
   { id: 'veteran', name: 'Veteran', description: 'Years in the game.', skillBonus: 2 },
   { id: 'brawler', name: 'Brawler', description: 'Thrives when it gets physical.', skillBonus: 2 },
+  { id: 'fixer', name: 'Fixer', description: 'Always knows a guy.', skillBonus: 2 },
+  { id: 'cat_burglar', name: 'Cat Burglar', description: 'Silent, patient, gone before dawn.', skillBonus: 2 },
   { id: 'prodigy', name: 'Prodigy', description: 'A natural — rare talent.', skillBonus: 3 },
+  { id: 'mastermind', name: 'Mastermind', description: 'Sees the whole board. Very rare.', skillBonus: 3 },
 ];
 
 export const TRAITS_BY_ID: Record<TraitId, TraitDef> = Object.fromEntries(
