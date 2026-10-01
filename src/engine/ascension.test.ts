@@ -13,6 +13,8 @@ import {
   legendCrewSkill,
   legendHeatMult,
   legendRecruitMult,
+  legendSpeedMult,
+  heatCoolRateMult,
 } from './selectors';
 import type { GameState } from './types';
 
@@ -58,6 +60,17 @@ describe('ascension selectors', () => {
     const maxed: GameState = { ...base, legendPerks: { ghost_protocol: 99, inner_circle: 99 } };
     expect(legendHeatMult(maxed)).toBe(0.3);
     expect(legendRecruitMult(maxed)).toBe(0.3);
+  });
+
+  it('Fast Hands shortens jobs and Lie Low speeds heat cooldown, neutral at 0', () => {
+    const base = createInitialState(T0);
+    const s: GameState = { ...base, legendPerks: { fast_hands: 3, lie_low: 2 } };
+    expect(legendSpeedMult(s)).toBeCloseTo(1 - CONFIG.legendFastHandsPct * 3, 5);
+    expect(heatCoolRateMult(s)).toBeCloseTo(heatCoolRateMult(base) * (1 + CONFIG.legendLieLowPct * 2), 5);
+    // Neutral with no legend perks.
+    expect(legendSpeedMult(base)).toBe(1);
+    // Fast Hands is floored so a job always takes real time.
+    expect(legendSpeedMult({ ...base, legendPerks: { fast_hands: 99 } })).toBe(0.5);
   });
 });
 
