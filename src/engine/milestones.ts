@@ -23,8 +23,14 @@ const CHECKS: Record<string, Check> = {
   top_brass: (s) => maxUnlockedTier(s) >= 5,
   contractor: (s) => s.contractLevel >= 1,
   gone_legit: (s) => s.prestigeCount >= 1,
+  getting_paid: (s) => s.careerCash >= 100_000,
   millionaire: (s) => s.careerCash >= 1_000_000,
   kingpin: (s) => s.careerCash >= 10_000_000,
+  seasoned: (s) => s.stats.heistsCompleted >= 150,
+  the_big_one: (s) => s.stats.biggestScore >= 250_000,
+  turf_warrior: (s) => s.turfWins >= 10,
+  run_them_out: (s) => s.rivalsDominated.length >= 1,
+  living_legend: (s) => s.ascendCount >= 1,
 };
 
 /** Grant any newly-met milestones and apply their rewards. */
