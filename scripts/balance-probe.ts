@@ -15,7 +15,7 @@ import { HEISTS_BY_ID } from '../src/data/heists.ts';
 import { createInitialState, estimateSuccess, type GameState, type Member } from '../src/engine/index.ts';
 
 const NOW = 1_700_000_000_000;
-const JOBS = ['penthouse_job', 'cargo_port', 'subway_vault', 'armored_convoy', 'rail_yard', 'data_center', 'gold_depository', 'central_bank', 'diamond_exchange', 'sovereign_reserve'];
+const JOBS = ['penthouse_job', 'cargo_port', 'subway_vault', 'armored_convoy', 'rail_yard', 'data_center', 'gold_depository', 'central_bank', 'diamond_exchange', 'sovereign_reserve', 'treasury_vault', 'black_ledger', 'last_score'];
 
 function crewAt(skill: number): GameState {
   const base = createInitialState(NOW);
@@ -24,7 +24,8 @@ function crewAt(skill: number): GameState {
   return { ...base, cash: 9e6, lifetimeCash: 9e6, heat: 0, heatUpdatedAt: NOW, members, crews: [{ ...base.crews[0], memberIds: members.map((m) => m.id), maxMembers: 8 }] };
 }
 
-for (const skill of [5, 8, 12, 15]) {
+for (const skill of [5, 8, 12, 15, 20]) {
+  // skill 20 is a proxy for a maxed crew (15) with the Master Plan legend perk (+5).
   const s = crewAt(skill);
   const crew = s.crews[0];
   console.log(`\n=== full 5-crew, skill ${skill} (max ${CONFIG.maxMemberSkill}) — sorted by expected $/s ===`);

@@ -16,7 +16,7 @@ describe('heist catalog integrity', () => {
       expect(h.name).toBeTruthy();
       expect(h.description).toBeTruthy();
       expect(h.tier).toBeGreaterThanOrEqual(1);
-      expect(h.tier).toBeLessThanOrEqual(5);
+      expect(h.tier).toBeLessThanOrEqual(6);
       expect(h.durationSec).toBeGreaterThan(0);
       expect(h.payoutPerSec).toBeGreaterThan(0);
       expect(h.heatCost).toBeGreaterThan(0);
@@ -33,7 +33,7 @@ describe('heist catalog integrity', () => {
 
   it('tiers do not overlap on payout or difficulty (the progression stays monotonic)', () => {
     const byTier = (t: number) => HEISTS.filter((h) => h.tier === t);
-    for (let t = 1; t < 5; t++) {
+    for (let t = 1; t < 6; t++) {
       const lower = byTier(t);
       const upper = byTier(t + 1);
       if (lower.length === 0 || upper.length === 0) continue;
@@ -73,5 +73,30 @@ describe('capstone ascension gate', () => {
   it('a normal tier-5 job ignores the ascension gate', () => {
     const central = HEISTS_BY_ID['central_bank'];
     expect(isHeistUnlocked({ ...tier5, ascendCount: 0 }, central)).toBe(true);
+  });
+});
+
+describe('tier-6 legend circuit', () => {
+  const base = createInitialState(T0);
+  const TIER6_CASH = CONFIG.tierUnlocks[6] ?? 2_500_000;
+  const tier6Cash = { ...base, lifetimeCash: TIER6_CASH };
+
+  it('every tier-6 job requires both the tier-6 cash gate and an ascension', () => {
+    const t6 = HEISTS.filter((h) => h.tier === 6);
+    expect(t6.length).toBeGreaterThan(0);
+    for (const h of t6) {
+      expect(h.minAscend ?? 0).toBeGreaterThanOrEqual(1);
+      // Cash-gated but not ascended -> locked.
+      expect(isHeistUnlocked({ ...tier6Cash, ascendCount: 0 }, h)).toBe(false);
+      // Ascended but below the tier-6 cash gate -> locked.
+      expect(isHeistUnlocked({ ...base, lifetimeCash: 0, ascendCount: 5 }, h)).toBe(false);
+    }
+  });
+
+  it('The Last Score is the twice-ascended pinnacle', () => {
+    const last = HEISTS_BY_ID['last_score'];
+    expect(last.minAscend).toBe(2);
+    expect(isHeistUnlocked({ ...tier6Cash, ascendCount: 1 }, last)).toBe(false);
+    expect(isHeistUnlocked({ ...tier6Cash, ascendCount: 2 }, last)).toBe(true);
   });
 });
