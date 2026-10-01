@@ -1,5 +1,5 @@
-Now: Giving the rival gangs their own voice, then bringing cleaner street art (cars and people) onto the city map.
-Next: Cleaner characters and cars moving on the map, then a playtest with friends and family.
+Now: Real cars and people are driving and walking the city map; polishing the look toward a playtest.
+Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 19
 Number: Crew roles = 4
 Number: Random city events = 14
@@ -15,7 +15,7 @@ Number: Crew team-up bonuses = 6
 - [x] Sound, satisfying effects and a guide for first-time players
 - [x] Save backups and a settings panel
 - [x] Animated city streets and crew portraits
-- [ ] Cleaner, hand-style street art — real cars and people on the map
+- [x] Cleaner, hand-style street art — real cars and people on the map
 - [ ] A real playtest with friends and family
 - [ ] Choose a provider for in-game purchases or ads, then switch on the optional reward ads and the shop for real
 - [ ] Web hosting turned on so the game is published online for anyone to play

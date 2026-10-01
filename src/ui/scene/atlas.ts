@@ -19,6 +19,17 @@
 
 import Phaser from 'phaser';
 
+// Real CC0 actor art (Kenney Racing Pack, see assets/CREDITS.md), pre-processed
+// offline to face east, noir-tinted, and sized to the baked placeholders. Vite
+// fingerprints these imports and emits relative URLs (works on itch too).
+import carUrl0 from './assets/nf_car0.png';
+import carUrl1 from './assets/nf_car1.png';
+import carUrl2 from './assets/nf_car2.png';
+import cruiserRedUrl from './assets/nf_cruiser_r.png';
+import cruiserBlueUrl from './assets/nf_cruiser_b.png';
+import pedUrl0 from './assets/nf_ped0.png';
+import pedUrl1 from './assets/nf_ped1.png';
+
 /** Stable texture keys. Real art must publish under these exact names. */
 export const KEYS = {
   cars: ['nf_car0', 'nf_car1', 'nf_car2'] as const,
@@ -167,6 +178,26 @@ function bakeGlow(scene: Phaser.Scene, key: string, color: number, size: number)
   }
   g.generateTexture(key, size, size);
   g.destroy();
+}
+
+/** Real-art URL for each texture key we ship art for. Keys absent here (van,
+ *  glows) keep their baked placeholder. */
+const ACTOR_ART: Record<string, string> = {
+  [KEYS.cars[0]]: carUrl0,
+  [KEYS.cars[1]]: carUrl1,
+  [KEYS.cars[2]]: carUrl2,
+  [KEYS.cruiserRed]: cruiserRedUrl,
+  [KEYS.cruiserBlue]: cruiserBlueUrl,
+  [KEYS.peds[0]]: pedUrl0,
+  [KEYS.peds[1]]: pedUrl1,
+};
+
+/** Queue the real actor textures. Call from a scene's preload(); Phaser loads
+ *  them before create(), where bakeAtlas() then fills in anything missing. */
+export function loadActorArt(scene: Phaser.Scene): void {
+  for (const [key, url] of Object.entries(ACTOR_ART)) {
+    if (!scene.textures.exists(key)) scene.load.image(key, url);
+  }
 }
 
 /** Bake every placeholder texture. Idempotent — skips keys already present, so
