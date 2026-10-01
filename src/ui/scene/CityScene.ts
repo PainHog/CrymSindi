@@ -14,7 +14,7 @@
 // -----------------------------------------------------------------------------
 
 import Phaser from 'phaser';
-import { KEYS, bakeAtlas } from './atlas';
+import { KEYS, bakeAtlas, loadActorArt } from './atlas';
 
 type Axis = 'h' | 'v';
 
@@ -53,6 +53,12 @@ export class CityScene extends Phaser.Scene {
 
   constructor() {
     super('city');
+  }
+
+  preload(): void {
+    // Real actor art loads here; create() then bakes placeholders for any key
+    // without art (van, glows), so the scene works whether or not art is present.
+    loadActorArt(this);
   }
 
   create(): void {
