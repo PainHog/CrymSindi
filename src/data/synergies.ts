@@ -41,6 +41,27 @@ export const SYNERGIES: SynergyDef[] = [
     power: 1,
     test: (counts) => (counts.muscle ?? 0) >= 2,
   },
+  {
+    id: 'brain_trust',
+    name: 'Brain Trust',
+    description: 'Two or more hackers — every system falls faster. +1 power each.',
+    power: 1,
+    test: (counts) => (counts.hacker ?? 0) >= 2,
+  },
+  {
+    id: 'wheels_up',
+    name: 'Wheels Up',
+    description: 'Two or more drivers — no route is ever closed. +1 power each.',
+    power: 1,
+    test: (counts) => (counts.driver ?? 0) >= 2,
+  },
+  {
+    id: 'overwatch',
+    name: 'Overwatch',
+    description: 'Two or more lookouts — nothing moves unseen. +1 power each.',
+    power: 1,
+    test: (counts) => (counts.lookout ?? 0) >= 2,
+  },
 ];
 
 /** Count members per role. */

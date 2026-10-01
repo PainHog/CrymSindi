@@ -1,9 +1,10 @@
-Now: Adding more jobs and crew personality, and keeping the late game balanced, before a playtest.
+Now: Adding crew team-up bonuses, rival gangs and personality, and keeping the late game balanced, before a playtest.
 Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 19
 Number: Crew roles = 4
 Number: Random city events = 14
-Number: Rival gangs = 10
+Number: Rival gangs = 12
+Number: Crew team-up bonuses = 6
 
 - [x] First playable version: send a crew on a heist, wait, and collect the cash
 - [x] Noir style and a live city map as the main screen

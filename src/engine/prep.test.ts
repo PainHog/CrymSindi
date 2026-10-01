@@ -75,9 +75,10 @@ describe('prep — case the job', () => {
   });
 
   it('prep can flip an otherwise-blown run — same seed, same rolls', () => {
-    // eff = 4 => each member chance = 0.5 + 0.045*4 - 0.02*4 = 0.60. Rolls of 0.65
-    // fail without prep (0.65 > 0.60) but pass with prep (0.65 < 0.72).
-    const s = makeState('driver', 4, 3);
+    // 3 drivers => Wheels Up (+1), so eff = 3 + 1 = 4 => each member chance =
+    // 0.5 + 0.05*4 - 0.016*4 = 0.636. Rolls of 0.65 fail without prep (0.65 >
+    // 0.636) but pass with prep (0.65 < 0.636 + 0.12 = 0.756).
+    const s = makeState('driver', 3, 3);
     const crewId = s.crews[0].id;
     const noPrep = launchHeist(s, 'smash_grab', crewId, T0, 1, CONFIG, 'quiet', false);
     const withPrep = launchHeist(s, 'smash_grab', crewId, T0, 1, CONFIG, 'quiet', true);
