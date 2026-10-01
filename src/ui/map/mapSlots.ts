@@ -36,6 +36,9 @@ const CELLS: ReadonlyArray<readonly [number, number, LandmarkKind]> = [
   [3, 7, 'twin'], [7, 4, 'spire'], [1, 2, 'tower'], [8, 5, 'bunker'],
   [4, 6, 'block'], [10, 4, 'dome'], [2, 5, 'tower'], [6, 3, 'spire'],
   [4, 2, 'twin'], [9, 3, 'block'], [7, 6, 'bunker'], [4, 4, 'tower'],
+  // Extra plots (slots 24+): decorative buildings in open cells that also keep a
+  // pin slot free for every heist plus the Syndicate Contract as the catalog grows.
+  [6, 1, 'tower'], [8, 3, 'block'], [2, 3, 'dome'], [6, 6, 'spire'],
 ];
 
 /** Landmark footprints, planted on the lattice. Heist pins sit on these by

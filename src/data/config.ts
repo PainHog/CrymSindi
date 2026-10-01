@@ -316,7 +316,7 @@ export const CONFIG: Config = {
   // ---- Progression gates ---------------------------------------------------
   // Map of heist tier -> lifetime cash (total ever earned) required to unlock.
   // Tier 1 is always unlocked. Add more entries to gate future tiers.
-  tierUnlocks: { 2: 2000, 3: 30000, 4: 180000, 5: 1200000 } as Record<number, number>,
+  tierUnlocks: { 2: 2000, 3: 30000, 4: 180000, 5: 1200000, 6: 2500000 } as Record<number, number>,
 
   // ---- Daily reward --------------------------------------------------------
   dailyRewardBase: 500,

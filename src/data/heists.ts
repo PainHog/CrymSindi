@@ -313,6 +313,49 @@ export const HEISTS: HeistDef[] = [
     difficulty: 40, // capstone: hard even for a maxed crew, wants full buffs — legend-only
     minAscend: 1,
   },
+
+  // ---- Tier 6: the legend circuit — unlocks at $2.5M lifetime AND only after
+  // you have ascended. These are the richest, hardest scores in the game; their
+  // difficulty wants the Master Plan legend perk and a fully-invested crew.
+  {
+    id: 'treasury_vault',
+    tier: 6,
+    name: 'The Treasury Vault',
+    description: 'The national vault. Only a legend ever gets the schematics. ~12 hours.',
+    requiredRoles: ['hacker', 'muscle', 'driver', 'lookout'],
+    durationSec: 12 * 60 * 60,
+    payoutPerSec: 210,
+    heatCost: 120,
+    failHeatBonus: 78,
+    difficulty: 44,
+    minAscend: 1,
+  },
+  {
+    id: 'black_ledger',
+    tier: 6,
+    name: 'The Black Ledger',
+    description: 'Steal the ledger that owns the city — then sell it back to them. ~6 hours.',
+    requiredRoles: ['hacker', 'driver', 'lookout'],
+    durationSec: 6 * 60 * 60,
+    payoutPerSec: 220,
+    heatCost: 118,
+    failHeatBonus: 76,
+    difficulty: 45,
+    minAscend: 1,
+  },
+  {
+    id: 'last_score',
+    tier: 6,
+    name: 'The Last Score',
+    description: 'The one you retire the name on. The door opens only for a twice-made legend. ~12 hours.',
+    requiredRoles: ['hacker', 'muscle', 'driver', 'lookout'],
+    durationSec: 12 * 60 * 60,
+    payoutPerSec: 245,
+    heatCost: 125,
+    failHeatBonus: 80,
+    difficulty: 48,
+    minAscend: 2,
+  },
 ];
 
 export const HEISTS_BY_ID: Record<HeistId, HeistDef> = Object.fromEntries(

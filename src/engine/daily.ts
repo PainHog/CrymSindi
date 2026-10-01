@@ -39,7 +39,10 @@ export function nextStreakFor(state: GameState, now: number): number {
 export function dailyReward(state: GameState, now: number, config: Config = CONFIG): number {
   const streak = Math.max(1, nextStreakFor(state, now));
   const steps = Math.min(streak, config.dailyStreakMax) - 1;
-  const tierScale = Math.max(1, maxUnlockedTier(state, config));
+  // The daily scales with the standard tier ladder (caps at 5); the ascension-
+  // gated tier 6 "legend circuit" rewards you through its own jobs, not a bigger
+  // login bonus, so base pacing is unchanged by adding tier 6.
+  const tierScale = Math.max(1, Math.min(5, maxUnlockedTier(state, config)));
   return Math.round(config.dailyRewardBase * (1 + config.dailyStreakBonus * steps) * tierScale);
 }
 

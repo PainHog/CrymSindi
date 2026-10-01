@@ -1,6 +1,6 @@
-Now: Deepening the late game — new permanent perks for players who go all the way (become a legend).
+Now: Deepening the late game — a brand-new circuit of the biggest, hardest jobs that only open once you've become a legend.
 Next: A playtest with friends and family to see how the game feels.
-Number: Heist jobs = 21
+Number: Heist jobs = 24
 Number: Crew roles = 4
 Number: Random city events = 20
 Number: Rival gangs = 12
