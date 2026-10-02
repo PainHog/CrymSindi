@@ -14,6 +14,7 @@ import {
   legendHeatMult,
   legendRecruitMult,
   legendSpeedMult,
+  legendFlawlessBonus,
   heatCoolRateMult,
 } from './selectors';
 import type { GameState } from './types';
@@ -71,6 +72,13 @@ describe('ascension selectors', () => {
     expect(legendSpeedMult(base)).toBe(1);
     // Fast Hands is floored so a job always takes real time.
     expect(legendSpeedMult({ ...base, legendPerks: { fast_hands: 99 } })).toBe(0.5);
+  });
+
+  it('Big Scores adds to the flawless bonus, neutral at 0', () => {
+    const base = createInitialState(T0);
+    const s: GameState = { ...base, legendPerks: { big_scores: 4 } };
+    expect(legendFlawlessBonus(s)).toBeCloseTo(CONFIG.legendBigScorePct * 4, 5);
+    expect(legendFlawlessBonus(base)).toBe(0);
   });
 });
 

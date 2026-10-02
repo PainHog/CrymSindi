@@ -1,4 +1,4 @@
-Now: Deepening the late game — endgame goals for the ascension loop and the new legend circuit.
+Now: Deepening the late game — legend perks now reward flawless scores, so a perfect-run build pays off big.
 Next: A playtest with friends and family to see how the game feels.
 Number: Heist jobs = 24
 Number: Crew roles = 4

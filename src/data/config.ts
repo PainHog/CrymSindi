@@ -100,6 +100,7 @@ export interface Config {
   legendInnerCirclePct: number; // Inner Circle: -this fraction of recruit cost per level
   legendFastHandsPct: number; // Fast Hands: -this fraction of job duration per level
   legendLieLowPct: number; // Lie Low: +this fraction of heat cooldown rate per level
+  legendBigScorePct: number; // Big Scores: +this added to the flawless take multiplier per level
 
   // Crew veterancy: members earn XP per job and level up for a small permanent
   // effective-skill bonus (attachment — your long-serving crew get better).
@@ -274,6 +275,7 @@ export const CONFIG: Config = {
   legendInnerCirclePct: 0.07,
   legendFastHandsPct: 0.06,
   legendLieLowPct: 0.15,
+  legendBigScorePct: 0.15,
 
   // ---- Crew veterancy ------------------------------------------------------
   // level 1 after ~2 early jobs; ~100+ jobs to max a member at +3 skill (a long

@@ -87,6 +87,14 @@ export const LEGEND_PERKS: LegendPerkDef[] = [
     baseCost: 1,
     costGrowth: 1.5,
   },
+  {
+    id: 'big_scores',
+    name: 'Big Scores',
+    description: 'Your perfect jobs hit harder. +15% to the flawless-run bonus, per level.',
+    maxLevel: 5,
+    baseCost: 2,
+    costGrowth: 1.6,
+  },
 ];
 
 export const LEGEND_PERKS_BY_ID: Record<LegendPerkId, LegendPerkDef> = Object.fromEntries(

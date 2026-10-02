@@ -31,6 +31,7 @@ import {
   isMemberDown,
   memberPower,
   legendPayoutMult,
+  legendFlawlessBonus,
   notorietyMult,
   payoutMult,
 } from './selectors';
@@ -320,7 +321,7 @@ export function resolveHeist(
     payout = Math.round(base * takeFrac * mult);
     if (perfect) {
       const before = payout;
-      payout = Math.round(payout * config.perfectBonusMult);
+      payout = Math.round(payout * (config.perfectBonusMult + legendFlawlessBonus(state, config)));
       perfectBonus = payout - before;
     }
   } else {
