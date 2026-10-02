@@ -251,6 +251,11 @@ export function legendRecruitMult(state: GameState, config: Config = CONFIG): nu
 export function legendSpeedMult(state: GameState, config: Config = CONFIG): number {
   return Math.max(0.5, 1 - config.legendFastHandsPct * legendPerkLevel(state, 'fast_hands'));
 }
+/** Extra added to the flawless-run take multiplier, from the Big Scores legend
+ *  perk (0 when unowned). */
+export function legendFlawlessBonus(state: GameState, config: Config = CONFIG): number {
+  return config.legendBigScorePct * legendPerkLevel(state, 'big_scores');
+}
 
 // ---- Endgame repeatable "Syndicate Contract" -------------------------------
 
