@@ -50,4 +50,4 @@ an auto-player sim, not real players).
   `src/data/`; UI in `src/ui/`. Balance invariants are locked by
   `src/engine/balance.test.ts` and the catalog tests.
 - `PORTAL.md` is the plain-language owner-facing status (kept current per
-  `CLAUDE.md`).
+  `AGENTS.md`).

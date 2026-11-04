@@ -5,7 +5,7 @@ idea / request / audit finding worth keeping. Update this in the same commit as
 the work it describes. Newest status at the top.
 
 - **Repo:** `painhog/crymsindi` · React 18 + Vite 5 + TypeScript, 100% client-side.
-- **Default branch:** `main`. Active dev branch: `claude/lucid-maxwell-muaota`.
+- **Default branch:** the repo's GitHub default (to be renamed `main`). New work goes on `work/<topic>` branches.
 - **Checks:** `npm test` (Vitest), `npm run build` (`tsc -b && vite build`). No CI configured yet.
 
 ---
